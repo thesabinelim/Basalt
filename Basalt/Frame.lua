@@ -258,9 +258,9 @@ return function(name, parent, pTerm, basalt)
 
         setFocusedObject = function(self, obj)
             if(self.parent~=nil)then  
-                --self:getBaseFrame():setFocusedObject(obj) 
+                self.getBaseFrame():setFocusedObject(obj) 
             else
-                --focusedObjectCache = obj
+                focusedObjectCache = obj
             end
             return self
         end;
@@ -775,7 +775,7 @@ return function(name, parent, pTerm, basalt)
             if(isMonitor)and not(monitorAttached)then return false end;
             if (self:getVisualChanged()) then
                 if (base.draw(self)) then
-                    --[[if(self.parent==nil)then
+                    if(self.parent==nil)then
                         local curObj = basalt.getFocusedObject()
                         basalt.setFocusedObject(focusedObjectCache)
                         if(focusedObjectCache~=nil)then
@@ -786,7 +786,7 @@ return function(name, parent, pTerm, basalt)
                                 curObj:loseFocusHandler()
                             end
                         end
-                    end]]
+                    end
                     if(calculateDynValues)then
                         _recalculateDynamicValues()
                     end

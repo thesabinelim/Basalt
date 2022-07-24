@@ -98,9 +98,10 @@ return function(name)
                             local splittedText = utils.splitString(self:getValue(), " ")
                             local text = {}
                             local line = ""
-                            for _,v in pairs(splittedText)do
+                            for k,v in pairs(splittedText)do
                                 if(line:len()+v:len()<=w)then
                                     line = line=="" and v or line.." "..v
+                                    if(k==#splittedText)then table.insert(text, line) end
                                 else
                                     table.insert(text, line)
                                     line = v:sub(1,w)

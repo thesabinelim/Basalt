@@ -681,7 +681,7 @@ return function(name)
                     end
                     if(event~="mouse_drag")then
                         if (self.parent ~= nil)and(event~="mouse_up")then
-                            self.parent:setFocusedObject(self)
+                            --self.parent:setFocusedObject(self)
                         elseif(self.parent == nil)and(event~="mouse_up")and(self:getType()=="Frame")then
                             --self:setFocusedObject(self)
                         end

@@ -1,3 +1,14 @@
+local splitString = function(str, sep)
+    if sep == nil then
+            sep = "%s"
+    end
+    local t={}
+    for v in string.gmatch(str, "([^"..sep.."]+)") do
+            table.insert(t, v)
+    end
+    return t
+end
+
 return {
 getTextHorizontalAlign = function(text, width, textAlign, replaceChar)
     text = string.sub(text, 1, width)
@@ -37,15 +48,23 @@ rpairs = function(t)
     end, t, #t + 1
 end,
 
-splitString = function(str, sep)
-    if sep == nil then
-            sep = "%s"
+splitString = splitString,
+
+createText = function(msg, maxWidth)
+    local words = splitString(msg, " ")
+    local lines = {}
+    local line = ""
+    for k,v in pairs(words)do
+        if(#line+#v <= maxWidth)then
+            line = line=="" and v or line.." "..v
+            if(k==#words)then table.insert(lines, line) end
+        else
+            table.insert(lines, line)
+            line = v:sub(1,maxWidth)
+            if(k==#words)then table.insert(lines, line) end
+        end
     end
-    local t={}
-    for v in string.gmatch(str, "([^"..sep.."]+)") do
-            table.insert(t, v)
-    end
-    return t
+    return lines
 end,
 
 getValueFromXML = function(name, tab)
