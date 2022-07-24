@@ -464,7 +464,7 @@ return function(name)
                     y = math.floor(ph/2) + y - 1
                 end
 
-                local xO, yO = self.parent:getOffset()
+                local xO, yO = self.parent:getOffsetInternal()
                 if not(ignOffset or ignOff) then
                     return x+xO, y+yO
                 end
@@ -663,7 +663,7 @@ return function(name)
                 if(isDragging)and(event=="mouse_drag")then 
                     local xO, yO, parentX, parentY = 0, 0, 1, 1
                     if (self.parent ~= nil) then
-                        xO, yO = self.parent:getOffset()
+                        xO, yO = self.parent:getOffsetInternal()
                         xO = xO < 0 and math.abs(xO) or -xO
                         yO = yO < 0 and math.abs(yO) or -yO
                         parentX, parentY = self.parent:getAbsolutePosition(self.parent:getAnchorPosition())
@@ -680,12 +680,11 @@ return function(name)
                         dragXOffset, dragYOffset = objX - x, objY - y
                     end
                     if(event~="mouse_drag")then
-                        if (self.parent ~= nil)and(event~="mouse_up")then
-                            --self.parent:setFocusedObject(self)
-                        elseif(self.parent == nil)and(event~="mouse_up")and(self:getType()=="Frame")then
-                            --self:setFocusedObject(self)
+                        if(event~="mouse_up")then
+                            if (self.parent ~= nil) then
+                                self.parent:setFocusedObject(self)
+                            end
                         end
-
                         local val = eventSystem:sendEvent(event, self, event, button, x, y)
                         if(val~=nil)then return val end
                     end

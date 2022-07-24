@@ -20,9 +20,7 @@ return function(name, parent, pTerm, basalt)
     local variables = {}
     local theme = {}
     local dynamicValues = {}
-    local focusedObjectCache
     local dynValueId = 0
-    local calculateDynValues = false
     local termObject = pTerm or term.current()
 
     local monSide = ""
@@ -37,6 +35,9 @@ return function(name, parent, pTerm, basalt)
     local mirrorAttached = false
     local mirrorSide = ""
     local importantScroll = false
+
+    local focusedOBjectCache
+    local focusedObject
 
     base:setZIndex(10)
 
@@ -146,11 +147,6 @@ return function(name, parent, pTerm, basalt)
         return false
     end
 
-    local function removeAllObjects()
-        objects = {}
-        objZIndex = {}
-    end
-
     local function stringToNumber(str)
         local ok, err = pcall(load("return " .. str))
         if not(ok)then error(str.." is not a valid dynamic code") end
@@ -158,6 +154,11 @@ return function(name, parent, pTerm, basalt)
     end
 
     local function newDynamicValue(_, obj, str)
+        for k,v in pairs(dynamicValues)do
+            if(v[2]==str)and(v[4]==obj)then
+                return v
+            end
+        end
         dynValueId = dynValueId + 1
         dynamicValues[dynValueId] = {0, str, {}, obj, dynValueId}
         return dynamicValues[dynValueId]
@@ -216,19 +217,16 @@ return function(name, parent, pTerm, basalt)
     end
 
 
-    local function _recalculateDynamicValues(force)
-        if(calculateDynValues)or(force)then
-            if(#dynamicValues>0)then
-                for n=1,dynValueId do
-                    if(dynamicValues[n]~=nil)then
-                        local numberStr
-                        if(#dynamicValues[n][3]<=0)then dynamicValues[n][3] = dynValueGetObjects(dynamicValues[n][4], dynamicValues[n][2]) end
-                        numberStr = dynValueObjectToNumber(dynamicValues[n][2], dynamicValues[n][3])
-                        dynamicValues[n][1] = stringToNumber(numberStr)
-                    end
+    local function recalculateDynamicValues()
+        if(#dynamicValues>0)then
+            for n=1,dynValueId do
+                if(dynamicValues[n]~=nil)then
+                    local numberStr
+                    if(#dynamicValues[n][3]<=0)then dynamicValues[n][3] = dynValueGetObjects(dynamicValues[n][4], dynamicValues[n][2]) end
+                    numberStr = dynValueObjectToNumber(dynamicValues[n][2], dynamicValues[n][3])
+                    dynamicValues[n][1] = stringToNumber(numberStr)
                 end
             end
-            calculateDynValues = false
         end
     end
 
@@ -246,10 +244,7 @@ return function(name, parent, pTerm, basalt)
         isMoveable = false,
 
         newDynamicValue = newDynamicValue,
-        recalculateDynamicValues = function(self)
-            calculateDynValues = true
-            return self
-        end,
+        recalculateDynamicValues = recalculateDynamicValues,
         getDynamicValue = getDynamicValue,
 
         getType = function(self)
@@ -257,11 +252,7 @@ return function(name, parent, pTerm, basalt)
         end;
 
         setFocusedObject = function(self, obj)
-            if(self.parent~=nil)then  
-                self.getBaseFrame():setFocusedObject(obj) 
-            else
-                focusedObjectCache = obj
-            end
+            focusedOBjectCache = obj
             return self
         end;
 
@@ -316,25 +307,21 @@ return function(name, parent, pTerm, basalt)
             return self
         end;
 
-        getOffset = function(self)
+        getOffsetInternal = function(self)
             return xOffset, yOffset
         end;
 
-        getOffsetInternal = function(self) -- internal
+        getOffset = function(self) -- internal
             return xOffset < 0 and math.abs(xOffset) or -xOffset, yOffset < 0 and math.abs(yOffset) or -yOffset
         end;
 
         removeFocusedObject = function(self)
-            if(self.parent~=nil)then  
-                self.parent:removeFocusedObject() 
-            else
-                focusedObjectCache = nil
-            end
+                focusedOBjectCache = nil
             return self
         end;
 
         getFocusedObject = function(self)
-            return basalt.getFocusedObject()
+            return focusedObject
         end;
 
         setCursor = function(self, _blink, _xCursor, _yCursor, color)
@@ -458,7 +445,7 @@ return function(name, parent, pTerm, basalt)
             local objectList = data:children()
             
             for k,v in pairs(objectList)do
-                if(v.___name~="animation")and(v.___name~="frame")then
+                if(v.___name~="animation")then
                     local name = v.___name:gsub("^%l", string.upper)
                     if(_OBJECTS[name]~=nil)then
                         addXMLObjectType(v, self["add"..name], self)
@@ -545,6 +532,10 @@ return function(name, parent, pTerm, basalt)
 
         loseFocusHandler = function(self)
             base.loseFocusHandler(self)
+            if(focusedOBjectCache~=nil)then
+                focusedOBjectCache:loseFocusHandler()
+                focusedOBjectCache = nil
+            end
         end;
 
         getFocusHandler = function(self)
@@ -556,7 +547,6 @@ return function(name, parent, pTerm, basalt)
         end;
 
         keyHandler = function(self, event, key)
-            local focusedObject = basalt.getFocusedObject()
             if (focusedObject ~= nil) then
                 if(focusedObject~=self)then
                     if (focusedObject.keyHandler ~= nil) then
@@ -628,7 +618,7 @@ return function(name, parent, pTerm, basalt)
 
         mouseHandler = function(self, event, button, x, y)
             if (self.drag) then
-                local xO, yO = self.parent:getOffset()
+                local xO, yO = self.parent:getOffsetInternal()
                 xO = xO < 0 and math.abs(xO) or -xO
                 yO = yO < 0 and math.abs(yO) or -yO
                 if (event == "mouse_drag") then
@@ -645,15 +635,14 @@ return function(name, parent, pTerm, basalt)
                 return true
             end
 
-            local objX, objY = self:getAbsolutePosition(self:getAnchorPosition())
+            local fx, fy = self:getAbsolutePosition(self:getAnchorPosition())
             local yOff = false
-            if(objY-1 == y)and(self:getBorder("top"))then
+            if(fy-1 == y)and(self:getBorder("top"))then
                 y = y+1
                 yOff = true
             end
 
             if (base.mouseHandler(self, event, button, x, y)) then
-                local fx, fy = self:getAbsolutePosition(self:getAnchorPosition())
                 fx = fx + xOffset;fy = fy + yOffset;
                 if(isScrollable)and(importantScroll)then
                     if(event=="mouse_scroll")then
@@ -673,8 +662,8 @@ return function(name, parent, pTerm, basalt)
                             end
                         end
                     end
+                    self:removeFocusedObject()
                     if (self.isMoveable) then
-                        local fx, fy = self:getAbsolutePosition(self:getAnchorPosition())
                         if (x >= fx) and (x <= fx + self:getWidth() - 1) and (y == fy) and (event == "mouse_click") then
                             self.drag = true
                             dragXOffset = fx - x
@@ -775,21 +764,17 @@ return function(name, parent, pTerm, basalt)
             if(isMonitor)and not(monitorAttached)then return false end;
             if (self:getVisualChanged()) then
                 if (base.draw(self)) then
-                    if(self.parent==nil)then
-                        local curObj = basalt.getFocusedObject()
-                        basalt.setFocusedObject(focusedObjectCache)
-                        if(focusedObjectCache~=nil)then
-                            focusedObjectCache:getFocusHandler()
+
+                    if(focusedObject~=focusedOBjectCache)then
+                        if(focusedOBjectCache~=nil)then
+                            focusedOBjectCache:getFocusHandler()
                         end
-                        if(curObj~=focusedObjectCache)then
-                            if(curObj~=nil)then
-                                curObj:loseFocusHandler()
-                            end
+                        if(focusedObject~=nil)then
+                            focusedObject:loseFocusHandler()
                         end
+                        focusedObject = focusedOBjectCache
                     end
-                    if(calculateDynValues)then
-                        _recalculateDynamicValues()
-                    end
+
                     local obx, oby = self:getAbsolutePosition(self:getAnchorPosition())
                     local anchx, anchy = self:getAnchorPosition()
                     local w,h = self:getSize()
@@ -860,9 +845,7 @@ return function(name, parent, pTerm, basalt)
         addObject = function(self, obj)
             return addObject(obj)
         end;
-        removeAllObjects = function(self)
-            return removeAllObjects()
-        end;
+
         removeObject = function(self, obj)
             return removeObject(obj)
         end;
