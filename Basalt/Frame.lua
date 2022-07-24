@@ -20,7 +20,9 @@ return function(name, parent, pTerm, basalt)
     local variables = {}
     local theme = {}
     local dynamicValues = {}
+    local focusedObjectCache
     local dynValueId = 0
+    local calculateDynValues = false
     local termObject = pTerm or term.current()
 
     local monSide = ""
@@ -144,6 +146,11 @@ return function(name, parent, pTerm, basalt)
         return false
     end
 
+    local function removeAllObjects()
+        objects = {}
+        objZIndex = {}
+    end
+
     local function stringToNumber(str)
         local ok, err = pcall(load("return " .. str))
         if not(ok)then error(str.." is not a valid dynamic code") end
@@ -209,16 +216,19 @@ return function(name, parent, pTerm, basalt)
     end
 
 
-    local function recalculateDynamicValues()
-        if(#dynamicValues>0)then
-            for n=1,dynValueId do
-                if(dynamicValues[n]~=nil)then
-                    local numberStr
-                    if(#dynamicValues[n][3]<=0)then dynamicValues[n][3] = dynValueGetObjects(dynamicValues[n][4], dynamicValues[n][2]) end
-                    numberStr = dynValueObjectToNumber(dynamicValues[n][2], dynamicValues[n][3])
-                    dynamicValues[n][1] = stringToNumber(numberStr)
+    local function _recalculateDynamicValues(force)
+        if(calculateDynValues)or(force)then
+            if(#dynamicValues>0)then
+                for n=1,dynValueId do
+                    if(dynamicValues[n]~=nil)then
+                        local numberStr
+                        if(#dynamicValues[n][3]<=0)then dynamicValues[n][3] = dynValueGetObjects(dynamicValues[n][4], dynamicValues[n][2]) end
+                        numberStr = dynValueObjectToNumber(dynamicValues[n][2], dynamicValues[n][3])
+                        dynamicValues[n][1] = stringToNumber(numberStr)
+                    end
                 end
             end
+            calculateDynValues = false
         end
     end
 
@@ -236,7 +246,10 @@ return function(name, parent, pTerm, basalt)
         isMoveable = false,
 
         newDynamicValue = newDynamicValue,
-        recalculateDynamicValues = recalculateDynamicValues,
+        recalculateDynamicValues = function(self)
+            calculateDynValues = true
+            return self
+        end,
         getDynamicValue = getDynamicValue,
 
         getType = function(self)
@@ -244,13 +257,10 @@ return function(name, parent, pTerm, basalt)
         end;
 
         setFocusedObject = function(self, obj)
-            if (basalt.getFocusedObject() ~= nil) then
-                basalt.getFocusedObject():loseFocusHandler()
-                basalt.setFocusedObject(nil)
-            end
-            if(obj~=nil)then
-                basalt.setFocusedObject(obj)
-                obj:getFocusHandler()
+            if(self.parent~=nil)then  
+                --self:getBaseFrame():setFocusedObject(obj) 
+            else
+                --focusedObjectCache = obj
             end
             return self
         end;
@@ -315,10 +325,11 @@ return function(name, parent, pTerm, basalt)
         end;
 
         removeFocusedObject = function(self)
-            if (basalt.getFocusedObject() ~= nil) then
-                basalt.getFocusedObject():loseFocusHandler()
+            if(self.parent~=nil)then  
+                self.parent:removeFocusedObject() 
+            else
+                focusedObjectCache = nil
             end
-            basalt.setFocusedObject(nil)
             return self
         end;
 
@@ -447,7 +458,7 @@ return function(name, parent, pTerm, basalt)
             local objectList = data:children()
             
             for k,v in pairs(objectList)do
-                if(v.___name~="animation")then
+                if(v.___name~="animation")and(v.___name~="frame")then
                     local name = v.___name:gsub("^%l", string.upper)
                     if(_OBJECTS[name]~=nil)then
                         addXMLObjectType(v, self["add"..name], self)
@@ -677,10 +688,6 @@ return function(name, parent, pTerm, basalt)
                             end
                         end
                     end
-                if (basalt.getFocusedObject() ~= nil) then
-                    basalt.getFocusedObject():loseFocusHandler()
-                    basalt.setFocusedObject(nil)
-                end
                 return true
             end
             return false
@@ -768,6 +775,21 @@ return function(name, parent, pTerm, basalt)
             if(isMonitor)and not(monitorAttached)then return false end;
             if (self:getVisualChanged()) then
                 if (base.draw(self)) then
+                    --[[if(self.parent==nil)then
+                        local curObj = basalt.getFocusedObject()
+                        basalt.setFocusedObject(focusedObjectCache)
+                        if(focusedObjectCache~=nil)then
+                            focusedObjectCache:getFocusHandler()
+                        end
+                        if(curObj~=focusedObjectCache)then
+                            if(curObj~=nil)then
+                                curObj:loseFocusHandler()
+                            end
+                        end
+                    end]]
+                    if(calculateDynValues)then
+                        _recalculateDynamicValues()
+                    end
                     local obx, oby = self:getAbsolutePosition(self:getAnchorPosition())
                     local anchx, anchy = self:getAnchorPosition()
                     local w,h = self:getSize()
@@ -838,7 +860,9 @@ return function(name, parent, pTerm, basalt)
         addObject = function(self, obj)
             return addObject(obj)
         end;
-
+        removeAllObjects = function(self)
+            return removeAllObjects()
+        end;
         removeObject = function(self, obj)
             return removeObject(obj)
         end;
@@ -851,7 +875,7 @@ return function(name, parent, pTerm, basalt)
         end,
 
         addFrame = function(self, name)
-            local obj = basalt.newFrame(name, self, nil, basalt)
+            local obj = basalt.newFrame(name or uuid(), self, nil, basalt)
             return addObject(obj)
         end;
     }
