@@ -680,9 +680,12 @@ return function(name)
                         dragXOffset, dragYOffset = objX - x, objY - y
                     end
                     if(event~="mouse_drag")then
-                        if (self.parent ~= nil) then
+                        if (self.parent ~= nil)and(event~="mouse_up")then
                             self.parent:setFocusedObject(self)
+                        elseif(self.parent == nil)and(event~="mouse_up")and(self:getType()=="Frame")then
+                            --self:setFocusedObject(self)
                         end
+
                         local val = eventSystem:sendEvent(event, self, event, button, x, y)
                         if(val~=nil)then return val end
                     end
