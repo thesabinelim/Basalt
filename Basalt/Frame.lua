@@ -369,6 +369,14 @@ return function(name, parent, pTerm, basalt)
             return self
         end,
 
+        getMaxScroll = function(self)
+            return maxScroll
+        end,
+
+        getMinScroll = function(self)
+            return minScroll
+        end,
+
         show = function(self)
             base.show(self)
             if(self.parent==nil)then

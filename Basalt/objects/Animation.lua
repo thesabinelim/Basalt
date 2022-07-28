@@ -2,7 +2,7 @@
 local xmlValue = require("utils").getValueFromXML
 local basaltEvent = require("basaltEvent")
 
-local floor = math.floor
+local floor,sin,cos,pi = math.floor,math.sin,math.cos,math.pi
 
 local lerp = function(s, e, pct)
     return s + (e - s) * pct
@@ -12,8 +12,8 @@ local linear = function (t)
     return t
 end
 
-local flip = function (x)
-    return 1 - x
+local flip = function (t)
+    return 1 - t
 end
 
 local easeIn = function (t)
@@ -28,6 +28,18 @@ local easeInOut = function(t)
     return lerp(easeIn(t), easeOut(t), t)
 end
 
+local easeOutSine = function(t)
+    return sin((t * pi) / 2);
+end
+
+local easeInSine = function(t)
+    return flip(cos((t * pi) / 2))
+end
+
+local easeInOutSine = function(t)
+    return -(cos(pi * x) - 1) / 2
+end
+
 local lerp = {
     linear = linear,
     lerp = lerp,
@@ -35,6 +47,9 @@ local lerp = {
     easeIn=easeIn,
     easeOut=easeOut,
     easeInOut=easeInOut,
+    easeOutSine = easeOutSine,
+    easeInSine = easeInSine,
+    easeInOutSine = easeInOutSine,
 }
 
 return function(name)
@@ -122,7 +137,7 @@ return function(name)
         addAnimationPart(t+0.05, function()
             x,y = get(_OBJ)
         end)
-        for n=0.05,d,0.05 do
+        for n=0.05,d+0.01,0.05 do
             addAnimationPart(t+n, function()
                 local _x = math.floor(lerp.lerp(x, v1, lerp[mode](n / d))+0.5)
                 local _y = math.floor(lerp.lerp(y, v2, lerp[mode](n / d))+0.5)

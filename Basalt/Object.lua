@@ -232,11 +232,11 @@ return function(name)
         end;
 
         getX = function(self)
-            return type(self.x) == "number" and self.x or self.x[1]
+            return type(self.x) == "number" and self.x or math.floor(self.x[1]+0.5)
         end;
 
         getY = function(self)
-            return type(self.y) == "number" and self.y or self.y[1]
+            return type(self.y) == "number" and self.y or math.floor(self.y[1]+0.5)
         end;
 
         getPosition = function(self)
@@ -275,11 +275,11 @@ return function(name)
         end;
 
         getHeight = function(self)
-            return type(self.height) == "number" and self.height or self.height[1]
+            return type(self.height) == "number" and self.height or math.floor(self.height[1]+0.5)
         end;
 
         getWidth = function(self)
-            return type(self.width) == "number" and self.width or self.width[1]
+            return type(self.width) == "number" and self.width or math.floor(self.width[1]+0.5)
         end;
 
         getSize = function(self)

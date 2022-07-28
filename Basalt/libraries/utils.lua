@@ -50,18 +50,21 @@ end,
 
 splitString = splitString,
 
-createText = function(msg, maxWidth)
-    local words = splitString(msg, " ")
+createText = function(str, width)
+    local uniqueLines = splitString(str, "\n")
     local lines = {}
-    local line = ""
-    for k,v in pairs(words)do
-        if(#line+#v <= maxWidth)then
-            line = line=="" and v or line.." "..v
-            if(k==#words)then table.insert(lines, line) end
-        else
-            table.insert(lines, line)
-            line = v:sub(1,maxWidth)
-            if(k==#words)then table.insert(lines, line) end
+    for k,v in pairs(uniqueLines)do
+        local line = ""
+        local words = splitString(v, " ")
+        for a,b in pairs(words)do
+            if(#line+#b <= width)then
+                line = line=="" and b or line.." "..b
+                if(a==#words)then table.insert(lines, line) end
+            else
+                table.insert(lines, line)
+                line = b:sub(1,width)
+                if(a==#words)then table.insert(lines, line) end
+            end
         end
     end
     return lines
