@@ -30,7 +30,7 @@ return function(name, parent, pTerm, basalt)
     local dragYOffset = 0
     local isScrollable = false
     local minScroll = 0
-    local maxScroll = 10
+    local maxScroll = 0
     local mirrorActive = false
     local mirrorAttached = false
     local mirrorSide = ""
@@ -38,6 +38,8 @@ return function(name, parent, pTerm, basalt)
 
     local focusedOBjectCache
     local focusedObject
+    local autoSize = true
+    local autoScroll = true
 
     base:setZIndex(10)
 
@@ -225,6 +227,9 @@ return function(name, parent, pTerm, basalt)
                     if(#dynamicValues[n][3]<=0)then dynamicValues[n][3] = dynValueGetObjects(dynamicValues[n][4], dynamicValues[n][2]) end
                     numberStr = dynValueObjectToNumber(dynamicValues[n][2], dynamicValues[n][3])
                     dynamicValues[n][1] = stringToNumber(numberStr)
+                    if(dynamicValues[n][4]:getType()=="Frame")then
+                        dynamicValues[n][4]:recalculateDynamicValues()
+                    end
                 end
             end
         end
@@ -232,6 +237,17 @@ return function(name, parent, pTerm, basalt)
 
     local function getDynamicValue(id)
         return dynamicValues[id][1]
+    end
+
+    local function calculateMaxScroll(self)
+        for _, value in pairs(objects) do
+            for _, b in pairs(value) do
+                local h, y = b:getHeight(), b:getY()
+                if (h + y > maxScroll) then
+                    maxScroll = math.max((h + y) - self:getHeight(), 0)
+                end
+            end
+        end
     end
 
 
@@ -262,6 +278,9 @@ return function(name, parent, pTerm, basalt)
 
         setSize = function(self, w, h, rel)
             base.setSize(self, w, h, rel)
+            if(self.parent==nil)then
+                basaltDraw = BasaltDraw()
+            end
             for _, index in pairs(objZIndex) do
                 if (objects[index] ~= nil) then
                     for _, value in pairs(objects[index]) do
@@ -271,6 +290,8 @@ return function(name, parent, pTerm, basalt)
                     end
                 end
             end
+            recalculateDynamicValues()
+            autoSize = false
             return self
         end;
 
@@ -361,6 +382,7 @@ return function(name, parent, pTerm, basalt)
 
         setMaxScroll = function(self, max)
             maxScroll = max or maxScroll
+            autoScroll = false
             return self
         end,
 
@@ -519,6 +541,7 @@ return function(name, parent, pTerm, basalt)
                     basalt.setMonitorFrame(monSide, nil)
                 end
             end
+            self:setSize(termObject.getSize())
             basaltDraw = BasaltDraw(termObject)
             monSide = side or nil
             return self;
@@ -593,6 +616,14 @@ return function(name, parent, pTerm, basalt)
                     end
                 end
             end
+            if(autoSize)then
+                if(self.parent==nil)then
+                    if(event=="term_resize")then
+                        self:setSize(termObject.getSize())
+                        autoSize = true
+                    end
+                end
+            end
             if(isMonitor)then
                 if(event == "peripheral")and(p1==monSide)then
                     if(peripheral.getType(monSide)=="monitor")then
@@ -655,6 +686,7 @@ return function(name, parent, pTerm, basalt)
                 if(isScrollable)and(importantScroll)then
                     if(event=="mouse_scroll")then
                         if(button>0)or(button<0)then
+                            if(autoScroll)then calculateMaxScroll(self) end
                             yOffset = max(min(yOffset-button, -minScroll),-maxScroll)
                         end
                     end
@@ -681,6 +713,7 @@ return function(name, parent, pTerm, basalt)
                     if(isScrollable)and(not importantScroll)then
                         if(event=="mouse_scroll")then
                             if(button>0)or(button<0)then
+                                if(autoScroll)then calculateMaxScroll(self) end
                                 yOffset = max(min(yOffset-button, -minScroll),-maxScroll)
                             end
                         end

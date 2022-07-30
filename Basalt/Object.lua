@@ -206,10 +206,6 @@ return function(name)
             return self.parent
         end;
 
-        getObjectReferencesForDynVal = function(self, str)
-            
-        end,
-
         setPosition = function(self, xPos, yPos, rel)
             if(type(xPos)=="number")then
                 self.x = rel and self:getX()+xPos or xPos

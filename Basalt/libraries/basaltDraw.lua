@@ -28,6 +28,7 @@ return function(drawTerm)
     createEmptyLines()
 
     local function recreateWindowArray()
+        createEmptyLines()
         local emptyText = emptySpaceLine
         local emptyFG = emptyColorLines[colors.white]
         local emptyBG = emptyColorLines[colors.black]
@@ -126,6 +127,11 @@ return function(drawTerm)
     end
 
     local drawHelper = {
+        setSize = function(w, h)
+            width, height = w, h
+            recreateWindowArray()
+        end,
+
         setMirror = function(mirror)
             mirrorTerm = mirror
         end,

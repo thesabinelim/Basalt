@@ -192,7 +192,7 @@ local function basaltUpdateEvent(event, p1, p2, p3, p4)
         activeKey[p1] = false
     end
 
-    for _, v in pairs(frames) do
+    for k, v in pairs(frames) do
         v:eventHandler(event, p1, p2, p3, p4)
     end
     handleSchedules(event, p1, p2, p3, p4)
@@ -339,7 +339,7 @@ basalt = {
 
 basalt.debugFrame = basalt.createFrame("basaltDebuggingFrame"):showBar():setBackground(colors.lightGray):setBar("Debug", colors.black, colors.gray)
 basalt.debugFrame:addButton("back"):setAnchor("topRight"):setSize(1, 1):setText("\22"):onClick(function() if(basalt.oldFrame~=nil)then basalt.oldFrame:show() end end):setBackground(colors.red):show()
-basalt.debugList = basalt.debugFrame:addList("debugList"):setSize(basalt.debugFrame.width - 2, basalt.debugFrame.height - 3):setPosition(2, 3):setScrollable(true):show()
+basalt.debugList = basalt.debugFrame:addList("debugList"):setSize("parent.w - 2", "parent.h - 3"):setPosition(2, 3):setScrollable(true):show()
 basalt.debugLabel = basalt.debugFrame:addLabel("debugLabel"):onClick(function() basalt.oldFrame = mainFrame basalt.debugFrame:show() end):setBackground(colors.black):setForeground(colors.white):setAnchor("bottomLeft"):ignoreOffset():setZIndex(20):show()
 
 return basalt
