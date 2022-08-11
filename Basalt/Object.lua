@@ -27,6 +27,7 @@ return function(name)
     local dragStartX, dragStartY, dragXOffset, dragYOffset = 0, 0, 0, 0
 
     local visualsChanged = true
+    local activeEvents = {}
 
     local eventSystem = basaltEvent()
 
@@ -117,8 +118,6 @@ return function(name)
             if(xmlValue("onEvent", data)~=nil)then self:generateXMLEventFunction(self.onEvent, xmlValue("onEvent", data)) end
             if(xmlValue("onGetFocus", data)~=nil)then self:generateXMLEventFunction(self.onGetFocus, xmlValue("onGetFocus", data)) end
             if(xmlValue("onLoseFocus", data)~=nil)then self:generateXMLEventFunction(self.onLoseFocus, xmlValue("onLoseFocus", data)) end
-            if(xmlValue("onBackgroundKey", data)~=nil)then self:generateXMLEventFunction(self.onBackgroundKey, xmlValue("onBackgroundKey", data)) end
-            if(xmlValue("onBackgroundKeyUp", data)~=nil)then self:generateXMLEventFunction(self.onBackgroundKeyUp, xmlValue("onBackgroundKeyUp", data)) end
             
             return self
         end,
@@ -139,9 +138,18 @@ return function(name)
             if (self.parent ~= nil) then
                 self.parent:removeObject(self)
                 self.parent:addObject(self)
+                self:updateEventHandlers()
             end
             return self
-        end;
+        end,
+
+        updateEventHandlers = function(self)
+            for k,v in pairs(activeEvents)do
+                if(v)then
+                    self.parent:addEvent(k, self)
+                end
+            end
+        end,
 
         getZIndex = function(self)
             return zIndex;
@@ -501,19 +509,31 @@ return function(name)
         end;
 
         onClick = function(self, ...)
-            for _,v in pairs(table.pack(...))do
-                if(type(v)=="function")then
-                    self:registerEvent("mouse_click", v)
-                    self:registerEvent("monitor_touch", v)
+            if(isEnabled)then
+                for _,v in pairs(table.pack(...))do
+                    if(type(v)=="function")then
+                        self:registerEvent("mouse_click", v)
+                        self:registerEvent("monitor_touch", v)
+                    end
+                end
+                if(self.parent~=nil)then
+                    self.parent:addEvent("mouse_click", self)
+                    activeEvents["mouse_click"] = true
                 end
             end
             return self
         end;
 
         onClickUp = function(self, ...)
-            for _,v in pairs(table.pack(...))do
-                if(type(v)=="function")then
-                    self:registerEvent("mouse_up", v)
+            if(isEnabled)then
+                for _,v in pairs(table.pack(...))do
+                    if(type(v)=="function")then
+                        self:registerEvent("mouse_up", v)
+                    end
+                end
+                if(self.parent~=nil)then
+                    self.parent:addEvent("mouse_up", self)
+                    activeEvents["mouse_up"] = true
                 end
             end
             return self
@@ -521,9 +541,15 @@ return function(name)
 
 
         onScroll = function(self, ...)
-            for _,v in pairs(table.pack(...))do
-                if(type(v)=="function")then
-                    self:registerEvent("mouse_scroll", v)
+            if(isEnabled)then
+                for _,v in pairs(table.pack(...))do
+                    if(type(v)=="function")then
+                        self:registerEvent("mouse_scroll", v)
+                    end
+                end
+                if(self.parent~=nil)then
+                    self.parent:addEvent("mouse_scroll", self)
+                    activeEvents["mouse_scroll"] = true
                 end
             end
             return self
@@ -535,6 +561,10 @@ return function(name)
                     if(type(v)=="function")then
                         self:registerEvent("mouse_drag", v)
                     end
+                end
+                if(self.parent~=nil)then
+                    self.parent:addEvent("mouse_drag", self)
+                    activeEvents["mouse_drag"] = true
                 end
             end
             return self
@@ -550,10 +580,18 @@ return function(name)
         end;
 
         onKey = function(self, ...)
-            for _,v in pairs(table.pack(...))do
-                if(type(v)=="function")then
-                    self:registerEvent("key", v)
-                    self:registerEvent("char", v)
+            if(isEnabled)then
+                for _,v in pairs(table.pack(...))do
+                    if(type(v)=="function")then
+                        self:registerEvent("key", v)
+                        self:registerEvent("char", v)
+                    end
+                end
+                if(self.parent~=nil)then
+                    self.parent:addEvent("key", self)
+                    self.parent:addEvent("char", self)
+                    activeEvents["key"] = true
+                    activeEvents["char"] = true
                 end
             end
             return self
@@ -578,28 +616,15 @@ return function(name)
         end;
 
         onKeyUp = function(self, ...)
-            for _,v in pairs(table.pack(...))do
-                if(type(v)=="function")then
-                    self:registerEvent("key_up", v)
+            if(isEnabled)then
+                for _,v in pairs(table.pack(...))do
+                    if(type(v)=="function")then
+                        self:registerEvent("key_up", v)
+                    end
                 end
-            end
-            return self
-        end;
-
-        onBackgroundKey = function(self, ...)
-            for _,v in pairs(table.pack(...))do
-                if(type(v)=="function")then
-                    self:registerEvent("background_key", v)
-                    self:registerEvent("background_char", v)
-                end
-            end
-            return self
-        end;
-
-        onBackgroundKeyUp = function(self, ...)
-            for _,v in pairs(table.pack(...))do
-                if(type(v)=="function")then
-                    self:registerEvent("background_key_up", v)
+                if(self.parent~=nil)then
+                    self.parent:addEvent("key_up", self)
+                    activeEvents["key_up"] = true
                 end
             end
             return self
@@ -642,6 +667,95 @@ return function(name)
             return eventSystem:sendEvent(event, self, ...)
         end;
 
+        isCoordsInObject = function(self, x, y)
+            if(isVisible)and(isEnabled)then
+                local objX, objY = self:getAbsolutePosition(self:getAnchorPosition())
+                local w, h = self:getSize()            
+                if (objX <= x) and (objX + w > x) and (objY <= y) and (objY + h > y) then
+                    return true
+                end
+            end
+            return false
+        end,
+
+        mouseHandler = function(self, button, x, y)
+            if(self:isCoordsInObject(x, y))then
+                local val = eventSystem:sendEvent("mouse_click", self, "mouse_click", button, x, y)
+                if(val==false)then return false end
+                if(self.parent~=nil)then
+                    self.parent:setFocusedObject(self)
+                end
+                return true
+            end
+            return false
+        end,
+
+        touchHandler = function(self, x, y)
+            if(self:isCoordsInObject(x, y))then
+                local val = eventSystem:sendEvent("monitor_touch", self, "monitor_touch", x, y)
+                if(val==false)then return false end
+                if(self.parent~=nil)then
+                    self.parent:setFocusedObject(self)
+                end
+                return true
+            end
+            return false
+        end,
+
+        mouseUpHandler = function(self, button, x, y)
+            isDragging = false
+            if(self:isCoordsInObject(x, y))then
+                local val = eventSystem:sendEvent("mouse_up", self, "mouse_up", button, x, y)
+                if(val==false)then return false end
+                if(self.parent~=nil)then
+                    self.parent:setFocusedObject(self)
+                end
+                return true
+            end
+            return false
+        end,
+
+        dragHandler = function(self, button, x, y)
+            if(isDragging)then 
+                local xO, yO, parentX, parentY = 0, 0, 1, 1
+                if (self.parent ~= nil) then
+                    xO, yO = self.parent:getOffsetInternal()
+                    xO = xO < 0 and math.abs(xO) or -xO
+                    yO = yO < 0 and math.abs(yO) or -yO
+                    parentX, parentY = self.parent:getAbsolutePosition(self.parent:getAnchorPosition())
+                end
+                local dX, dY = x + dragXOffset - (parentX - 1) + xO, y + dragYOffset - (parentY - 1) + yO
+                local val = eventSystem:sendEvent(event, self, event, button, dX, dY, dragStartX, dragStartY, x, y)
+                if(val==false)then return false end
+                return true
+            end
+
+            if(self:isCoordsInObject(x, y))then
+                local objX, objY = self:getAbsolutePosition(self:getAnchorPosition())
+                isDragging = true 
+                dragStartX, dragStartY = x, y 
+                dragXOffset, dragYOffset = objX - x, objY - y
+                if(self.parent~=nil)then
+                    self.parent:setFocusedObject(self)
+                end
+                return true
+            end
+            return false
+        end,
+
+        scrollHandler = function(self, dir, x, y)
+            if(self:isCoordsInObject(x, y))then
+                local val = eventSystem:sendEvent("mouse_scroll", self, "mouse_scroll", dir, x, y)
+                if(val==false)then return false end
+                if(self.parent~=nil)then
+                    self.parent:setFocusedObject(self)
+                end
+                return true
+            end
+            return false
+        end,
+
+        --[[
         mouseHandler = function(self, event, button, x, y)
             if(isEnabled)and(isVisible)then
                 local objX, objY = self:getAbsolutePosition(self:getAnchorPosition())
@@ -688,26 +802,40 @@ return function(name)
                 end
             end
             return false
-        end;
+        end;]]
 
-        keyHandler = function(self, event, key)
+        keyHandler = function(self, key)
             if(isEnabled)then
                 if (self:isFocused()) then
-                    local val = eventSystem:sendEvent(event, self, event, key)
-                    if(val~=nil)then return val end
-                    return true
+                local val = eventSystem:sendEvent("key", self, "key", key)
+                if(val==false)then return false end
+                return true
                 end
             end
             return false
         end;
 
-        backgroundKeyHandler = function(self, event, key)
-                if(isEnabled)then
-                local val = eventSystem:sendEvent("background_"..event, self, event, key)
-                if(val~=nil)then return val end
+        keyUpHandler = function(self, key)
+            if(isEnabled)then
+                if (self:isFocused()) then
+                    local val = eventSystem:sendEvent("key_up", self, "key_up", key)
+                if(val==false)then return false end
+                return true
+                end
             end
-            return true
+            return false
         end;
+
+        charHandler = function(self, char)
+            if(isEnabled)then
+                if (self:isFocused()) then
+                    local val = eventSystem:sendEvent("char", self, "char", char)
+                if(val==false)then return false end
+                return true
+                end
+            end
+            return false
+        end,
 
         valueChangedHandler = function(self)
             eventSystem:sendEvent("value_changed", self)
@@ -729,6 +857,15 @@ return function(name)
             return true
         end;
 
+        init = function(self)
+            if(self.parent~=nil)then
+                for k,v in pairs(activeEvents)do
+                    if(v)then
+                    self.parent:addEvent(k, self)
+                    end
+                end
+            end
+        end
 
     }
 

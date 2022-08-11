@@ -24,10 +24,6 @@ return function(name)
     local internalValueChange = false
 
     local object = {
-        init = function(self)
-            self.bgColor = self.parent:getTheme("InputBG")
-            self.fgColor = self.parent:getTheme("InputFG")
-        end,
         getType = function(self)
             return objectType
         end;
@@ -107,11 +103,10 @@ return function(name)
             end
         end;
 
-        keyHandler = function(self, event, key)
-            if (base.keyHandler(self, event, key)) then
+        keyHandler = function(self, key)
+            if (base.keyHandler(self, key)) then
                 local w,h = self:getSize()
                 internalValueChange = true
-                if (event == "key") then
                     if (key == keys.backspace) then
                         -- on backspace
                         local text = tostring(base.getValue())
@@ -167,27 +162,43 @@ return function(name)
                             wIndex = 1
                         end
                     end
-                end
+                local obx, oby = self:getAnchorPosition()
+                local val = tostring(base.getValue())
+                local cursorX = (textX <= val:len() and textX - 1 or val:len()) - (wIndex - 1)
 
-                if (event == "char") then
-                    local text = base.getValue()
-                    if (text:len() < inputLimit or inputLimit <= 0) then
-                        if (inputType == "number") then
-                            local cache = text
-                            if (key == ".") or (tonumber(key) ~= nil) then
-                                self:setValue(text:sub(1, textX - 1) .. key .. text:sub(textX, text:len()))
-                                textX = textX + 1
-                            end
-                            if (tonumber(base.getValue()) == nil) then
-                                self:setValue(cache)
-                            end
-                        else
-                            self:setValue(text:sub(1, textX - 1) .. key .. text:sub(textX, text:len()))
+                if (cursorX > self.x + w - 1) then
+                    cursorX = self.x + w - 1
+                end
+                if (self.parent ~= nil) then
+                    self.parent:setCursor(true, obx + cursorX, oby+math.floor(h/2), self.fgColor)
+                end
+                internalValueChange = false
+                return true
+            end
+            return false
+        end,
+
+        charHandler = function(self, char)
+            if (base.charHandler(self, char)) then
+                internalValueChange = true
+                local w,h = self:getSize()
+                local text = base.getValue()
+                if (text:len() < inputLimit or inputLimit <= 0) then
+                    if (inputType == "number") then
+                        local cache = text
+                        if (char == ".") or (tonumber(char) ~= nil) then
+                            self:setValue(text:sub(1, textX - 1) .. char .. text:sub(textX, text:len()))
                             textX = textX + 1
                         end
-                        if (textX >= w + wIndex) then
-                            wIndex = wIndex + 1
+                        if (tonumber(base.getValue()) == nil) then
+                            self:setValue(cache)
                         end
+                    else
+                        self:setValue(text:sub(1, textX - 1) .. char .. text:sub(textX, text:len()))
+                        textX = textX + 1
+                    end
+                    if (textX >= w + wIndex) then
+                        wIndex = wIndex + 1
                     end
                 end
                 local obx, oby = self:getAnchorPosition()
@@ -201,18 +212,10 @@ return function(name)
                     self.parent:setCursor(true, obx + cursorX, oby+math.floor(h/2), self.fgColor)
                 end
                 internalValueChange = false
-            end
-        end;
-
-        mouseHandler = function(self, event, button, x, y)
-            if (base.mouseHandler(self, event, button, x, y)) then
-                if (event == "mouse_click") and (button == 1) then
-                    
-                end
                 return true
             end
             return false
-        end;
+        end,
 
         draw = function(self)
             if (base.draw(self)) then
@@ -251,9 +254,18 @@ return function(name)
                         end
                     end
                 end
-                self:setVisualChanged(false)
             end
-        end;
+        end,
+
+        init = function(self)
+            self.bgColor = self.parent:getTheme("InputBG")
+            self.fgColor = self.parent:getTheme("InputText")
+            if(self.parent~=nil)then
+                self.parent:addEvent("mouse_click", self)
+                self.parent:addEvent("key", self)
+                self.parent:addEvent("char", self)
+            end
+        end,
     }
 
     return setmetatable(object, base)

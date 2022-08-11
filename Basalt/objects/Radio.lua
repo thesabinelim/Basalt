@@ -20,16 +20,6 @@ return function(name)
     local align = "left"
 
     local object = {
-
-        init = function(self)
-            self.bgColor = self.parent:getTheme("MenubarBG")
-            self.fgColor = self.parent:getTheme("MenubarFG")
-            itemSelectedBG = self.parent:getTheme("SelectionBG")
-            itemSelectedFG = self.parent:getTheme("SelectionText")
-            boxSelectedBG = self.parent:getTheme("MenubarBG")
-            boxSelectedFG = self.parent:getTheme("MenubarText")
-        end,
-
         getType = function(self)
             return objectType
         end;
@@ -118,20 +108,19 @@ return function(name)
             return self
         end;
 
-        mouseHandler = function(self, event, button, x, y)
-            local obx, oby = self:getAbsolutePosition(self:getAnchorPosition())
-            if ((event == "mouse_click")and(button==1))or(event=="monitor_touch") then
-                if (#list > 0) then
-                    for _, value in pairs(list) do
-                        if (obx + value.x - 1 <= x) and (obx + value.x - 1 + value.text:len() + 2 >= x) and (oby + value.y - 1 == y) then
-                            self:setValue(value)
-                            if (self.parent ~= nil) then
-                                self.parent:setFocusedObject(self)
-                            end
-                            self:getEventSystem():sendEvent(event, self, event, button, x, y)
-                            self:setVisualChanged()
-                            return true
+        mouseHandler = function(self, button, x, y)
+            if (#list > 0) then
+                local obx, oby = self:getAbsolutePosition(self:getAnchorPosition())
+                for _, value in pairs(list) do
+                    if (obx + value.x - 1 <= x) and (obx + value.x - 1 + value.text:len() + 1 >= x) and (oby + value.y - 1 == y) then
+                        self:setValue(value)
+                        local val = self:getEventSystem():sendEvent("mouse_click", self, "mouse_click", button, x, y)
+                        if(val==false)then return val end
+                        if(self.parent~=nil)then
+                            self.parent:setFocusedObject(self)
                         end
+                        self:setVisualChanged()
+                        return true
                     end
                 end
             end
@@ -157,6 +146,18 @@ return function(name)
                 self:setVisualChanged(false)
             end
         end;
+
+        init = function(self)
+            self.bgColor = self.parent:getTheme("MenubarBG")
+            self.fgColor = self.parent:getTheme("MenubarFG")
+            itemSelectedBG = self.parent:getTheme("SelectionBG")
+            itemSelectedFG = self.parent:getTheme("SelectionText")
+            boxSelectedBG = self.parent:getTheme("MenubarBG")
+            boxSelectedFG = self.parent:getTheme("MenubarText")
+            if(self.parent~=nil)then
+                self.parent:addEvent("mouse_click", self)
+            end
+        end,
     }
 
     return setmetatable(object, base)

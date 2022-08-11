@@ -40,13 +40,6 @@ return function(name)
     end
 
     object = {
-        init = function(self)
-            self.bgColor = self.parent:getTheme("MenubarBG")
-            self.fgColor = self.parent:getTheme("MenubarText")
-            itemSelectedBG = self.parent:getTheme("SelectionBG")
-            itemSelectedFG = self.parent:getTheme("SelectionText")
-        end,
-
         getType = function(self)
             return objectType
         end;
@@ -154,45 +147,45 @@ return function(name)
             return self
         end;
 
-        mouseHandler = function(self, event, button, x, y)
-            if(base.mouseHandler(self, event, button, x, y))then
+        mouseHandler = function(self, button, x, y)
+            if(base.mouseHandler(self, button, x, y))then
                 local objX, objY = self:getAbsolutePosition(self:getAnchorPosition())
                 local w,h = self:getSize()
-                if (objX <= x) and (objX + w > x) and (objY <= y) and (objY + h > y) and (self:isVisible()) then
-                    if (self.parent ~= nil) then
-                        self.parent:setFocusedObject(self)
-                    end
-                    if (event == "mouse_click") or (event == "monitor_touch") then
-                        local xPos = 0
-                        for n = 1, #list do
-                            if (list[n] ~= nil) then
-                                if (objX + xPos <= x + itemOffset) and (objX + xPos + list[n].text:len() + (space*2) > x + itemOffset) and (objY == y) then
-                                    self:setValue(list[n])
-                                    self:getEventSystem():sendEvent(event, self, event, 0, x, y, list[n])
-                                end
-                                xPos = xPos + list[n].text:len() + space * 2
+                    local xPos = 0
+                    for n = 1, #list do
+                        if (list[n] ~= nil) then
+                            if (objX + xPos <= x + itemOffset) and (objX + xPos + list[n].text:len() + (space*2) > x + itemOffset) and (objY == y) then
+                                self:setValue(list[n])
+                                self:getEventSystem():sendEvent(event, self, event, 0, x, y, list[n])
                             end
-                        end
-
-                    end
-                    if (event == "mouse_scroll") and (scrollable) then
-                        itemOffset = itemOffset + button
-                        if (itemOffset < 0) then
-                            itemOffset = 0
-                        end
-
-                        local mScroll = maxScroll()
-
-                        if (itemOffset > mScroll) then
-                            itemOffset = mScroll
+                            xPos = xPos + list[n].text:len() + space * 2
                         end
                     end
-                    self:setVisualChanged(true)
-                    return true
-                end
+                self:setVisualChanged()
+                return true
             end
             return false
-        end;
+        end,
+
+        scrollHandler = function(self, dir, x, y)
+            if(base.scrollHandler(self, dir, x, y))then
+                if(scrollable)then
+                    itemOffset = itemOffset + dir
+                    if (itemOffset < 0) then
+                        itemOffset = 0
+                    end
+
+                    local mScroll = maxScroll()
+
+                    if (itemOffset > mScroll) then
+                        itemOffset = mScroll
+                    end
+                    self:setVisualChanged()
+                end
+                return true
+            end
+            return false
+        end,
 
         draw = function(self)
             if (base.draw(self)) then
@@ -223,7 +216,19 @@ return function(name)
                 end
                 self:setVisualChanged(false)
             end
-        end;
+        end,
+
+        init = function(self)
+            self.bgColor = self.parent:getTheme("MenubarBG")
+            self.fgColor = self.parent:getTheme("MenubarText")
+            itemSelectedBG = self.parent:getTheme("SelectionBG")
+            itemSelectedFG = self.parent:getTheme("SelectionText")
+
+            if(self.parent~=nil)then
+                self.parent:addEvent("mouse_click", self)
+                self.parent:addEvent("mouse_scroll", self)
+            end
+        end,
     }
 
     return setmetatable(object, base)

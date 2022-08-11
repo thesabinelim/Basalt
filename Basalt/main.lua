@@ -158,42 +158,47 @@ local function basaltUpdateEvent(event, p1, p2, p3, p4)
     if(basaltEvent:sendEvent("basaltEventCycle", event, p1, p2, p3, p4)==false)then return end
     if(mainFrame~=nil)then
         if (event == "mouse_click") then
-            mainFrame:mouseHandler(event, p1, p2, p3, p4)
+            mainFrame:mouseHandler(p1, p2, p3, p4)
             activeFrame = mainFrame
         elseif (event == "mouse_drag") then
-            mainFrame:mouseHandler(event, p1, p2, p3, p4)
+            mainFrame:dragHandler(p1, p2, p3, p4)
             activeFrame = mainFrame
         elseif (event == "mouse_up") then
-            mainFrame:mouseHandler(event, p1, p2, p3, p4)
+            mainFrame:mouseUpHandler(p1, p2, p3, p4)
             activeFrame = mainFrame
         elseif (event == "mouse_scroll") then
-            mainFrame:mouseHandler(event, p1, p2, p3, p4)
+            mainFrame:scrollHandler(p1, p2, p3, p4)
             activeFrame = mainFrame
         elseif (event == "monitor_touch") then
             if(monFrames[p1]~=nil)then
-                monFrames[p1]:mouseHandler(event, p1, p2, p3, p4)
+                monFrames[p1]:touchHandler(p1, p2, p3, p4)
                 activeFrame = monFrames[p1]
             end
         end
     end
 
-    if(event == "key") or (event == "char") then
+    if(event == "char")then
         if(activeFrame~=nil)then
-            activeFrame:keyHandler(event, p1)
-            activeFrame:backgroundKeyHandler(event, p1)
+            activeFrame:charHandler(p1)
         end
     end
-
+    if(event == "key_up")then
+        if(activeFrame~=nil)then
+            activeFrame:keyUpHandler(p1)
+        end
+        activeKey[p1] = false
+    end
     if(event == "key")then
+        if(activeFrame~=nil)then
+            activeFrame:keyHandler(p1)
+        end
         activeKey[p1] = true
     end
 
-    if(event == "key_up")then
-        activeKey[p1] = false
-    end
-
-    for k, v in pairs(frames) do
-        v:eventHandler(event, p1, p2, p3, p4)
+    if(event~="mouse_click")and(event~="mouse_up")and(event~="mouse_scroll")and(event~="mouse_drag")and(event~="key")and(event~="key_up")and(event~="char")then
+        for k, v in pairs(frames) do
+            v:eventHandler(event, p1, p2, p3, p4)
+        end
     end
     handleSchedules(event, p1, p2, p3, p4)
     drawFrames()

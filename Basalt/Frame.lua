@@ -1,6 +1,6 @@
 local Object = require("Object")
 local _OBJECTS = require("loadObjects")
-
+local log = require("basaltLogs")
 local BasaltDraw = require("basaltDraw")
 local utils = require("utils")
 local layout = require("layout")
@@ -17,6 +17,8 @@ return function(name, parent, pTerm, basalt)
     local objects = {}
     local objZIndex = {}
     local object = {}
+    local events = {}
+    local eventZIndex = {}
     local variables = {}
     local theme = {}
     local dynamicValues = {}
@@ -29,17 +31,20 @@ return function(name, parent, pTerm, basalt)
     local dragXOffset = 0
     local dragYOffset = 0
     local isScrollable = false
-    local minScroll = 0
-    local maxScroll = 0
+    local scrollAmount = 0
     local mirrorActive = false
     local mirrorAttached = false
     local mirrorSide = ""
     local importantScroll = false
+    local isMovable = false
+    local isDragging =false
 
     local focusedOBjectCache
     local focusedObject
     local autoSize = true
     local autoScroll = true
+
+    local activeEvents = {}
 
     base:setZIndex(10)
 
@@ -137,11 +142,95 @@ return function(name, parent, pTerm, basalt)
         return obj
     end
 
+    local function removeEvents(self, obj)
+        for a, b in pairs(events) do
+            for c, d in pairs(b) do
+                for key, value in pairs(d) do
+                    if (value == obj) then
+                        table.remove(events[a][c], key)
+                        if(self.parent~=nil)then
+                            if(#events[a]<=0)then
+                                self.parent:removeEvent(a, self)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
     local function removeObject(obj)
         for a, b in pairs(objects) do
             for key, value in pairs(b) do
                 if (value == obj) then
                     table.remove(objects[a], key)
+                    removeEvents(object, obj)
+                    return true;
+                end
+            end
+        end
+        return false
+    end
+
+    local function getEvent(self, event, name)
+        for _, value in pairs(events[event]) do
+            for _, b in pairs(value) do
+                if (b:getName() == name) then
+                    return b
+                end
+            end
+        end
+    end
+
+    local function addEvent(self, event, obj)
+        log("Registered Event: "..event.." for "..obj:getName())
+        local zIndex = obj:getZIndex()
+        if(events[event]==nil)then events[event] = {} end
+        if(eventZIndex[event]==nil)then eventZIndex[event] = {} end
+        if (getEvent(self, event, obj.name) ~= nil) then
+            return nil
+        end
+        if(self.parent~=nil)then
+            self.parent:addEvent(event, self)
+        end
+        activeEvents[event] = true
+        if (events[event][zIndex] == nil) then
+            for x = 1, #eventZIndex[event] + 1 do
+                if (eventZIndex[event][x] ~= nil) then
+                    if (zIndex == eventZIndex[event][x]) then
+                        break
+                    end
+                    if (zIndex > eventZIndex[event][x]) then
+                        table.insert(eventZIndex[event], x, zIndex)
+                        break
+                    end
+                else
+                    table.insert(eventZIndex[event], zIndex)
+                end
+            end
+            if (#eventZIndex[event] <= 0) then
+                table.insert(eventZIndex[event], zIndex)
+            end
+            events[event][zIndex] = {}
+        end
+        table.insert(events[event][zIndex], obj)
+        return obj
+    end
+
+    local function removeEvent(self, event, obj)
+        for a, b in pairs(events[event]) do
+            for key, value in pairs(b) do
+                if (value == obj) then
+                    table.remove(events[event][a], key)
+                    if(#events[event][a]<=0)then
+                        events[event][a] = nil
+                    end
+                    if(self.parent~=nil)then
+                        if(#events[event]<=0)then
+                            activeEvents[event] = false
+                            self.parent:removeEvent(event, self)
+                        end
+                    end
                     return true;
                 end
             end
@@ -242,9 +331,11 @@ return function(name, parent, pTerm, basalt)
     local function calculateMaxScroll(self)
         for _, value in pairs(objects) do
             for _, b in pairs(value) do
-                local h, y = b:getHeight(), b:getY()
-                if (h + y > maxScroll) then
-                    maxScroll = math.max((h + y) - self:getHeight(), 0)
+                if(b.getHeight~=nil)and(b.getY~=nil)then
+                    local h, y = b:getHeight(), b:getY()
+                    if (h + y - self:getHeight() > scrollAmount) then
+                        scrollAmount = max(h + y - self:getHeight(), 0)
+                    end
                 end
             end
         end
@@ -257,7 +348,11 @@ return function(name, parent, pTerm, basalt)
         barTextcolor = colors.black,
         barText = "New Frame",
         barTextAlign = "left",
-        isMoveable = false,
+
+        addEvent = addEvent,
+        removeEvent = removeEvent,
+        removeEvents = removeEvents,
+        getEvent = getEvent,
 
         newDynamicValue = newDynamicValue,
         recalculateDynamicValues = recalculateDynamicValues,
@@ -332,7 +427,7 @@ return function(name, parent, pTerm, basalt)
             return xOffset, yOffset
         end;
 
-        getOffset = function(self) -- internal
+        getOffset = function(self)
             return xOffset < 0 and math.abs(xOffset) or -xOffset, yOffset < 0 and math.abs(yOffset) or -yOffset
         end;
 
@@ -364,14 +459,27 @@ return function(name, parent, pTerm, basalt)
             return self
         end;
 
-        setMoveable = function(self, moveable)
-            self.isMoveable = moveable or not self.isMoveable
-            self:setVisualChanged()
+        setMovable = function(self, movable)
+            if(self.parent~=nil)then
+                isMovable = movable or not isMovable
+                self.parent:addEvent("mouse_click", self)
+                activeEvents["mouse_click"] = true
+                self.parent:addEvent("mouse_up", self)
+                activeEvents["mouse_up"] = true
+                self.parent:addEvent("mouse_drag", self)
+                activeEvents["mouse_drag"] = true
+                self.parent:addEvent("mouse_scroll", self)
+                activeEvents["mouse_scroll"] = true
+            end
             return self;
         end;
 
         setScrollable = function(self, scrollable)
             isScrollable = scrollable and true or false
+            if(self.parent~=nil)then
+                self.parent:addEvent("mouse_scroll", self)
+            end
+            activeEvents["mouse_scroll"] = true
             return self
         end,
 
@@ -380,23 +488,15 @@ return function(name, parent, pTerm, basalt)
             return self
         end,
 
-        setMaxScroll = function(self, max)
-            maxScroll = max or maxScroll
+        setScrollAmount = function(self, max)
+            scrollAmount = max or scrollAmount
             autoScroll = false
             return self
         end,
 
-        setMinScroll = function(self, min)
-            minScroll = min or minScroll
-            return self
-        end,
 
-        getMaxScroll = function(self)
-            return maxScroll
-        end,
-
-        getMinScroll = function(self)
-            return minScroll
+        getScrollAmount = function(self)
+            return scrollAmount
         end,
 
         show = function(self)
@@ -456,7 +556,7 @@ return function(name, parent, pTerm, basalt)
         
         setValuesByXMLData = function(self, data)
             base.setValuesByXMLData(self, data)
-            if(xmlValue("moveable", data)~=nil)then if(xmlValue("moveable", data))then self:setMoveable(true) end end
+            if(xmlValue("moveable", data)~=nil)then if(xmlValue("moveable", data))then self:setMovable(true) end end
             if(xmlValue("scrollable", data)~=nil)then if(xmlValue("scrollable", data))then self:setScrollable(true) end end
             if(xmlValue("monitor", data)~=nil)then self:setMonitor(xmlValue("monitor", data)):show() end
             if(xmlValue("mirror", data)~=nil)then self:setMirror(xmlValue("mirror", data)) end
@@ -468,8 +568,7 @@ return function(name, parent, pTerm, basalt)
             if(xmlValue("layout", data)~=nil)then self:addLayout(xmlValue("layout", data)) end
             if(xmlValue("xOffset", data)~=nil)then self:setOffset(xmlValue("xOffset", data), yOffset) end
             if(xmlValue("yOffset", data)~=nil)then self:setOffset(yOffset, xmlValue("yOffset", data)) end
-            if(xmlValue("maxScroll", data)~=nil)then self:setMaxScroll(xmlValue("maxScroll", data)) end
-            if(xmlValue("minScroll", data)~=nil)then self:setMaxScroll(xmlValue("minScroll", data)) end
+            if(xmlValue("scrollAmount", data)~=nil)then self:setScrollAmount(xmlValue("scrollAmount", data)) end
             if(xmlValue("importantScroll", data)~=nil)then self:setImportantScroll(xmlValue("importantScroll", data)) end
 
             local objectList = data:children()
@@ -529,6 +628,7 @@ return function(name, parent, pTerm, basalt)
                 if(peripheral.getType(side)=="monitor")then
                     termObject = peripheral.wrap(side)
                     monitorAttached = true
+                    self:setSize(termObject.getSize())
                 end
                 if(self.parent~=nil)then
                     self.parent:removeObject(self)
@@ -540,8 +640,8 @@ return function(name, parent, pTerm, basalt)
                 if(basalt.getMonitorFrame(monSide)==self)then
                     basalt.setMonitorFrame(monSide, nil)
                 end
+                self:setSize(termObject.getSize())
             end
-            self:setSize(termObject.getSize())
             basaltDraw = BasaltDraw(termObject)
             monSide = side or nil
             return self;
@@ -572,34 +672,12 @@ return function(name, parent, pTerm, basalt)
         getFocusHandler = function(self)
             base.getFocusHandler(self)
             if (self.parent ~= nil) then
+                self.parent:removeEvents(self)
                 self.parent:removeObject(self)
                 self.parent:addObject(self)
-            end
-        end;
-
-        keyHandler = function(self, event, key)
-            if (focusedObject ~= nil) then
-                if(focusedObject~=self)then
-                    if (focusedObject.keyHandler ~= nil) then
-                        if (focusedObject:keyHandler(event, key)) then
-                            return true
-                        end
-                    end
-                else
-                    base.keyHandler(self, event, key)
-                end
-            end
-            return false
-        end;
-
-        backgroundKeyHandler = function(self, event, key)
-            base.backgroundKeyHandler(self, event, key)
-            for _, index in pairs(objZIndex) do
-                if (objects[index] ~= nil) then
-                    for _, value in pairs(objects[index]) do
-                        if (value.backgroundKeyHandler ~= nil) then
-                            value:backgroundKeyHandler(event, key)
-                        end
+                for k,v in pairs(activeEvents)do
+                    if(v)then
+                        self.parent:addEvent(k, self)
                     end
                 end
             end
@@ -653,75 +731,182 @@ return function(name, parent, pTerm, basalt)
                 termObject.clear()
                 basalt.stop()
             end
-        end;
+        end,
 
-        mouseHandler = function(self, event, button, x, y)
-            if (self.drag) then
-                local xO, yO = self.parent:getOffsetInternal()
-                xO = xO < 0 and math.abs(xO) or -xO
-                yO = yO < 0 and math.abs(yO) or -yO
-                if (event == "mouse_drag") then
-                    local parentX = 1
-                    local parentY = 1
-                    if (self.parent ~= nil) then
-                        parentX, parentY = self.parent:getAbsolutePosition(self.parent:getAnchorPosition())
-                    end
-                    self:setPosition(x + dragXOffset - (parentX - 1) + xO, y + dragYOffset - (parentY - 1) + yO)
-                end
-                if (event == "mouse_up") then
-                    self.drag = false
-                end
-                return true
-            end
-
-            local fx, fy = self:getAbsolutePosition(self:getAnchorPosition())
-            local yOff = false
-            if(fy-1 == y)and(self:getBorder("top"))then
-                y = y+1
-                yOff = true
-            end
-
-            if (base.mouseHandler(self, event, button, x, y)) then
-                fx = fx + xOffset;fy = fy + yOffset;
-                if(isScrollable)and(importantScroll)then
-                    if(event=="mouse_scroll")then
-                        if(button>0)or(button<0)then
-                            if(autoScroll)then calculateMaxScroll(self) end
-                            yOffset = max(min(yOffset-button, -minScroll),-maxScroll)
-                        end
-                    end
-                end
-                    for _, index in pairs(objZIndex) do
-                        if (objects[index] ~= nil) then
-                            for _, value in rpairs(objects[index]) do
+        mouseHandler = function(self, button, x, y)
+            if(base.mouseHandler(self, button, x, y))then
+                if(events["mouse_click"]~=nil)then
+                    for _, index in ipairs(eventZIndex["mouse_click"]) do
+                        if (events["mouse_click"][index] ~= nil) then
+                            for _, value in rpairs(events["mouse_click"][index]) do
                                 if (value.mouseHandler ~= nil) then
-                                    if (value:mouseHandler(event, button, x, y)) then
+                                    if (value:mouseHandler(button, x, y)) then
                                         return true
                                     end
                                 end
                             end
                         end
                     end
-                    self:removeFocusedObject()
-                    if (self.isMoveable) then
-                        if (x >= fx) and (x <= fx + self:getWidth() - 1) and (y == fy) and (event == "mouse_click") then
-                            self.drag = true
-                            dragXOffset = fx - x
-                            dragYOffset = yOff and 1 or 0
-                        end
+                end
+                if (isMovable) then
+                    local fx, fy = self:getAbsolutePosition(self:getAnchorPosition())
+                    if (x >= fx) and (x <= fx + self:getWidth() - 1) and (y == fy)then
+                        isDragging = true
+                        dragXOffset = fx - x
+                        dragYOffset = yOff and 1 or 0
                     end
-                    if(isScrollable)and(not importantScroll)then
-                        if(event=="mouse_scroll")then
-                            if(button>0)or(button<0)then
-                                if(autoScroll)then calculateMaxScroll(self) end
-                                yOffset = max(min(yOffset-button, -minScroll),-maxScroll)
-                            end
-                        end
-                    end
+                end
+                self:removeFocusedObject()
                 return true
             end
             return false
-        end;
+        end,
+
+        mouseUpHandler = function(self, button, x, y)
+            if (isDragging) then
+                isDragging = false
+            end
+            if(base.mouseUpHandler(self, button, x, y))then
+                if(events["mouse_up"]~=nil)then
+                    for _, index in ipairs(eventZIndex["mouse_up"]) do
+                        if (events["mouse_up"][index] ~= nil) then
+                            for _, value in rpairs(events["mouse_up"][index]) do
+                                if (value.mouseUpHandler ~= nil) then
+                                    if (value:mouseUpHandler(button, x, y)) then
+                                        return true
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                --self:removeFocusedObject()
+                return true
+            end
+            return false
+        end,
+
+        scrollHandler = function(self, dir, x, y)
+            if(base.scrollHandler(self, dir, x, y))then
+                if(isScrollable)and(autoScroll)then
+                    calculateMaxScroll(self)
+                end
+                if(isScrollable)and(importantScroll)then
+                    if(dir>0)or(dir<0)then
+                        yOffset = max(min(yOffset-dir, 0),-scrollAmount)
+                    end
+                end
+                if(events["mouse_scroll"]~=nil)then
+                    for _, index in pairs(eventZIndex["mouse_scroll"]) do
+                        if (events["mouse_scroll"][index] ~= nil) then
+                            for _, value in rpairs(events["mouse_scroll"][index]) do
+                                if (value.scrollHandler ~= nil) then
+                                    if (value:scrollHandler(dir, x, y)) then
+                                        return true
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                if(isScrollable)and not(importantScroll)then
+                    if(dir>0)or(dir<0)then
+                        yOffset = max(min(yOffset-dir, 0),-scrollAmount)
+                    end
+                end
+                return true
+            end
+            return false
+        end,
+
+        dragHandler = function(self, button, x, y)
+            if (isDragging) then
+                local xO, yO = self.parent:getOffsetInternal()
+                xO = xO < 0 and math.abs(xO) or -xO
+                yO = yO < 0 and math.abs(yO) or -yO
+                local parentX = 1
+                local parentY = 1
+                if (self.parent ~= nil) then
+                    parentX, parentY = self.parent:getAbsolutePosition(self.parent:getAnchorPosition())
+                end
+                self:setPosition(x + dragXOffset - (parentX - 1) + xO, y + dragYOffset - (parentY - 1) + yO)
+                return true
+            end
+            if(base.dragHandler(self, button, x, y))then
+                if(events["mouse_drag"]~=nil)then
+                    for _, index in ipairs(eventZIndex["mouse_drag"]) do
+                        if (events["mouse_drag"][index] ~= nil) then
+                            for _, value in rpairs(events["mouse_drag"][index]) do
+                                if (value.dragHandler ~= nil) then
+                                    if (value:dragHandler(button, x, y)) then
+                                        return true
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                return true
+            end
+            return false
+        end,
+
+        keyHandler = function(self, key)
+            local val = self:getEventSystem():sendEvent("key", self, "key", key)
+            if(val==false)then return false end
+            if(events["key"]~=nil)then
+                for _, index in pairs(eventZIndex["key"]) do
+                    if (events["key"][index] ~= nil) then
+                        for _, value in rpairs(events["key"][index]) do
+                            if (value.keyHandler ~= nil) then
+                                if (value:keyHandler(key)) then
+                                    return true
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            return false
+        end,
+
+        keyUpHandler = function(self, key)
+            local val = self:getEventSystem():sendEvent("key_up", self, "key_up", key)
+            if(val==false)then return false end
+            if(events["key_up"]~=nil)then
+                for _, index in pairs(eventZIndex["key_up"]) do
+                    if (events["key_up"][index] ~= nil) then
+                        for _, value in rpairs(events["key_up"][index]) do
+                            if (value.keyUpHandler ~= nil) then
+                                if (value:keyUpHandler(key)) then
+                                    return true
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            return false
+        end,
+
+        charHandler = function(self, char)
+            local val = self:getEventSystem():sendEvent("char", self, "char", char)
+            if(val==false)then return false end
+            if(events["char"]~=nil)then
+                for _, index in pairs(eventZIndex["char"]) do
+                    if (events["char"][index] ~= nil) then
+                        for _, value in rpairs(events["char"][index]) do
+                            if (value.charHandler ~= nil) then
+                                if (value:charHandler(char)) then
+                                    return true
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            return false
+        end,
 
         setText = function(self, x, y, text)
             local obx, oby = self:getAnchorPosition()

@@ -1,42 +1,15 @@
 # Basalt - A UI Framework for CC:Tweaked
+![GitHub Repo stars](https://img.shields.io/github/stars/Pyroxenium/Basalt?style=for-the-badge)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/y/Pyroxenium/Basalt?style=for-the-badge)
+![GitHub Repo stars](https://img.shields.io/badge/Made%20for-CC%3AT-orange?style=for-the-badge)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/Pyroxenium/Basalt?style=for-the-badge)
+[![Discord](https://img.shields.io/discord/976905222251233320?label=Discord&style=for-the-badge)](https://discord.gg/yNNnmBVBpE)
 
-## Important Notice
-#### Basalt has moved! We are now located at [Pyroxenium](https://github.com/Pyroxenium), please make sure to update your previous GitHub links, as they are now out of date. We apologize for any inconvenience.
+Basalt is intended to be an easy-to-understand UI Framework designed for CC:Tweaked (Also know as "ComputerCraft: Tweaked") - a popular minecraft mod. For more information about CC:Tweaked, checkout the project's [wiki](https://tweaked.cc/) or [download](https://www.curseforge.com/minecraft/mc-mods/cc-tweaked).<br>
+**Note:** Basalt is still under developement and you may find bugs!
 
-Basalt is still under developement and you may find bugs!
+Check out the [wiki](https://basalt.madefor.cc/) for more information.<br>
+If you have questions, feel free to join the discord server: [https://discord.gg/yNNnmBVBpE](https://discord.gg/yNNnmBVBpE).
 
-## Information
-
-Check out the [wiki](https://basalt.madefor.cc/) for information<br>
-If you have questions, feel free to join the discord server: [https://discord.gg/yM7kndJdJJ](https://discord.gg/yM7kndJdJJ)
-
-## Changelogs
-From now on we will add changes:
-
-#### Version 4:
-- You can now mirror a frame to a monitor by using :setMirror(side)
-- with dynamic values you are able to use percentage values and even functions which get called everytime we need the size of that object
-- XML got added to make design and logic seperate (you don't have to) - you are now able to use xml to create your UI design.
-- Animations are now more advanced and provide many features to do cool stuff. They are also very easy to use now!
-- Also some smaller bugfixes
-- new bugs to explore
-
-#### Version 3:
-- fixed monitor support
-- added :setIndex() for scrollbars
-- added dynamic value system (not fully done)
-
-#### Version 2:
-Note: You won't get any changes for now, so don't redownload the project! (:
-- reworked the filesystem, now we use require instead of loadfile
-- from now on the single file will be complied on the end users computer
-- prepared everything for an advanced installer
-
-#### Version 1:
-- created Basalt
-- added many objects (buttons, checkbox, labels, programs, switch, radio, lists, dropdowns, input, textfields, images, menubar, animations, threads, timers, progressbar, scrollbar, slider, pane)
-- added bigfont
-- added blittle
-- added coroutine management
-- added advanced event system
-
+## Demo
+<img src="https://raw.githubusercontent.com/Pyroxenium/Basalt/master/docs/_media/basaltPreview2.gif" width="300">

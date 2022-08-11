@@ -18,12 +18,6 @@ return function(name)
     local scrollable = true
 
     local object = {
-        init = function(self)
-            self.bgColor = self.parent:getTheme("ListBG")
-            self.fgColor = self.parent:getTheme("ListText")
-            itemSelectedBG = self.parent:getTheme("SelectionBG")
-            itemSelectedFG = self.parent:getTheme("SelectionText")
-        end,
         getType = function(self)
             return objectType
         end;
@@ -97,6 +91,7 @@ return function(name)
 
         setScrollable = function(self, scroll)
             scrollable = scroll
+            if(scroll==nil)then scrollable = true end
             return self
         end;
 
@@ -116,29 +111,15 @@ return function(name)
             return self
         end,
 
-        mouseHandler = function(self, event, button, x, y)
-            local obx, oby = self:getAbsolutePosition(self:getAnchorPosition())
-            local w,h = self:getSize()
-            if (obx <= x) and (obx + w > x) and (oby <= y) and (oby + h > y) and (self:isVisible()) then
-                if (((event == "mouse_click") or (event == "mouse_drag"))and(button==1))or(event=="monitor_touch") then
-                    if (#list > 0) then
-                        for n = 1, h do
-                            if (list[n + yOffset] ~= nil) then
-                                if (obx <= x) and (obx + w > x) and (oby + n - 1 == y) then
-                                    self:setValue(list[n + yOffset])
-                                    self:getEventSystem():sendEvent("mouse_click", self, "mouse_click", 0, x, y, list[n + yOffset])
-                                end
-                            end
-                        end
-                    end
-                end
-
-                if (event == "mouse_scroll") and (scrollable) then
-                    yOffset = yOffset + button
+        scrollHandler = function(self, dir, x, y)
+            if(base.scrollHandler(self, dir, x, y))then
+                if(scrollable)then
+                    local w,h = self:getSize()
+                    yOffset = yOffset + dir
                     if (yOffset < 0) then
                         yOffset = 0
                     end
-                    if (button >= 1) then
+                    if (dir >= 1) then
                         if (#list > h) then
                             if (yOffset > #list - h) then
                                 yOffset = #list - h
@@ -151,10 +132,37 @@ return function(name)
                         end
                     end
                 end
-                self:setVisualChanged()
                 return true
             end
-        end;
+            return false
+        end,
+
+        mouseHandler = function(self, button, x, y)
+            if(base.mouseHandler(self, button, x, y))then
+                local obx, oby = self:getAbsolutePosition(self:getAnchorPosition())
+                local w,h = self:getSize()
+                if (#list > 0) then
+                    for n = 1, h do
+                        if (list[n + yOffset] ~= nil) then
+                            if (obx <= x) and (obx + w > x) and (oby + n - 1 == y) then
+                                self:setValue(list[n + yOffset])
+                                self:setVisualChanged()
+                            end
+                        end
+                    end
+                end
+                return true
+            end
+            return false
+        end,
+
+        dragHandler = function(self, button, x, y)
+            return self:mouseHandler(button, x, y)
+        end,
+
+        touchHandler = function(self, x, y)
+            return self:mouseHandler(1, x, y)
+        end,
 
         draw = function(self)
             if (base.draw(self)) then
@@ -181,6 +189,18 @@ return function(name)
                 self:setVisualChanged(false)
             end
         end;
+
+        init = function(self)
+            self.bgColor = self.parent:getTheme("ListBG")
+            self.fgColor = self.parent:getTheme("ListText")
+            itemSelectedBG = self.parent:getTheme("SelectionBG")
+            itemSelectedFG = self.parent:getTheme("SelectionText")
+            if(self.parent~=nil)then
+                self.parent:addEvent("mouse_click", self)
+                self.parent:addEvent("mouse_drag", self)
+                self.parent:addEvent("mouse_scroll", self)
+            end
+        end,
     }
 
     return setmetatable(object, base)

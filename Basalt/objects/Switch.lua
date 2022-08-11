@@ -17,13 +17,6 @@ return function(name)
     local activeBG = colors.green
 
     local object = {
-        init = function(self)
-            self.bgColor = self.parent:getTheme("SwitchBG")
-            self.fgColor = self.parent:getTheme("SwitchText")
-            bgSymbol = self.parent:getTheme("SwitchBGSymbol")
-            inactiveBG = self.parent:getTheme("SwitchInactive")
-            activeBG = self.parent:getTheme("SwitchActive")
-        end,
         getType = function(self)
             return objectType
         end;
@@ -54,12 +47,10 @@ return function(name)
 
         end,
 
-        mouseHandler = function(self, event, button, x, y)
-            if (base.mouseHandler(self, event, button, x, y)) then
+        mouseHandler = function(self, button, x, y)
+            if (base.mouseHandler(self, button, x, y)) then
                 local obx, oby = self:getAbsolutePosition(self:getAnchorPosition())
-                if ((event == "mouse_click") and (button == 1))or(event=="monitor_touch") then
-                    self:setValue(not self:getValue())
-                end
+                self:setValue(not self:getValue())
                 return true
             end
         end;
@@ -80,7 +71,16 @@ return function(name)
                 end
                 self:setVisualChanged(false)
             end
-        end;
+        end,
+
+        init = function(self)
+            self.bgColor = self.parent:getTheme("SwitchBG")
+            self.fgColor = self.parent:getTheme("SwitchText")
+            bgSymbol = self.parent:getTheme("SwitchBGSymbol")
+            inactiveBG = self.parent:getTheme("SwitchInactive")
+            activeBG = self.parent:getTheme("SwitchActive")
+            self.parent:addEvent("mouse_click", self)
+        end,
     }
 
     return setmetatable(object, base)
