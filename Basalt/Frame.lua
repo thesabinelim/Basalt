@@ -7,6 +7,7 @@ local layout = require("layout")
 local uuid = utils.uuid
 local rpairs = utils.rpairs
 local xmlValue = utils.getValueFromXML
+local tableCount = utils.tableCount
 
 local sub,min,max = string.sub,math.min,math.max
 
@@ -35,7 +36,6 @@ return function(name, parent, pTerm, basalt)
     local mirrorActive = false
     local mirrorAttached = false
     local mirrorSide = ""
-    local importantScroll = false
     local isMovable = false
     local isDragging =false
 
@@ -149,7 +149,7 @@ return function(name, parent, pTerm, basalt)
                     if (value == obj) then
                         table.remove(events[a][c], key)
                         if(self.parent~=nil)then
-                            if(#events[a]<=0)then
+                            if(tableCount(events[event])<=0)then
                                 self.parent:removeEvent(a, self)
                             end
                         end
@@ -183,7 +183,6 @@ return function(name, parent, pTerm, basalt)
     end
 
     local function addEvent(self, event, obj)
-        log("Registered Event: "..event.." for "..obj:getName())
         local zIndex = obj:getZIndex()
         if(events[event]==nil)then events[event] = {} end
         if(eventZIndex[event]==nil)then eventZIndex[event] = {} end
@@ -224,11 +223,11 @@ return function(name, parent, pTerm, basalt)
                     table.remove(events[event][a], key)
                     if(#events[event][a]<=0)then
                         events[event][a] = nil
-                    end
-                    if(self.parent~=nil)then
-                        if(#events[event]<=0)then
-                            activeEvents[event] = false
-                            self.parent:removeEvent(event, self)
+                        if(self.parent~=nil)then
+                            if(tableCount(events[event])<=0)then
+                                activeEvents[event] = false
+                                self.parent:removeEvent(event, self)
+                            end
                         end
                     end
                     return true;
@@ -341,7 +340,6 @@ return function(name, parent, pTerm, basalt)
         end
     end
 
-
     object = {
         barActive = false,
         barBackground = colors.gray,
@@ -374,7 +372,7 @@ return function(name, parent, pTerm, basalt)
         setSize = function(self, w, h, rel)
             base.setSize(self, w, h, rel)
             if(self.parent==nil)then
-                basaltDraw = BasaltDraw()
+                basaltDraw = BasaltDraw(termObject)
             end
             for _, index in pairs(objZIndex) do
                 if (objects[index] ~= nil) then
@@ -468,8 +466,6 @@ return function(name, parent, pTerm, basalt)
                 activeEvents["mouse_up"] = true
                 self.parent:addEvent("mouse_drag", self)
                 activeEvents["mouse_drag"] = true
-                self.parent:addEvent("mouse_scroll", self)
-                activeEvents["mouse_scroll"] = true
             end
             return self;
         end;
@@ -480,11 +476,6 @@ return function(name, parent, pTerm, basalt)
                 self.parent:addEvent("mouse_scroll", self)
             end
             activeEvents["mouse_scroll"] = true
-            return self
-        end,
-
-        setImportantScroll = function(self, imp)
-            importantScroll = imp and true or false
             return self
         end,
 
@@ -569,7 +560,6 @@ return function(name, parent, pTerm, basalt)
             if(xmlValue("xOffset", data)~=nil)then self:setOffset(xmlValue("xOffset", data), yOffset) end
             if(xmlValue("yOffset", data)~=nil)then self:setOffset(yOffset, xmlValue("yOffset", data)) end
             if(xmlValue("scrollAmount", data)~=nil)then self:setScrollAmount(xmlValue("scrollAmount", data)) end
-            if(xmlValue("importantScroll", data)~=nil)then self:setImportantScroll(xmlValue("importantScroll", data)) end
 
             local objectList = data:children()
             
@@ -671,13 +661,15 @@ return function(name, parent, pTerm, basalt)
 
         getFocusHandler = function(self)
             base.getFocusHandler(self)
-            if (self.parent ~= nil) then
-                self.parent:removeEvents(self)
-                self.parent:removeObject(self)
-                self.parent:addObject(self)
-                for k,v in pairs(activeEvents)do
-                    if(v)then
-                        self.parent:addEvent(k, self)
+            if(isMovable)then
+                if (self.parent ~= nil) then
+                    self.parent:removeEvents(self)
+                    self.parent:removeObject(self)
+                    self.parent:addObject(self)
+                    for k,v in pairs(activeEvents)do
+                        if(v)then
+                            self.parent:addEvent(k, self)
+                        end
                     end
                 end
             end
@@ -685,18 +677,22 @@ return function(name, parent, pTerm, basalt)
 
         eventHandler = function(self, event, p1, p2, p3, p4)
             base.eventHandler(self, event, p1, p2, p3, p4)
-            for _, index in pairs(objZIndex) do
-                if (objects[index] ~= nil) then
-                    for _, value in pairs(objects[index]) do
-                        if (value.eventHandler ~= nil) then
-                            value:eventHandler(event, p1, p2, p3, p4)
+            if(events["other_event"]~=nil)then
+                for _, index in ipairs(eventZIndex["other_event"]) do
+                    if (events["other_event"][index] ~= nil) then
+                        for _, value in rpairs(events["other_event"][index]) do
+                            if (value.eventHandler ~= nil) then
+                                if (value:eventHandler(event, p1, p2, p3, p4)) then
+                                    return true
+                                end
+                            end
                         end
                     end
                 end
             end
             if(autoSize)then
                 if(self.parent==nil)then
-                    if(event=="term_resize")then
+                    if(event=="term_resize")or(event=="monitor_resize")then
                         self:setSize(termObject.getSize())
                         autoSize = true
                     end
@@ -788,14 +784,6 @@ return function(name, parent, pTerm, basalt)
 
         scrollHandler = function(self, dir, x, y)
             if(base.scrollHandler(self, dir, x, y))then
-                if(isScrollable)and(autoScroll)then
-                    calculateMaxScroll(self)
-                end
-                if(isScrollable)and(importantScroll)then
-                    if(dir>0)or(dir<0)then
-                        yOffset = max(min(yOffset-dir, 0),-scrollAmount)
-                    end
-                end
                 if(events["mouse_scroll"]~=nil)then
                     for _, index in pairs(eventZIndex["mouse_scroll"]) do
                         if (events["mouse_scroll"][index] ~= nil) then
@@ -809,11 +797,14 @@ return function(name, parent, pTerm, basalt)
                         end
                     end
                 end
-                if(isScrollable)and not(importantScroll)then
+                local cache = yOffset
+                if(isScrollable)then
+                    calculateMaxScroll(self)
                     if(dir>0)or(dir<0)then
                         yOffset = max(min(yOffset-dir, 0),-scrollAmount)
                     end
                 end
+                if(yOffset==cache)then return false end
                 return true
             end
             return false

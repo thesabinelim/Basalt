@@ -378,6 +378,7 @@ return function(name)
 
         animationDoneHandler = function(self)
             eventSystem:sendEvent("animation_done", self)
+            self.parent:removeEvent("other_event", self)
             if(autoDestroy)then
                 self.parent:removeObject(self)
                 self = nil
@@ -413,6 +414,7 @@ return function(name)
             else
                 self:animationDoneHandler()
             end
+            self.parent:addEvent("other_event", self)
             return self
         end;
 
@@ -422,6 +424,7 @@ return function(name)
                 infinitePlay = false
             end
             animationActive = false
+            self.parent:removeEvent("other_event", self)
             return self
         end;
 

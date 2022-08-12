@@ -573,8 +573,12 @@ return function(name)
         onEvent = function(self, ...)
             for _,v in pairs(table.pack(...))do
                 if(type(v)=="function")then
-                    self:registerEvent("custom_event_handler", v)
+                    self:registerEvent("other_event", v)
                 end
+            end
+            if(self.parent~=nil)then
+                self.parent:addEvent("other_event", self)
+                activeEvents["other_event"] = true
             end
             return self
         end;
@@ -755,55 +759,6 @@ return function(name)
             return false
         end,
 
-        --[[
-        mouseHandler = function(self, event, button, x, y)
-            if(isEnabled)and(isVisible)then
-                local objX, objY = self:getAbsolutePosition(self:getAnchorPosition())
-                local w, h = self:getSize()
-                local yOff = false
-                
-                if(objY-1 == y)and(self:getBorder("top"))then
-                    y = y+1
-                    yOff = true
-                end
-                if(event=="mouse_up")then
-                    isDragging = false
-                end
-
-                if(isDragging)and(event=="mouse_drag")then 
-                    local xO, yO, parentX, parentY = 0, 0, 1, 1
-                    if (self.parent ~= nil) then
-                        xO, yO = self.parent:getOffsetInternal()
-                        xO = xO < 0 and math.abs(xO) or -xO
-                        yO = yO < 0 and math.abs(yO) or -yO
-                        parentX, parentY = self.parent:getAbsolutePosition(self.parent:getAnchorPosition())
-                    end
-                    local dX, dY = x + dragXOffset - (parentX - 1) + xO, y + dragYOffset - (parentY - 1) + yO
-                    local val = eventSystem:sendEvent(event, self, event, button, dX, dY, dragStartX, dragStartY, x, y)
-                end 
-
-
-                if (objX <= x) and (objX + w > x) and (objY <= y) and (objY + h > y) then
-                    if(event=="mouse_click")then 
-                        isDragging = true 
-                        dragStartX, dragStartY = x, y 
-                        dragXOffset, dragYOffset = objX - x, objY - y
-                    end
-                    if(event~="mouse_drag")then
-                        if(event~="mouse_up")then
-                            if (self.parent ~= nil) then
-                                self.parent:setFocusedObject(self)
-                            end
-                        end
-                        local val = eventSystem:sendEvent(event, self, event, button, x, y)
-                        if(val~=nil)then return val end
-                    end
-                    return true
-                end
-            end
-            return false
-        end;]]
-
         keyHandler = function(self, key)
             if(isEnabled)then
                 if (self:isFocused()) then
@@ -842,7 +797,8 @@ return function(name)
         end;
 
         eventHandler = function(self, event, p1, p2, p3, p4)
-            eventSystem:sendEvent("custom_event_handler", self, event, p1, p2, p3, p4)
+            eventSystem:sendEvent("other_event", self, event, p1, p2, p3, p4)
+            return true
         end;
 
         getFocusHandler = function(self)

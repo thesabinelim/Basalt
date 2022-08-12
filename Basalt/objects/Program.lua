@@ -525,6 +525,7 @@ return function(name, parent)
                 self.parent:addEvent("key", self)
                 self.parent:addEvent("key_up", self)
                 self.parent:addEvent("char", self)
+                self.parent:addEvent("other_event", self)
             end
             return self
         end;
@@ -540,6 +541,7 @@ return function(name, parent)
                     end
                 end
             end
+            self.parent:removeEvents(self)
             return self
         end;
 
@@ -681,30 +683,30 @@ return function(name, parent)
         end;
 
         eventHandler = function(self, event, p1, p2, p3, p4)
-            if (curProcess == nil) then
-                return
-            end
-            if not (curProcess:isDead()) then
-                if not (paused) then
-                    if(event ~= "terminate") then
-                        curProcess:resume(event, p1, p2, p3, p4)
-                    end
-                    if (self:isFocused()) then
-                        local obx, oby = self:getAnchorPosition()
-                        local xCur, yCur = pWindow.getCursorPos()
-                        if (self.parent ~= nil) then
-                            local w,h = self:getSize()
-                            if (obx + xCur - 1 >= 1 and obx + xCur - 1 <= obx + w - 1 and yCur + oby - 1 >= 1 and yCur + oby - 1 <= oby + h - 1) then
-                                self.parent:setCursor(pWindow.getCursorBlink(), obx + xCur - 1, yCur + oby - 1, pWindow.getTextColor())
+            if(base.eventHandler(self, event, p1, p2, p3, p4))then
+                if (curProcess == nil) then
+                    return
+                end
+                if not (curProcess:isDead()) then
+                    if not (paused) then
+                        if(event ~= "terminate") then
+                            curProcess:resume(event, p1, p2, p3, p4)
+                        end
+                        if (self:isFocused()) then
+                            local obx, oby = self:getAnchorPosition()
+                            local xCur, yCur = pWindow.getCursorPos()
+                            if (self.parent ~= nil) then
+                                local w,h = self:getSize()
+                                if (obx + xCur - 1 >= 1 and obx + xCur - 1 <= obx + w - 1 and yCur + oby - 1 >= 1 and yCur + oby - 1 <= oby + h - 1) then
+                                    self.parent:setCursor(pWindow.getCursorBlink(), obx + xCur - 1, yCur + oby - 1, pWindow.getTextColor())
+                                end
+                            end
+
+                            if (event == "terminate") and (self:isFocused()) then
+                                self:stop()
                             end
                         end
-
-                        if (event == "terminate") and (self:isFocused()) then
-                            self:stop()
-                        end
-                    end
-                else
-                    if (event ~= "mouse_click") and (event ~= "monitor_touch") and (event ~= "mouse_up") and (event ~= "mouse_scroll") and (event ~= "mouse_drag") and (event ~= "key_up") and (event ~= "key") and (event ~= "char") and (event ~= "terminate") then
+                    else
                         table.insert(queuedEvent, { event = event, args = { p1, p2, p3, p4 } })
                     end
                 end
