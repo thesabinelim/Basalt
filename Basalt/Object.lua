@@ -502,7 +502,7 @@ return function(name)
         onChange = function(self, ...)
             for _,v in pairs(table.pack(...))do
                 if(type(v)=="function")then
-                    self:registerEvent("value_changed", v)
+                    self:registerEvent("value_changed", v, value)
                 end
             end
             return self
@@ -730,8 +730,14 @@ return function(name)
                 end
                 local dX, dY = x + dragXOffset - (parentX - 1) + xO, y + dragYOffset - (parentY - 1) + yO
                 local val = eventSystem:sendEvent(event, self, event, button, dX, dY, dragStartX, dragStartY, x, y)
-                if(val==false)then return false end
-                return true
+                if(val~=nil)then return val end
+                if(self:isCoordsInObject(x, y))then
+                    if(self.parent~=nil)then
+                        self.parent:setFocusedObject(self)
+                    end
+                    return true
+                end
+                return false
             end
 
             if(self:isCoordsInObject(x, y))then

@@ -55,6 +55,9 @@ return function(name)
             base.setValue(self, tostring(val))
             if not (internalValueChange) then
                 textX = tostring(val):len() + 1
+                wIndex = math.max(1, textX-self:getWidth()+1)
+                local obx, oby = self:getAnchorPosition()
+                self.parent:setCursor(true, obx + textX - wIndex, oby+math.floor(self.height/2), self.fgColor)
             end
             return self
         end;
@@ -205,8 +208,9 @@ return function(name)
                 local val = tostring(base.getValue())
                 local cursorX = (textX <= val:len() and textX - 1 or val:len()) - (wIndex - 1)
 
-                if (cursorX > self.x + w - 1) then
-                    cursorX = self.x + w - 1
+                local x = self:getX()
+                if (cursorX > x + w - 1) then
+                    cursorX = x + w - 1
                 end
                 if (self.parent ~= nil) then
                     self.parent:setCursor(true, obx + cursorX, oby+math.floor(h/2), self.fgColor)
@@ -215,6 +219,70 @@ return function(name)
                 return true
             end
             return false
+        end,
+
+        mouseHandler = function(self, button, x, y)
+            if(base.mouseHandler(self, button, x, y))then
+                local obx, oby = self:getAbsolutePosition(self:getAnchorPosition())
+                local w, h = self:getSize()
+                textX = x - obx + wIndex
+                local text = base.getValue()
+                if (textX > text:len()) then
+                    textX = text:len() + 1
+                end
+                if (textX < wIndex) then
+                    wIndex = textX - 1
+                    if (wIndex < 1) then
+                        wIndex = 1
+                    end
+                end
+                local cursorX = (textX <= text:len() and textX - 1 or text:len()) - (wIndex - 1)
+                if (self.parent ~= nil) then
+                    self.parent:setCursor(true, obx + cursorX, oby+math.floor(h/2), self.fgColor)
+                end
+                return true
+            end
+        end,
+
+        eventHandler = function(self, event, paste, p2, p3, p4)
+            if(base.eventHandler(self, event, paste, p2, p3, p4))then
+                if(event=="paste")then
+                    if(self:isFocused())then
+                        local text = base.getValue()
+                        local w, h = self:getSize()
+                        internalValueChange = true
+                        if (inputType == "number") then
+                            local cache = text
+                            if (paste == ".") or (tonumber(paste) ~= nil) then
+                                self:setValue(text:sub(1, textX - 1) .. paste .. text:sub(textX, text:len()))
+                                textX = textX + paste:len()
+                            end
+                            if (tonumber(base.getValue()) == nil) then
+                                self:setValue(cache)
+                            end
+                        else
+                            self:setValue(text:sub(1, textX - 1) .. paste .. text:sub(textX, text:len()))
+                            textX = textX + paste:len()
+                        end
+                        if (textX >= w + wIndex) then
+                            wIndex = (textX+1)-w
+                        end
+
+                        local obx, oby = self:getAnchorPosition()
+                        local val = tostring(base.getValue())
+                        local cursorX = (textX <= val:len() and textX - 1 or val:len()) - (wIndex - 1)
+
+                        local x = self:getX()
+                        if (cursorX > x + w - 1) then
+                            cursorX = x + w - 1
+                        end
+                        if (self.parent ~= nil) then
+                            self.parent:setCursor(true, obx + cursorX, oby+math.floor(h/2), self.fgColor)
+                        end
+                        internalValueChange = false
+                    end
+                end
+            end
         end,
 
         draw = function(self)
@@ -264,6 +332,7 @@ return function(name)
                 self.parent:addEvent("mouse_click", self)
                 self.parent:addEvent("key", self)
                 self.parent:addEvent("char", self)
+                self.parent:addEvent("other_event", self)
             end
         end,
     }

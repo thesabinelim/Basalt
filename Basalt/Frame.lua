@@ -983,11 +983,11 @@ return function(name, parent, pTerm, basalt)
                 if (base.draw(self)) then
 
                     if(focusedObject~=focusedOBjectCache)then
-                        if(focusedOBjectCache~=nil)then
-                            focusedOBjectCache:getFocusHandler()
-                        end
                         if(focusedObject~=nil)then
                             focusedObject:loseFocusHandler()
+                        end
+                        if(focusedOBjectCache~=nil)then
+                            focusedOBjectCache:getFocusHandler()
                         end
                         focusedObject = focusedOBjectCache
                     end
