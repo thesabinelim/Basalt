@@ -22,6 +22,7 @@ return function(name)
 
         setSymbol = function(self, sym)
             symbol = sym
+            self:updateDraw()
             return self
         end,
 
@@ -33,6 +34,7 @@ return function(name)
                     else
                         self:setValue(not self:getValue())
                     end
+                self:updateDraw()
                 return true
                 end
             end
@@ -66,9 +68,9 @@ return function(name)
                         end
                     end
                 end
-                self:setVisualChanged(false)
             end
-        end;
+        end,
+        
         init = function(self)
             base.init(self)
             self.bgColor = self.parent:getTheme("CheckboxBG")

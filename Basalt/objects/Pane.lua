@@ -22,9 +22,8 @@ return function(name)
                     self.parent:drawBackgroundBox(obx, oby, w, h, self.bgColor)
                     self.parent:drawForegroundBox(obx, oby, w, h, self.fgColor)
                 end
-                self:setVisualChanged(false)
             end
-        end;
+        end,
 
     }
 

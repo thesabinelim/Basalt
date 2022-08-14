@@ -23,19 +23,19 @@ return function(name)
 
         setSymbolColor = function(self, symbolColor)
             bgSymbol = symbolColor
-            self:setVisualChanged()
+            self:updateDraw()
             return self
         end;
 
         setActiveBackground = function(self, bgcol)
             activeBG = bgcol
-            self:setVisualChanged()
+            self:updateDraw()
             return self
         end;
 
         setInactiveBackground = function(self, bgcol)
             inactiveBG = bgcol
-            self:setVisualChanged()
+            self:updateDraw()
             return self
         end;
 
@@ -51,6 +51,7 @@ return function(name)
             if (base.mouseHandler(self, button, x, y)) then
                 local obx, oby = self:getAbsolutePosition(self:getAnchorPosition())
                 self:setValue(not self:getValue())
+                self:updateDraw()
                 return true
             end
         end;
@@ -69,7 +70,6 @@ return function(name)
                         self.parent:drawBackgroundBox(obx+1, oby, 1, h, inactiveBG)
                     end
                 end
-                self:setVisualChanged(false)
             end
         end,
 

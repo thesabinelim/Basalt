@@ -1,5 +1,6 @@
 local Object = require("Object")
 local utils = require("utils")
+local log = require("basaltLogs")
 local xmlValue = utils.getValueFromXML
 
 return function(name)
@@ -32,6 +33,7 @@ return function(name)
             if (iType == "password") or (iType == "number") or (iType == "text") then
                 inputType = iType
             end
+            self:updateDraw()
             return self
         end;
 
@@ -44,6 +46,7 @@ return function(name)
             else
                 showingText = defaultText
             end
+            self:updateDraw()
             return self
         end;
 
@@ -59,6 +62,7 @@ return function(name)
                 local obx, oby = self:getAnchorPosition()
                 self.parent:setCursor(true, obx + textX - wIndex, oby+math.floor(self.height/2), self.fgColor)
             end
+            self:updateDraw()
             return self
         end;
 
@@ -69,6 +73,7 @@ return function(name)
 
         setInputLimit = function(self, limit)
             inputLimit = tonumber(limit) or inputLimit
+            self:updateDraw()
             return self
         end;
 
@@ -92,17 +97,21 @@ return function(name)
             if (self.parent ~= nil) then
                 local obx, oby = self:getAnchorPosition()
                 showingText = ""
-                if (self.parent ~= nil) then
-                    self.parent:setCursor(true, obx + textX - wIndex, oby+math.floor(self.height/2), self.fgColor)
+                if(defaultText~="")then
+                    self:updateDraw()
                 end
+                self.parent:setCursor(true, obx + textX - wIndex, oby+math.floor(self:getHeight()/2), self.fgColor)
             end
         end;
 
         loseFocusHandler = function(self)
             base.loseFocusHandler(self)
             if (self.parent ~= nil) then
-                self.parent:setCursor(false)
                 showingText = defaultText
+                if(defaultText~="")then
+                    self:updateDraw()
+                end
+                self.parent:setCursor(false)
             end
         end;
 
@@ -216,6 +225,7 @@ return function(name)
                     self.parent:setCursor(true, obx + cursorX, oby+math.floor(h/2), self.fgColor)
                 end
                 internalValueChange = false
+                self:updateDraw()
                 return true
             end
             return false
@@ -223,7 +233,8 @@ return function(name)
 
         mouseHandler = function(self, button, x, y)
             if(base.mouseHandler(self, button, x, y))then
-                local obx, oby = self:getAbsolutePosition(self:getAnchorPosition())
+                local ax, ay = self:getAnchorPosition()
+                local obx, oby = self:getAbsolutePosition(ax, ay)
                 local w, h = self:getSize()
                 textX = x - obx + wIndex
                 local text = base.getValue()
@@ -235,10 +246,6 @@ return function(name)
                     if (wIndex < 1) then
                         wIndex = 1
                     end
-                end
-                local cursorX = (textX <= text:len() and textX - 1 or text:len()) - (wIndex - 1)
-                if (self.parent ~= nil) then
-                    self.parent:setCursor(true, obx + cursorX, oby+math.floor(h/2), self.fgColor)
                 end
                 return true
             end
@@ -279,6 +286,7 @@ return function(name)
                         if (self.parent ~= nil) then
                             self.parent:setCursor(true, obx + cursorX, oby+math.floor(h/2), self.fgColor)
                         end
+                        self:updateDraw()
                         internalValueChange = false
                     end
                 end

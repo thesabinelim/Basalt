@@ -26,7 +26,7 @@ return function(name)
     local isDragging = false
     local dragStartX, dragStartY, dragXOffset, dragYOffset = 0, 0, 0, 0
 
-    local visualsChanged = true
+    local draw = true
     local activeEvents = {}
 
     local eventSystem = basaltEvent()
@@ -43,13 +43,13 @@ return function(name)
 
         show = function(self)
             isVisible = true
-            visualsChanged = true
+            self:updateDraw()
             return self
         end;
 
         hide = function(self)
             isVisible = false
-            visualsChanged = true
+            self:updateDraw()
             return self
         end;
 
@@ -118,7 +118,7 @@ return function(name)
             if(xmlValue("onEvent", data)~=nil)then self:generateXMLEventFunction(self.onEvent, xmlValue("onEvent", data)) end
             if(xmlValue("onGetFocus", data)~=nil)then self:generateXMLEventFunction(self.onGetFocus, xmlValue("onGetFocus", data)) end
             if(xmlValue("onLoseFocus", data)~=nil)then self:generateXMLEventFunction(self.onLoseFocus, xmlValue("onLoseFocus", data)) end
-            
+            self:updateDraw()
             return self
         end,
 
@@ -140,6 +140,7 @@ return function(name)
                 self.parent:addObject(self)
                 self:updateEventHandlers()
             end
+            
             return self
         end,
 
@@ -184,7 +185,7 @@ return function(name)
         setValue = function(self, _value)
             if (value ~= _value) then
                 value = _value
-                visualsChanged = true
+                self:updateDraw()
                 self:valueChangedHandler()
             end
             return self
@@ -194,13 +195,14 @@ return function(name)
             return value
         end;
 
-        getVisualChanged = function(self)
-            return visualsChanged
+        getDraw = function(self)
+            return draw
         end;
 
-        setVisualChanged = function(self, change)
-            visualsChanged = change or true
-            if(change == nil)then visualsChanged = true end
+        updateDraw = function(self, change)
+            draw = change
+            if(change == nil)then draw = true end
+            if(draw)then if(self.parent~=nil)then self.parent:updateDraw() end end
             return self
         end;
 
@@ -231,7 +233,7 @@ return function(name)
                 self.parent:recalculateDynamicValues()
             end
             eventSystem:sendEvent("basalt_reposition", self)
-            visualsChanged = true
+            self:updateDraw()
             return self
         end;
 
@@ -253,7 +255,7 @@ return function(name)
 
         setVisibility = function(self, _isVisible)
             isVisible = _isVisible or not isVisible
-            visualsChanged = true
+            self:updateDraw()
             return self
         end;
 
@@ -274,7 +276,7 @@ return function(name)
                 self.parent:recalculateDynamicValues()
             end
             eventSystem:sendEvent("basalt_resize", self)
-            visualsChanged = true
+            self:updateDraw()
             return self
         end;
 
@@ -295,12 +297,13 @@ return function(name)
             if(type(self.height)=="table")then self.height:calculate() end
             if(type(self.x)=="table")then self.x:calculate() end
             if(type(self.y)=="table")then self.y:calculate() end
+            self:updateDraw()
             return self
         end,
 
         setBackground = function(self, color)
             self.bgColor = color or false
-            visualsChanged = true
+            self:updateDraw()
             return self
         end;
 
@@ -310,7 +313,7 @@ return function(name)
 
         setForeground = function(self, color)
             self.fgColor = color or false
-            visualsChanged = true
+            self:updateDraw()
             return self
         end;
 
@@ -320,11 +323,13 @@ return function(name)
 
         showShadow = function(self, show)
             shadow = show or (not shadow)
+            self:updateDraw()
             return self
         end;
 
         setShadow = function(self, color)
             shadowColor = color
+            self:updateDraw()
             return self
         end;
 
@@ -347,11 +352,13 @@ return function(name)
                     borderBottom = true
                 end
             end
+            self:updateDraw()
             return self
         end;
 
         setBorder = function(self, color)
             borderColor = color
+            self:updateDraw()
             return self
         end;
         
@@ -371,7 +378,7 @@ return function(name)
         end;
 
         draw = function(self)
-            if (isVisible) then
+            if (isVisible)then
                 if(self.parent~=nil)then
                     local x, y = self:getAnchorPosition()
                     local w,h = self:getSize()
@@ -417,6 +424,7 @@ return function(name)
                         self.parent:drawForegroundBox(x-1, y+h, 1, 1, borderColor)
                     end
                 end
+                draw = false
                 return true
             end
             return false
@@ -491,7 +499,7 @@ return function(name)
         
         setAnchor = function(self, newAnchor)
             anchor = newAnchor
-            visualsChanged = true
+            self:updateDraw()
             return self
         end;
 
@@ -766,7 +774,7 @@ return function(name)
         end,
 
         keyHandler = function(self, key)
-            if(isEnabled)then
+            if(isEnabled)and(isVisible)then
                 if (self:isFocused()) then
                 local val = eventSystem:sendEvent("key", self, "key", key)
                 if(val==false)then return false end
@@ -777,7 +785,7 @@ return function(name)
         end;
 
         keyUpHandler = function(self, key)
-            if(isEnabled)then
+            if(isEnabled)and(isVisible)then
                 if (self:isFocused()) then
                     local val = eventSystem:sendEvent("key_up", self, "key_up", key)
                 if(val==false)then return false end
@@ -788,7 +796,7 @@ return function(name)
         end;
 
         charHandler = function(self, char)
-            if(isEnabled)then
+            if(isEnabled)and(isVisible)then
                 if (self:isFocused()) then
                     local val = eventSystem:sendEvent("char", self, "char", char)
                 if(val==false)then return false end

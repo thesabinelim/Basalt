@@ -48,6 +48,7 @@ return function(name)
             if (#list == 1) then
                 self:setValue(list[1])
             end
+            self:updateDraw()
             return self
         end;
 
@@ -57,6 +58,7 @@ return function(name)
 
         removeItem = function(self, index)
             table.remove(list, index)
+            self:updateDraw()
             return self
         end;
 
@@ -76,6 +78,7 @@ return function(name)
         clear = function(self)
             list = {}
             self:setValue({})
+            self:updateDraw()
             return self
         end;
 
@@ -86,16 +89,19 @@ return function(name)
         editItem = function(self, index, text, x, y, bgCol, fgCol, ...)
             table.remove(list, index)
             table.insert(list, index, { x = x or 1, y = y or 1, text = text, bgCol = bgCol or self.bgColor, fgCol = fgCol or self.fgColor, args = { ... } })
+            self:updateDraw()
             return self
         end;
 
         selectItem = function(self, index)
             self:setValue(list[index] or {})
+            self:updateDraw()
             return self
         end;
 
         setActiveSymbol = function(self, sym)
             symbol = sym:sub(1,1)
+            self:updateDraw()
             return self
         end,
 
@@ -105,6 +111,7 @@ return function(name)
             boxSelectedBG = boxBG or boxSelectedBG
             boxSelectedFG = boxFG or boxSelectedFG
             selectionColorActive = active~=nil and active or true
+            self:updateDraw()
             return self
         end;
 
@@ -119,7 +126,7 @@ return function(name)
                         if(self.parent~=nil)then
                             self.parent:setFocusedObject(self)
                         end
-                        self:setVisualChanged()
+                        self:updateDraw()
                         return true
                     end
                 end
@@ -143,9 +150,8 @@ return function(name)
                         end
                     end
                 end
-                self:setVisualChanged(false)
             end
-        end;
+        end,
 
         init = function(self)
             self.bgColor = self.parent:getTheme("MenubarBG")
@@ -154,9 +160,7 @@ return function(name)
             itemSelectedFG = self.parent:getTheme("SelectionText")
             boxSelectedBG = self.parent:getTheme("MenubarBG")
             boxSelectedFG = self.parent:getTheme("MenubarText")
-            if(self.parent~=nil)then
-                self.parent:addEvent("mouse_click", self)
-            end
+            self.parent:addEvent("mouse_click", self)
         end,
     }
 

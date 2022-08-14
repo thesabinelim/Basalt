@@ -146,11 +146,11 @@ end
 local function drawFrames()
     if(mainFrame~=nil)then
         mainFrame:draw()
-        mainFrame:drawUpdate()
+        mainFrame:updateTerm()
     end
     for _,v in pairs(monFrames)do
         v:draw()
-        v:drawUpdate()
+        v:updateTerm()
     end
 end
 
@@ -246,6 +246,7 @@ basalt = {
     end,
     
     stop = stop,
+    stopUpdate = stop,
     
     isKeyDown = function(key)
         if(activeKey[key]==nil)then return false end

@@ -49,6 +49,7 @@ return function(name)
             if (#list == 1) then
                 self:setValue(list[1])
             end
+            self:updateDraw()
             return self
         end;
 
@@ -68,11 +69,13 @@ return function(name)
         clear = function(self)
             list = {}
             self:setValue({})
+            self:updateDraw()
             return self
         end;
 
         setSpace = function(self, _space)
             space = _space or space
+            self:updateDraw()
             return self
         end;
 
@@ -86,6 +89,7 @@ return function(name)
             if (itemOffset > mScroll) then
                 itemOffset = mScroll
             end
+            self:updateDraw()
             return self
         end;
 
@@ -118,6 +122,7 @@ return function(name)
 
         removeItem = function(self, index)
             table.remove(list, index)
+            self:updateDraw()
             return self
         end;
 
@@ -132,11 +137,13 @@ return function(name)
         editItem = function(self, index, text, bgCol, fgCol, ...)
             table.remove(list, index)
             table.insert(list, index, { text = text, bgCol = bgCol or self.bgColor, fgCol = fgCol or self.fgColor, args = { ... } })
+            self:updateDraw()
             return self
         end;
 
         selectItem = function(self, index)
             self:setValue(list[index] or {})
+            self:updateDraw()
             return self
         end;
 
@@ -144,6 +151,7 @@ return function(name)
             itemSelectedBG = bgCol or self.bgColor
             itemSelectedFG = fgCol or self.fgColor
             selectionColorActive = active
+            self:updateDraw()
             return self
         end;
 
@@ -161,7 +169,7 @@ return function(name)
                             xPos = xPos + list[n].text:len() + space * 2
                         end
                     end
-                self:setVisualChanged()
+                self:updateDraw()
                 return true
             end
             return false
@@ -180,7 +188,7 @@ return function(name)
                     if (itemOffset > mScroll) then
                         itemOffset = mScroll
                     end
-                    self:setVisualChanged()
+                    self:updateDraw()
                 end
                 return true
             end
@@ -214,7 +222,6 @@ return function(name)
                     self.parent:setBG(obx, oby, textBGCol:sub(itemOffset+1, w+itemOffset))
                     self.parent:setFG(obx, oby, textFGCol:sub(itemOffset+1, w+itemOffset))
                 end
-                self:setVisualChanged(false)
             end
         end,
 
@@ -224,10 +231,9 @@ return function(name)
             itemSelectedBG = self.parent:getTheme("SelectionBG")
             itemSelectedFG = self.parent:getTheme("SelectionText")
 
-            if(self.parent~=nil)then
-                self.parent:addEvent("mouse_click", self)
-                self.parent:addEvent("mouse_scroll", self)
-            end
+            self.parent:addEvent("mouse_click", self)
+            self.parent:addEvent("mouse_scroll", self)
+
         end,
     }
 

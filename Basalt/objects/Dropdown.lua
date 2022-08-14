@@ -45,7 +45,7 @@ return function(name)
 
         setOffset = function(self, yOff)
             yOffset = yOff
-            self:setVisualChanged()
+            self:updateDraw()
             return self
         end;
 
@@ -55,7 +55,7 @@ return function(name)
 
         addItem = function(self, text, bgCol, fgCol, ...)
             table.insert(list, { text = text, bgCol = bgCol or self.bgColor, fgCol = fgCol or self.fgColor, args = { ... } })
-            self:setVisualChanged()
+            self:updateDraw()
             return self
         end;
 
@@ -65,7 +65,7 @@ return function(name)
 
         removeItem = function(self, index)
             table.remove(list, index)
-            self:setVisualChanged()
+            self:updateDraw()
             return self
         end;
 
@@ -85,7 +85,7 @@ return function(name)
         clear = function(self)
             list = {}
             self:setValue({})
-            self:setVisualChanged()
+            self:updateDraw()
             return self
         end;
 
@@ -96,13 +96,13 @@ return function(name)
         editItem = function(self, index, text, bgCol, fgCol, ...)
             table.remove(list, index)
             table.insert(list, index, { text = text, bgCol = bgCol or self.bgColor, fgCol = fgCol or self.fgColor, args = { ... } })
-            self:setVisualChanged()
+            self:updateDraw()
             return self
         end;
 
         selectItem = function(self, index)
             self:setValue(list[index] or {})
-            self:setVisualChanged()
+            self:updateDraw()
             return self
         end;
 
@@ -110,13 +110,13 @@ return function(name)
             itemSelectedBG = bgCol or self.bgColor
             itemSelectedFG = fgCol or self.fgColor
             selectionColorActive = active
-            self:setVisualChanged()
+            self:updateDraw()
             return self
         end;
 
         setDropdownSize = function(self, width, height)
             dropdownW, dropdownH = width, height
-            self:setVisualChanged()
+            self:updateDraw()
             return self
         end,
 
@@ -129,7 +129,7 @@ return function(name)
                             if (list[n + yOffset] ~= nil) then
                                 if (obx <= x) and (obx + dropdownW > x) and (oby + n == y) then
                                     self:setValue(list[n + yOffset])
-                                    self:setVisualChanged()
+                                    self:updateDraw()
                                     local val = self:getEventSystem():sendEvent("mouse_click", self, "mouse_click", dir, x, y)
                                     if(val==false)then return val end
                                     return true
@@ -141,11 +141,11 @@ return function(name)
             end
             if (base.mouseHandler(self, button, x, y)) then
                 isOpened = (not isOpened)
-                self:setVisualChanged()
+                self:updateDraw()
                 return true
             else
                 if(isOpened)then 
-                    self:setVisualChanged()
+                    self:updateDraw()
                     isOpened = false
                 end 
                 return false
@@ -161,7 +161,7 @@ return function(name)
                             if (list[n + yOffset] ~= nil) then
                                 if (obx <= x) and (obx + dropdownW > x) and (oby + n == y) then
                                     isOpened = false
-                                    self:setVisualChanged()
+                                    self:updateDraw()
                                     local val = self:getEventSystem():sendEvent("mouse_up", self, "mouse_up", dir, x, y)
                                     if(val==false)then return val end
                                     return true
@@ -190,7 +190,7 @@ return function(name)
                 end
                 local val = self:getEventSystem():sendEvent("mouse_scroll", self, "mouse_scroll", dir, x, y)
                 if(val==false)then return val end
-                self:setVisualChanged()
+                self:updateDraw()
                 return true
             end
         end,

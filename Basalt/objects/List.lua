@@ -27,11 +27,13 @@ return function(name)
             if (#list == 1) then
                 self:setValue(list[1])
             end
+            self:updateDraw()
             return self
         end;
 
         setOffset = function(self, yOff)
             yOffset = yOff
+            self:updateDraw()
             return self
         end;
 
@@ -41,6 +43,7 @@ return function(name)
 
         removeItem = function(self, index)
             table.remove(list, index)
+            self:updateDraw()
             return self
         end;
 
@@ -64,6 +67,7 @@ return function(name)
         clear = function(self)
             list = {}
             self:setValue({})
+            self:updateDraw()
             return self
         end;
 
@@ -74,11 +78,13 @@ return function(name)
         editItem = function(self, index, text, bgCol, fgCol, ...)
             table.remove(list, index)
             table.insert(list, index, { text = text, bgCol = bgCol or self.bgColor, fgCol = fgCol or self.fgColor, args = { ... } })
+            self:updateDraw()
             return self
         end;
 
         selectItem = function(self, index)
             self:setValue(list[index] or {})
+            self:updateDraw()
             return self
         end;
 
@@ -86,12 +92,14 @@ return function(name)
             itemSelectedBG = bgCol or self.bgColor
             itemSelectedFG = fgCol or self.fgColor
             selectionColorActive = active
+            self:updateDraw()
             return self
         end;
 
         setScrollable = function(self, scroll)
             scrollable = scroll
             if(scroll==nil)then scrollable = true end
+            self:updateDraw()
             return self
         end;
 
@@ -131,6 +139,7 @@ return function(name)
                             yOffset = yOffset - 1
                         end
                     end
+                    self:updateDraw()
                 end
                 return true
             end
@@ -146,7 +155,7 @@ return function(name)
                         if (list[n + yOffset] ~= nil) then
                             if (obx <= x) and (obx + w > x) and (oby + n - 1 == y) then
                                 self:setValue(list[n + yOffset])
-                                self:setVisualChanged()
+                                self:updateDraw()
                             end
                         end
                     end
@@ -186,20 +195,17 @@ return function(name)
                         end
                     end
                 end
-                self:setVisualChanged(false)
             end
-        end;
+        end,
 
         init = function(self)
             self.bgColor = self.parent:getTheme("ListBG")
             self.fgColor = self.parent:getTheme("ListText")
             itemSelectedBG = self.parent:getTheme("SelectionBG")
             itemSelectedFG = self.parent:getTheme("SelectionText")
-            if(self.parent~=nil)then
-                self.parent:addEvent("mouse_click", self)
-                self.parent:addEvent("mouse_drag", self)
-                self.parent:addEvent("mouse_scroll", self)
-            end
+            self.parent:addEvent("mouse_click", self)
+            self.parent:addEvent("mouse_drag", self)
+            self.parent:addEvent("mouse_scroll", self)
         end,
     }
 

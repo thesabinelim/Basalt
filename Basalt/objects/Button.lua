@@ -24,14 +24,19 @@ return function(name)
         end;
         setHorizontalAlign = function(self, pos)
             textHorizontalAlign = pos
+            self:updateDraw()
+            return self
         end;
 
         setVerticalAlign = function(self, pos)
             textVerticalAlign = pos
+            self:updateDraw()
+            return self
         end;
 
         setText = function(self, text)
             base:setValue(text)
+            self:updateDraw()
             return self
         end;
 
@@ -61,9 +66,8 @@ return function(name)
                         end
                     end
                 end
-                self:setVisualChanged(false)
             end
-        end;
+        end,
 
     }
     return setmetatable(object, base)

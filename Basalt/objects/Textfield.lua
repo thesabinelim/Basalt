@@ -1,5 +1,6 @@
 local Object = require("Object")
 local tHex = require("tHex")
+local log = require("basaltLogs")
 local xmlValue = require("utils").getValueFromXML
 
 return function(name)
@@ -65,6 +66,7 @@ return function(name)
         end
         fgLines[l] = fgLine
         bgLines[l] = bgLine
+        self:updateDraw()
     end
 
     local function updateAllColors(self)
@@ -140,6 +142,7 @@ return function(name)
 
         editLine = function(self, index, text)
             lines[index] = text or lines[index]
+            self:updateDraw()
             return self
         end;
 
@@ -148,6 +151,7 @@ return function(name)
             bgLines = {""}
             fgLines = {""}
             hIndex, wIndex, textX, textY = 1, 1, 1, 1
+            self:updateDraw()
             return self
         end,
 
@@ -169,6 +173,7 @@ return function(name)
                     table.insert(fgLines, tHex[self.fgColor]:rep(text:len()))
                 end
             end
+            self:updateDraw()
             return self
         end;
 
@@ -179,11 +184,13 @@ return function(name)
             for k,v in pairs(tab)do
                 table.insert(keyWords[color], v)
             end
+            self:updateDraw()
             return self
         end;
 
         addRule = function(self, rule, fg, bg)
             table.insert(rules, {rule, fg, bg})
+            self:updateDraw()
             return self
         end;
 
@@ -194,6 +201,7 @@ return function(name)
                     rules[k][3] = bg
                 end
             end
+            self:updateDraw()
             return self
         end;
 
@@ -203,11 +211,13 @@ return function(name)
                     table.remove(rules, k)
                 end
             end
+            self:updateDraw()
             return self
         end;
 
         setKeywords = function(self, color, tab)
             keyWords[color] = tab
+            self:updateDraw()
             return self
         end;
 
@@ -216,6 +226,7 @@ return function(name)
             if (#lines <= 0) then
                 table.insert(lines, "")
             end
+            self:updateDraw()
             return self
         end;
 
@@ -450,6 +461,7 @@ return function(name)
                     cursorX = 0
                 end
                 self.parent:setCursor(true, obx + cursorX, oby + cursorY, self.fgColor)
+                self:updateDraw()
                 return true
             end
         end,
@@ -474,7 +486,6 @@ return function(name)
                         self.parent:setCursor(true, anchx + textX - wIndex, anchy + textY - hIndex, self.fgColor)
                     end
                 end
-                self:setVisualChanged()
                 return true
             end
         end,
@@ -500,7 +511,7 @@ return function(name)
                         self.parent:setCursor(false)
                     end
                 end
-                self:setVisualChanged()
+                self:updateDraw()
                 return true
             end
         end,
@@ -521,11 +532,10 @@ return function(name)
                                 wIndex = 1
                             end
                         end
-                        if (self.parent ~= nil) then
-                            self.parent:setCursor(true, anchx + textX - wIndex, anchy + textY - hIndex, self.fgColor)
-                        end
                     end
-                self:setVisualChanged()
+                    if (self.parent ~= nil) then
+                        self.parent:setCursor(true, anchx + textX - wIndex, anchy + textY - hIndex, self.fgColor)
+                    end
                 return true
             end
         end,
@@ -545,6 +555,7 @@ return function(name)
                         local anchx, anchy = self:getAnchorPosition()
                         self.parent:setCursor(true, anchx + textX - wIndex, anchy + textY - hIndex, self.fgColor)
                         updateColors(self)
+                        self:updateDraw()
                     end
                 end
             end
@@ -585,7 +596,6 @@ return function(name)
                         self.parent:setFG(obx, oby + n - 1, fg)
                     end
                 end
-                self:setVisualChanged(false)
             end
         end,
 

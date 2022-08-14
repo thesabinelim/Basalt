@@ -35,25 +35,28 @@ return function(name)
             end
             if not(fgColChanged)then self.fgColor = self.parent:getForeground() or colors.white end
             if not(bgColChanged)then self.bgColor = self.parent:getBackground() or colors.black end
+            self:updateDraw()
             return self
         end;
 
         setBackground = function(self, col)
             base.setBackground(self, col)
             bgColChanged = true
+            self:updateDraw()
             return self
         end,
 
         setForeground = function(self, col)
             base.setForeground(self, col)
             fgColChanged = true
+            self:updateDraw()
             return self
         end,
 
         setTextAlign = function(self, hor, vert)
             textHorizontalAlign = hor or textHorizontalAlign
             textVerticalAlign = vert or textVerticalAlign
-            self:setVisualChanged()
+            self:updateDraw()
             return self
         end;
 
@@ -61,6 +64,7 @@ return function(name)
             if(size>0)and(size<=4)then
                 fontsize = size-1 or 0
             end
+            self:updateDraw()
             return self
         end;
 
@@ -80,7 +84,7 @@ return function(name)
         setSize = function(self, width, height)
             base.setSize(self, width, height)
             autoSize = false
-            self:setVisualChanged()
+            self:updateDraw()
             return self
         end;
 
@@ -128,9 +132,8 @@ return function(name)
                         end
                     end
                 end
-                self:setVisualChanged(false)
             end
-        end;
+        end,
 
     }
 

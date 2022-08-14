@@ -2,6 +2,7 @@ local Object = require("Object")
 local tHex = require("tHex")
 local process = require("process")
 local xmlValue = require("utils").getValueFromXML
+local log = require("basaltLogs")
 
 local sub = string.sub
 
@@ -12,7 +13,7 @@ return function(name, parent)
     local object
     local cachedPath
 
-    local function createBasaltWindow(x, y, width, height)
+    local function createBasaltWindow(x, y, width, height, self)
         local xCursor, yCursor = 1, 1
         local bgColor, fgColor = colors.black, colors.white
         local cursorBlink = false
@@ -51,6 +52,7 @@ return function(name, parent)
                 cacheFG[n] = sub(cacheFG[n] == nil and emptyFG or cacheFG[n] .. emptyFG:sub(1, width - cacheFG[n]:len()), 1, width)
                 cacheBG[n] = sub(cacheBG[n] == nil and emptyBG or cacheBG[n] .. emptyBG:sub(1, width - cacheBG[n]:len()), 1, width)
             end
+            base.updateDraw(base)
         end
         recreateWindowArray()
 
@@ -118,6 +120,7 @@ return function(name, parent)
                         cacheFG[yCursor] = sNewTextColor
                         cacheBG[yCursor] = sNewBackgroundColor
                     end
+                    object:updateDraw()
                 end
                 xCursor = nEnd + 1
                 if (visible) then
@@ -133,6 +136,7 @@ return function(name, parent)
                     cacheT[_y] = sub(gText:sub(1, _x - 1) .. text .. gText:sub(_x + (text:len()), width), 1, width)
                 end
             end
+            object:updateDraw()
         end
 
         local function setBG(_x, _y, colorStr)
@@ -142,6 +146,7 @@ return function(name, parent)
                     cacheBG[_y] = sub(gBG:sub(1, _x - 1) .. colorStr .. gBG:sub(_x + (colorStr:len()), width), 1, width)
                 end
             end
+            object:updateDraw()
         end
 
         local function setFG(_x, _y, colorStr)
@@ -151,6 +156,7 @@ return function(name, parent)
                     cacheFG[_y] = sub(gFG:sub(1, _x - 1) .. colorStr .. gFG:sub(_x + (colorStr:len()), width), 1, width)
                 end
             end
+            object:updateDraw()
         end
 
         local setTextColor = function(color)
@@ -494,7 +500,7 @@ return function(name, parent)
 
         setSize = function(self, width, height, rel)
             base.setSize(self, width, height, rel)
-            pWindow.basalt_resize(self:getSize())
+            pWindow.basalt_resize(self:getWidth(), self:getHeight())
             return self
         end;
 
@@ -687,6 +693,18 @@ return function(name, parent)
                 if (curProcess == nil) then
                     return
                 end
+                if(event=="dynamicValueEvent")then
+                    local w, h = pWindow.getSize()
+                    local pW, pH = self:getSize()
+                    if(w~=pW)or(h~=pH)then
+                        pWindow.basalt_resize(pW, pH)
+                        if not (curProcess:isDead()) then
+                            curProcess:resume("term_resize")
+                        end
+                    end
+                    pWindow.basalt_reposition(self:getAnchorPosition())
+                    
+                end
                 if not (curProcess:isDead()) then
                     if not (paused) then
                         if(event ~= "terminate") then
@@ -724,13 +742,11 @@ return function(name, parent)
                     end
                     pWindow.basalt_update()
                 end
-                self:setVisualChanged(false)
             end
         end,
 
         init = function(self)
             self.bgColor = self.parent:getTheme("ProgramBG")
-
         end,
 
     }
