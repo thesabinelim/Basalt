@@ -26,6 +26,11 @@ return function(name)
     local isDragging = false
     local dragStartX, dragStartY, dragXOffset, dragYOffset = 0, 0, 0, 0
 
+    local bgSymbol = " "
+    local bgSymbolColor = colors.black
+    local bgColor = colors.black
+    local transparentColor = false
+
     local draw = true
     local activeEvents = {}
 
@@ -168,6 +173,7 @@ return function(name)
             if (self.parent ~= nil) then
                 self.parent:removeObject(self)
             end
+            self:updateDraw()
             return self
         end;
 
@@ -301,8 +307,17 @@ return function(name)
             return self
         end,
 
-        setBackground = function(self, color)
+        setBackground = function(self, color, symbol, symbolCol)
             self.bgColor = color or false
+            bgColor = color or false
+            bgSymbol = symbol or (color~=false and bgSymbol or false)
+            bgSymbolColor = symbolCol or bgSymbolColor
+            self:updateDraw()
+            return self
+        end;
+
+        setTransparent = function(self, color)
+            transparentColor = color or false
             self:updateDraw()
             return self
         end;
@@ -382,6 +397,18 @@ return function(name)
                 if(self.parent~=nil)then
                     local x, y = self:getAnchorPosition()
                     local w,h = self:getSize()
+                    local wP,hP = self.parent:getSize()
+                    if(x+w<1)or(x>wP)or(y+h<1)or(y>hP)then return false end
+                    if(transparentColor~=false)then
+                        self.parent:drawForegroundBox(x, y, w, h, transparentColor)
+                    end
+                    if(bgColor~=false)then
+                        self.parent:drawBackgroundBox(x, y, w, h, bgColor)
+                    end
+                    if(bgSymbol~=false)then
+                        self.parent:drawForegroundBox(x, y, w, h, bgSymbolColor)
+                        self.parent:drawTextBox(x, y, w, h, bgSymbol)
+                    end
                     if(shadow)then                        
                         self.parent:drawBackgroundBox(x+1, y+h, w, 1, shadowColor)
                         self.parent:drawBackgroundBox(x+w, y+1, 1, h, shadowColor)
@@ -510,14 +537,13 @@ return function(name)
         onChange = function(self, ...)
             for _,v in pairs(table.pack(...))do
                 if(type(v)=="function")then
-                    self:registerEvent("value_changed", v, value)
+                    self:registerEvent("value_changed", v)
                 end
             end
             return self
         end;
 
         onClick = function(self, ...)
-            if(isEnabled)then
                 for _,v in pairs(table.pack(...))do
                     if(type(v)=="function")then
                         self:registerEvent("mouse_click", v)
@@ -528,12 +554,10 @@ return function(name)
                     self.parent:addEvent("mouse_click", self)
                     activeEvents["mouse_click"] = true
                 end
-            end
             return self
         end;
 
         onClickUp = function(self, ...)
-            if(isEnabled)then
                 for _,v in pairs(table.pack(...))do
                     if(type(v)=="function")then
                         self:registerEvent("mouse_up", v)
@@ -543,13 +567,11 @@ return function(name)
                     self.parent:addEvent("mouse_up", self)
                     activeEvents["mouse_up"] = true
                 end
-            end
             return self
         end;
 
 
         onScroll = function(self, ...)
-            if(isEnabled)then
                 for _,v in pairs(table.pack(...))do
                     if(type(v)=="function")then
                         self:registerEvent("mouse_scroll", v)
@@ -559,22 +581,21 @@ return function(name)
                     self.parent:addEvent("mouse_scroll", self)
                     activeEvents["mouse_scroll"] = true
                 end
-            end
             return self
         end;
 
         onDrag = function(self, ...)
-            if(isEnabled)then
-                for _,v in pairs(table.pack(...))do
-                    if(type(v)=="function")then
-                        self:registerEvent("mouse_drag", v)
-                    end
-                end
-                if(self.parent~=nil)then
-                    self.parent:addEvent("mouse_drag", self)
-                    activeEvents["mouse_drag"] = true
+            for _,v in pairs(table.pack(...))do
+                if(type(v)=="function")then
+                    self:registerEvent("mouse_drag", v)
                 end
             end
+            self.parent:addEvent("mouse_drag", self)
+            activeEvents["mouse_drag"] = true
+            self.parent:addEvent("mouse_click", self)
+            activeEvents["mouse_click"] = true
+            self.parent:addEvent("mouse_up", self)
+            activeEvents["mouse_up"] = true
             return self
         end;
 
@@ -697,6 +718,8 @@ return function(name)
                 if(self.parent~=nil)then
                     self.parent:setFocusedObject(self)
                 end
+                isDragging = true
+                dragStartX, dragStartY = x, y 
                 return true
             end
             return false
@@ -737,26 +760,20 @@ return function(name)
                     parentX, parentY = self.parent:getAbsolutePosition(self.parent:getAnchorPosition())
                 end
                 local dX, dY = x + dragXOffset - (parentX - 1) + xO, y + dragYOffset - (parentY - 1) + yO
-                local val = eventSystem:sendEvent(event, self, event, button, dX, dY, dragStartX, dragStartY, x, y)
-                if(val~=nil)then return val end
-                if(self:isCoordsInObject(x, y))then
-                    if(self.parent~=nil)then
-                        self.parent:setFocusedObject(self)
-                    end
-                    return true
-                end
-                return false
-            end
-
-            if(self:isCoordsInObject(x, y))then
+                local val = eventSystem:sendEvent("mouse_drag", self, button, dX, dY, dragStartX-x, dragStartY-y, x, y)
                 local objX, objY = self:getAbsolutePosition(self:getAnchorPosition())
-                isDragging = true 
                 dragStartX, dragStartY = x, y 
-                dragXOffset, dragYOffset = objX - x, objY - y
+                if(val~=nil)then return val end
                 if(self.parent~=nil)then
                     self.parent:setFocusedObject(self)
                 end
                 return true
+            end
+
+            if(self:isCoordsInObject(x, y))then
+                local objX, objY = self:getAbsolutePosition(self:getAnchorPosition())
+                dragStartX, dragStartY = x, y 
+                dragXOffset, dragYOffset = objX - x, objY - y
             end
             return false
         end,
@@ -807,7 +824,7 @@ return function(name)
         end,
 
         valueChangedHandler = function(self)
-            eventSystem:sendEvent("value_changed", self)
+            eventSystem:sendEvent("value_changed", self, value)
         end;
 
         eventHandler = function(self, event, p1, p2, p3, p4)
@@ -822,6 +839,7 @@ return function(name)
         end;
 
         loseFocusHandler = function(self)
+            isDragging = false
             local val = eventSystem:sendEvent("lose_focus", self)
             if(val~=nil)then return val end
             return true

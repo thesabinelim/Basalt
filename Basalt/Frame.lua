@@ -77,17 +77,6 @@ return function(name, parent, pTerm, basalt)
         end
     end
 
-    if (parent ~= nil) then
-        base.parent = parent
-        base.width, base.height = parent:getSize()
-        base.bgColor = parent:getTheme("FrameBG")
-        base.fgColor = parent:getTheme("FrameText")
-    else
-        base.width, base.height = termObject.getSize()
-        base.bgColor = basalt.getTheme("BasaltBG")
-        base.fgColor = basalt.getTheme("BasaltText")
-    end
-
     local function getObject(name)
         for _, value in pairs(objects) do
             for _, b in pairs(value) do
@@ -409,8 +398,12 @@ return function(name, parent, pTerm, basalt)
             return self
         end;
 
-        setTheme = function(self, _theme)
-            theme = _theme
+        setTheme = function(self, _theme, col)
+            if(type(_theme)=="table")then
+                theme = _theme
+            elseif(type(_theme)=="string")then
+                theme[_theme] = col
+            end
             self:updateDraw()
             return self
         end,
@@ -851,24 +844,22 @@ return function(name, parent, pTerm, basalt)
                 self:updateDraw()
                 return true
             end
-            if(base.dragHandler(self, button, x, y))then
-                if(events["mouse_drag"]~=nil)then
-                    for _, index in ipairs(eventZIndex["mouse_drag"]) do
-                        if (events["mouse_drag"][index] ~= nil) then
-                            for _, value in rpairs(events["mouse_drag"][index]) do
-                                if (value.dragHandler ~= nil) then
-                                    if (value:dragHandler(button, x, y)) then
-                                        focusSystem(self)
-                                        return true
-                                    end
+            if(events["mouse_drag"]~=nil)then
+                for _, index in ipairs(eventZIndex["mouse_drag"]) do
+                    if (events["mouse_drag"][index] ~= nil) then
+                        for _, value in rpairs(events["mouse_drag"][index]) do
+                            if (value.dragHandler ~= nil) then
+                                if (value:dragHandler(button, x, y)) then
+                                    focusSystem(self)
+                                    return true
                                 end
                             end
                         end
                     end
                 end
-                focusSystem(self)
-                return true
             end
+            focusSystem(self)
+            base.dragHandler(self, button, x, y)
             return false
         end,
 
@@ -1017,17 +1008,10 @@ return function(name, parent, pTerm, basalt)
             if(isMonitor)and not(monitorAttached)then return false end;
             if(self.parent==nil)then if(self:getDraw()==false)then return false end end
             if (base.draw(self))then
-                --if(self.parent==nil)then log("DRAW") end
                 local obx, oby = self:getAbsolutePosition(self:getAnchorPosition())
                 local anchx, anchy = self:getAnchorPosition()
                 local w,h = self:getSize()
-                if (self.parent ~= nil) then
-                    if(self.bgColor~=false)then
-                        self.parent:drawBackgroundBox(anchx, anchy, w, h, self.bgColor)
-                        self.parent:drawTextBox(anchx, anchy, w, h, " ")
-                    end
-                    if(self.bgColor~=false)then self.parent:drawForegroundBox(anchx, anchy, w, h, self.fgColor) end
-                else
+                if (self.parent == nil) then
                     if(self.bgColor~=false)then
                         basaltDraw.drawBackgroundBox(anchx, anchy, w, h, self.bgColor)
                         basaltDraw.drawTextBox(anchx, anchy, w, h, " ")
@@ -1090,7 +1074,19 @@ return function(name, parent, pTerm, basalt)
         addFrame = function(self, name)
             local obj = basalt.newFrame(name or uuid(), self, nil, basalt)
             return addObject(obj)
-        end;
+        end,
+
+        init = function(self)
+            if (parent ~= nil) then
+                base.width, base.height = parent:getSize()
+                self:setBackground(parent:getTheme("FrameBG"))
+                self:setForeground(parent:getTheme("FrameText"))
+            else
+                base.width, base.height = termObject.getSize()
+                self:setBackground(basalt.getTheme("BasaltBG"))
+                self:setForeground(basalt.getTheme("BasaltText"))
+            end
+        end,
     }
     for k,v in pairs(_OBJECTS)do
         object["add"..k] = function(self, name)

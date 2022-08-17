@@ -302,6 +302,7 @@ basalt = {
             end
         end
         local newFrame = Frame(name,nil,nil,bInstance)
+        newFrame:init()
         table.insert(frames, newFrame)
         if(mainFrame==nil)and(newFrame:getName()~="basaltDebuggingFrame")then
             newFrame:show()

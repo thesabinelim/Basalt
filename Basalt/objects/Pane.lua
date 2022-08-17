@@ -14,16 +14,6 @@ return function(name)
             return objectType
         end;
 
-        draw = function(self)
-            if (base.draw(self)) then
-                if (self.parent ~= nil) then
-                    local obx, oby = self:getAnchorPosition()
-                    local w,h = self:getSize()
-                    self.parent:drawBackgroundBox(obx, oby, w, h, self.bgColor)
-                    self.parent:drawForegroundBox(obx, oby, w, h, self.fgColor)
-                end
-            end
-        end,
 
     }
 
