@@ -1,6 +1,7 @@
 local Object = require("Object")
 local utils = require("utils")
 local xmlValue = utils.getValueFromXML
+local tHex = require("tHex")
 
 return function(name)
     -- Button
@@ -55,14 +56,10 @@ return function(name)
                     local w,h = self:getSize()
                     local verticalAlign = utils.getTextVerticalAlign(h, textVerticalAlign)
 
-                    if(self.bgColor~=false)then
-                        self.parent:drawBackgroundBox(obx, oby, w, h, self.bgColor)
-                        self.parent:drawTextBox(obx, oby, w, h, " ")
-                    end
-                    if(self.fgColor~=false)then self.parent:drawForegroundBox(obx, oby, w, h, self.fgColor) end
                     for n = 1, h do
                         if (n == verticalAlign) then
                             self.parent:setText(obx, oby + (n - 1), utils.getTextHorizontalAlign(self:getValue(), w, textHorizontalAlign))
+                            self.parent:setFG(obx, oby + (n - 1), utils.getTextHorizontalAlign(tHex[self.fgColor]:rep(self:getValue():len()), w, textHorizontalAlign))
                         end
                     end
                 end

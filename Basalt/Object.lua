@@ -26,11 +26,6 @@ return function(name)
     local isDragging = false
     local dragStartX, dragStartY, dragXOffset, dragYOffset = 0, 0, 0, 0
 
-    local bgSymbol = " "
-    local bgSymbolColor = colors.black
-    local bgColor = colors.black
-    local transparentColor = false
-
     local draw = true
     local activeEvents = {}
 
@@ -42,7 +37,10 @@ return function(name)
         width = 1,
         height = 1,
         bgColor = colors.black,
+        bgSymbol  = " ",
+        bgSymbolColor = colors.black,
         fgColor = colors.white,
+        transparentColor = false,
         name = name or "Object",
         parent = nil,
 
@@ -309,9 +307,8 @@ return function(name)
 
         setBackground = function(self, color, symbol, symbolCol)
             self.bgColor = color or false
-            bgColor = color or false
-            bgSymbol = symbol or (color~=false and bgSymbol or false)
-            bgSymbolColor = symbolCol or bgSymbolColor
+            self.bgSymbol = symbol or (color~=false and self.bgSymbol or false)
+            self.bgSymbolColor = symbolCol or self.bgSymbolColor
             self:updateDraw()
             return self
         end;
@@ -354,16 +351,16 @@ return function(name)
 
         showBorder = function(self, ...)
             for _,v in pairs(table.pack(...))do
-                if(v=="left")then
+                if(v=="left")or(...==nil)then
                     borderLeft = true
                 end
-                if(v=="top")then
+                if(v=="top")or(...==nil)then
                     borderTop = true
                 end
-                if(v=="right")then
+                if(v=="right")or(...==nil)then
                     borderRight = true
                 end
-                if(v=="bottom")then
+                if(v=="bottom")or(...==nil)then
                     borderBottom = true
                 end
             end
@@ -399,15 +396,15 @@ return function(name)
                     local w,h = self:getSize()
                     local wP,hP = self.parent:getSize()
                     if(x+w<1)or(x>wP)or(y+h<1)or(y>hP)then return false end
-                    if(transparentColor~=false)then
-                        self.parent:drawForegroundBox(x, y, w, h, transparentColor)
+                    if(self.transparentColor~=false)then
+                        self.parent:drawForegroundBox(x, y, w, h, self.transparentColor)
                     end
-                    if(bgColor~=false)then
-                        self.parent:drawBackgroundBox(x, y, w, h, bgColor)
+                    if(self.bgColor~=false)then
+                        self.parent:drawBackgroundBox(x, y, w, h, self.bgColor)
                     end
-                    if(bgSymbol~=false)then
-                        self.parent:drawForegroundBox(x, y, w, h, bgSymbolColor)
-                        self.parent:drawTextBox(x, y, w, h, bgSymbol)
+                    if(self.bgSymbol~=false)then
+                        self.parent:drawForegroundBox(x, y, w, h, self.bgSymbolColor)
+                        self.parent:drawTextBox(x, y, w, h, self.bgSymbol)
                     end
                     if(shadow)then                        
                         self.parent:drawBackgroundBox(x+1, y+h, w, 1, shadowColor)
@@ -547,7 +544,6 @@ return function(name)
                 for _,v in pairs(table.pack(...))do
                     if(type(v)=="function")then
                         self:registerEvent("mouse_click", v)
-                        self:registerEvent("monitor_touch", v)
                     end
                 end
                 if(self.parent~=nil)then
@@ -649,7 +645,6 @@ return function(name)
         end;
 
         onKeyUp = function(self, ...)
-            if(isEnabled)then
                 for _,v in pairs(table.pack(...))do
                     if(type(v)=="function")then
                         self:registerEvent("key_up", v)
@@ -659,7 +654,6 @@ return function(name)
                     self.parent:addEvent("key_up", self)
                     activeEvents["key_up"] = true
                 end
-            end
             return self
         end;
 
@@ -676,6 +670,10 @@ return function(name)
                     self:registerEvent("get_focus", v)
                 end
             end
+            if(self.parent~=nil)then
+                self.parent:addEvent("mouse_click", self)
+                activeEvents["mouse_click"] = true
+            end
             return self
         end;
 
@@ -684,6 +682,10 @@ return function(name)
                 if(type(v)=="function")then
                     self:registerEvent("lose_focus", v)
                 end
+            end
+            if(self.parent~=nil)then
+                self.parent:addEvent("mouse_click", self)
+                activeEvents["mouse_click"] = true
             end
             return self
         end;
@@ -711,27 +713,15 @@ return function(name)
             return false
         end,
 
-        mouseHandler = function(self, button, x, y)
+        mouseHandler = function(self, button, x, y, isMon)
             if(self:isCoordsInObject(x, y))then
-                local val = eventSystem:sendEvent("mouse_click", self, "mouse_click", button, x, y)
+                local val = eventSystem:sendEvent("mouse_click", self, "mouse_click", button, x, y, isMon)
                 if(val==false)then return false end
                 if(self.parent~=nil)then
                     self.parent:setFocusedObject(self)
                 end
                 isDragging = true
                 dragStartX, dragStartY = x, y 
-                return true
-            end
-            return false
-        end,
-
-        touchHandler = function(self, x, y)
-            if(self:isCoordsInObject(x, y))then
-                local val = eventSystem:sendEvent("monitor_touch", self, "monitor_touch", x, y)
-                if(val==false)then return false end
-                if(self.parent~=nil)then
-                    self.parent:setFocusedObject(self)
-                end
                 return true
             end
             return false

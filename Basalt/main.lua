@@ -72,6 +72,7 @@ local bInstance = {
     end,
 
     setMonitorFrame = function(name, frame)
+        if(mainFrame == frame)then mainFrame = nil end
         monFrames[name] = frame
     end,
 
@@ -158,7 +159,7 @@ local function basaltUpdateEvent(event, p1, p2, p3, p4)
     if(basaltEvent:sendEvent("basaltEventCycle", event, p1, p2, p3, p4)==false)then return end
     if(mainFrame~=nil)then
         if (event == "mouse_click") then
-            mainFrame:mouseHandler(p1, p2, p3, p4)
+            mainFrame:mouseHandler(p1, p2, p3, false)
             activeFrame = mainFrame
         elseif (event == "mouse_drag") then
             mainFrame:dragHandler(p1, p2, p3, p4)
@@ -169,11 +170,12 @@ local function basaltUpdateEvent(event, p1, p2, p3, p4)
         elseif (event == "mouse_scroll") then
             mainFrame:scrollHandler(p1, p2, p3, p4)
             activeFrame = mainFrame
-        elseif (event == "monitor_touch") then
-            if(monFrames[p1]~=nil)then
-                monFrames[p1]:touchHandler(p1, p2, p3, p4)
-                activeFrame = monFrames[p1]
-            end
+        end
+    end
+    if(event == "monitor_touch") then
+        if(monFrames[p1]~=nil)then
+            monFrames[p1]:mouseHandler(1, p2, p3, true)
+            activeFrame = monFrames[p1]
         end
     end
 
@@ -320,6 +322,7 @@ basalt = {
 
     debug = function(...)
         local args = { ... }
+        if(mainFrame==nil)then print(...) return end
         if (mainFrame.name ~= "basaltDebuggingFrame") then
             if (mainFrame ~= basalt.debugFrame) then
                 basalt.debugLabel:setParent(mainFrame)

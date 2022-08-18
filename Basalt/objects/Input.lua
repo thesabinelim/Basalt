@@ -100,7 +100,7 @@ return function(name)
                 if(defaultText~="")then
                     self:updateDraw()
                 end
-                self.parent:setCursor(true, obx + textX - wIndex, oby+math.floor(self:getHeight()/2), self.fgColor)
+                self.parent:setCursor(true, obx + textX - wIndex, oby+math.max(math.ceil(self:getHeight()/2-1, 1)), self.fgColor)
             end
         end;
 
@@ -182,7 +182,7 @@ return function(name)
                     cursorX = self.x + w - 1
                 end
                 if (self.parent ~= nil) then
-                    self.parent:setCursor(true, obx + cursorX, oby+math.floor(h/2), self.fgColor)
+                    self.parent:setCursor(true, obx + cursorX, oby+math.max(math.ceil(h/2-1, 1)), self.fgColor)
                 end
                 internalValueChange = false
                 return true
@@ -222,7 +222,7 @@ return function(name)
                     cursorX = x + w - 1
                 end
                 if (self.parent ~= nil) then
-                    self.parent:setCursor(true, obx + cursorX, oby+math.floor(h/2), self.fgColor)
+                    self.parent:setCursor(true, obx + cursorX, oby+math.max(math.ceil(h/2-1, 1)), self.fgColor)
                 end
                 internalValueChange = false
                 self:updateDraw()
@@ -247,6 +247,7 @@ return function(name)
                         wIndex = 1
                     end
                 end
+                self.parent:setCursor(true, obx + textX-1, oby+math.max(math.ceil(h/2-1, 1)), self.fgColor)
                 return true
             end
         end,
@@ -284,7 +285,7 @@ return function(name)
                             cursorX = x + w - 1
                         end
                         if (self.parent ~= nil) then
-                            self.parent:setCursor(true, obx + cursorX, oby+math.floor(h/2), self.fgColor)
+                            self.parent:setCursor(true, obx + cursorX, oby+math.max(math.ceil(h/2-1, 1)), self.fgColor)
                         end
                         self:updateDraw()
                         internalValueChange = false
@@ -325,7 +326,7 @@ return function(name)
                             if (inputType == "password") and (val ~= "") then
                                 text = string.rep("*", text:len())
                             end
-                            text = text .. string.rep(" ", space)
+                            text = text .. string.rep(self.bgSymbol, space)
                             self.parent:writeText(obx, oby + (n - 1), text, bCol, fCol)
                         end
                     end

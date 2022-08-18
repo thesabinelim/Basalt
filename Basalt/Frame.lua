@@ -623,6 +623,7 @@ return function(name, parent, pTerm, basalt)
         end;
 
         setMirror = function(self, side)
+            if(self.parent~=nil)then error("Frame has to be a base frame in order to attach a mirror.") end
             mirrorSide = side
             if(mirror~=nil)then
                 basaltDraw.setMirror(mirror)
@@ -643,21 +644,23 @@ return function(name, parent, pTerm, basalt)
                 if(peripheral.getType(side)=="monitor")then
                     termObject = peripheral.wrap(side)
                     monitorAttached = true
-                    self:setSize(termObject.getSize())
+                    
                 end
                 if(self.parent~=nil)then
                     self.parent:removeObject(self)
                 end
                 isMonitor = true
+                basalt.setMonitorFrame(side, self)
             else
                 termObject = parentTerminal
                 isMonitor = false
                 if(basalt.getMonitorFrame(monSide)==self)then
                     basalt.setMonitorFrame(monSide, nil)
                 end
-                self:setSize(termObject.getSize())
             end
             basaltDraw = BasaltDraw(termObject)
+            self:setSize(termObject.getSize())
+            autoSize = true
             monSide = side or nil
             self:updateDraw()
             return self;
@@ -701,15 +704,22 @@ return function(name, parent, pTerm, basalt)
                     end
                 end
             end
-            if(autoSize)then
+            if(autoSize)and not(isMonitor)then
                 if(self.parent==nil)then
-                    if(event=="term_resize")or(event=="monitor_resize")then
+                    if(event=="term_resize")then
                         self:setSize(termObject.getSize())
                         autoSize = true
                     end
                 end
             end
             if(isMonitor)then
+                if(autoSize)then
+                    if(event=="monitor_resize")and(p1==monSide)then
+                        self:setSize(termObject.getSize())
+                        autoSize = true
+                        self:updateDraw()
+                    end
+                end
                 if(event == "peripheral")and(p1==monSide)then
                     if(peripheral.getType(monSide)=="monitor")then
                         monitorAttached = true
@@ -730,8 +740,8 @@ return function(name, parent, pTerm, basalt)
                 if(event == "peripheral_detach")and(p1==mirrorSide)then
                     monitorAttached = false
                 end
-                if(event=="monitor_touch")then
-                    self:mouseHandler(1, p1, p2)
+                if(event=="monitor_touch")and(mirrorSide==p1)then
+                    self:mouseHandler(1, p2, p3, true)
                 end
             end
             if (event == "terminate") then

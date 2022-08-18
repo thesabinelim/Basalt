@@ -3,6 +3,8 @@ local tHex = require("tHex")
 local log = require("basaltLogs")
 local xmlValue = require("utils").getValueFromXML
 
+local rep = string.rep
+
 return function(name)
     local base = Object(name)
     local objectType = "Textfield"
@@ -434,6 +436,7 @@ return function(name)
                     cursorX = 0
                 end
                 self.parent:setCursor(true, obx + cursorX, oby + cursorY, self.fgColor)
+                self:updateDraw()
                 return true
             end
         end,
@@ -470,20 +473,24 @@ return function(name)
             if (base.dragHandler(self, button, x, y)) then
                 local obx, oby = self:getAbsolutePosition(self:getAnchorPosition())
                 local anchx, anchy = self:getAnchorPosition()
+                local w,h = self:getSize()
                 if (lines[y - oby + hIndex] ~= nil) then
-                    textX = x - obx + wIndex
-                    textY = y - oby + hIndex
-                    if (textX > lines[textY]:len()) then
-                        textX = lines[textY]:len() + 1
-                    end
-                    if (textX < wIndex) then
-                        wIndex = textX - 1
-                        if (wIndex < 1) then
-                            wIndex = 1
+                    if(anchx+w > anchx + x - (obx+1)+ wIndex)and(anchx < anchx + x - obx+ wIndex)then
+                        textX = x - obx + wIndex
+                        textY = y - oby + hIndex
+                        if (textX > lines[textY]:len()) then
+                            textX = lines[textY]:len() + 1
                         end
-                    end
-                    if (self.parent ~= nil) then
-                        self.parent:setCursor(true, anchx + textX - wIndex, anchy + textY - hIndex, self.fgColor)
+                        if (textX < wIndex) then
+                            wIndex = textX - 1
+                            if (wIndex < 1) then
+                                wIndex = 1
+                            end
+                        end
+                        if (self.parent ~= nil) then
+                            self.parent:setCursor(true, anchx + textX - wIndex, anchy + textY - hIndex, self.fgColor)
+                        end
+                        self:updateDraw()
                     end
                 end
                 return true
@@ -566,12 +573,6 @@ return function(name)
                 if (self.parent ~= nil) then
                     local obx, oby = self:getAnchorPosition()
                     local w,h = self:getSize()
-                    if(self.bgColor~=false)then
-                        self.parent:drawBackgroundBox(obx, oby, w, h, self.bgColor)
-                    end
-                    if(self.fgColor~=false)then
-                        self.parent:drawForegroundBox(obx, oby, w, h, self.fgColor)
-                    end
                     for n = 1, h do
                         local text = ""
                         local bg = ""
@@ -588,9 +589,9 @@ return function(name)
                         if (space < 0) then
                             space = 0
                         end
-                        text = text .. string.rep(" ", space)
-                        bg = bg .. string.rep(tHex[self.bgColor], space)
-                        fg = fg .. string.rep(tHex[self.fgColor], space)
+                        text = text .. rep(self.bgSymbol, space)
+                        bg = bg .. rep(tHex[self.bgColor], space)
+                        fg = fg .. rep(tHex[self.fgColor], space)
                         self.parent:setText(obx, oby + n - 1, text)
                         self.parent:setBG(obx, oby + n - 1, bg)
                         self.parent:setFG(obx, oby + n - 1, fg)
