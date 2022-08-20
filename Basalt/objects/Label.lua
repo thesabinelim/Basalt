@@ -33,8 +33,6 @@ return function(name)
             if (autoSize) then
                 self.width = text:len()
             end
-            if not(fgColChanged)then self.fgColor = self.parent:getForeground() or colors.white end
-            if not(bgColChanged)then self.bgColor = self.parent:getBackground() or colors.black end
             self:updateDraw()
             return self
         end;
@@ -94,10 +92,6 @@ return function(name)
                     local obx, oby = self:getAnchorPosition()
                     local w,h = self:getSize()
                     local verticalAlign = utils.getTextVerticalAlign(h, textVerticalAlign)
-                    if(self.bgColor~=false)then 
-                        self.parent:drawBackgroundBox(obx, oby, w, h, self.bgColor)
-                        self.parent:drawTextBox(obx, oby, w, h, " ") end
-                    if(self.fgColor~=false)then self.parent:drawForegroundBox(obx, oby, w, h, self.fgColor) end
                     if(fontsize==0)then
                         if not(autoSize)then
                             local text = createText(self:getValue(), self:getWidth())
@@ -125,7 +119,6 @@ return function(name)
                             
                                 for i = 1, cY do
                                     self.parent:setFG(obx, oby + i + n - 2, utils.getTextHorizontalAlign(tData[2][i], w, textHorizontalAlign))
-                                    self.parent:setBG(obx, oby + i + n - 2, utils.getTextHorizontalAlign(tData[3][i], w, textHorizontalAlign, tHex[self.bgColor or colors.black]))
                                     self.parent:setText(obx, oby + i + n - 2, utils.getTextHorizontalAlign(tData[1][i], w, textHorizontalAlign))
                                 end
                             end
@@ -134,6 +127,10 @@ return function(name)
                 end
             end
         end,
+        init = function(self)
+            self.bgColor = self.parent:getTheme("LabelBG")
+            self.fgColor = self.parent:getTheme("LabelText")
+        end
 
     }
 

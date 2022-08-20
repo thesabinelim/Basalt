@@ -3,12 +3,12 @@ local process = {}
 local processId = 0
 
 function process:new(path, window, ...)
-    local args = table.pack(...)
+    local args = {...}
     local newP = setmetatable({ path = path }, { __index = self })
     newP.window = window
     newP.processId = processId
     newP.coroutine = coroutine.create(function()
-        os.run({ basaltProcess = true }, path, table.unpack(args))
+        shell.execute(path, table.unpack(args))
     end)
     processes[processId] = newP
     processId = processId + 1

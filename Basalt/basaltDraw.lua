@@ -163,11 +163,15 @@ return function(drawTerm)
             end
         end;
         writeText = function(x, y, text, bgCol, fgCol)
-            bgCol = bgCol or terminal.getBackgroundColor()
-            fgCol = fgCol or terminal.getTextColor()
-            setText(x, y, text)
-            setBG(x, y, rep(tHex[bgCol], text:len()))
-            setFG(x, y, rep(tHex[fgCol], text:len()))
+            if(text~=nil)then
+                setText(x, y, text)
+                if(bgCol~=nil)and(bgCol~=false)then
+                    setBG(x, y, rep(tHex[bgCol], text:len()))
+                end
+                if(fgCol~=nil)and(fgCol~=false)then
+                    setFG(x, y, rep(tHex[fgCol], text:len()))
+                end
+            end
         end;
 
         update = function()

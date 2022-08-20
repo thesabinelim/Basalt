@@ -314,7 +314,9 @@ return function(name)
         end;
 
         setTransparent = function(self, color)
-            transparentColor = color or false
+            self.transparentColor = color or false
+            self.bgSymbol = false
+            self.bgSymbolColor = false
             self:updateDraw()
             return self
         end;
@@ -780,10 +782,10 @@ return function(name)
             return false
         end,
 
-        keyHandler = function(self, key)
+        keyHandler = function(self, key, isHolding)
             if(isEnabled)and(isVisible)then
                 if (self:isFocused()) then
-                local val = eventSystem:sendEvent("key", self, "key", key)
+                local val = eventSystem:sendEvent("key", self, "key", key, isHolding)
                 if(val==false)then return false end
                 return true
                 end
@@ -818,7 +820,8 @@ return function(name)
         end;
 
         eventHandler = function(self, event, p1, p2, p3, p4)
-            eventSystem:sendEvent("other_event", self, event, p1, p2, p3, p4)
+            local val = eventSystem:sendEvent("other_event", self, event, p1, p2, p3, p4)
+            if(val~=nil)then return val end
             return true
         end;
 

@@ -2,8 +2,10 @@ local basaltEvent = require("basaltEvent")()
 local Frame = require("Frame")
 local theme = require("theme")
 local utils = require("utils")
+local log = require("basaltLogs")
 local uuid = utils.uuid
 local createText = utils.createText
+
 
 local baseTerm = term.current()
 local version = 5
@@ -14,12 +16,16 @@ local projectDirectory = fs.getDir(table.pack(...)[2] or "")
 local activeKey, frames, monFrames, variables, schedules = {}, {}, {}, {}, {}
 local mainFrame, activeFrame, focusedObject, updaterActive
 
+local basalt = {}
+
 if not  term.isColor or not term.isColor() then
     error('Basalt requires an advanced (golden) computer to run.', 0)
 end
 
 local function stop()
-    updaterActive = false
+    updaterActive = false    
+    baseTerm.clear()
+    baseTerm.setCursorPos(1, 1)
 end
 
 local setVariable = function(name, var)
@@ -93,34 +99,19 @@ local basaltError = function(errMsg)
     baseTerm.setBackgroundColor(colors.black)
     baseTerm.setTextColor(colors.red)
     local w,h = baseTerm.getSize()
-
-    local splitString = function(str, sep)
-        if sep == nil then
-                sep = "%s"
-        end
-        local t={}
-        for v in string.gmatch(str, "([^"..sep.."]+)") do
-                table.insert(t, v)
-        end
-        return t
-    end   
-    local words = splitString(errMsg, " ")
-    local line = "Basalt error: "
-    local yPos = 1
-    for n=1,#words do
-        baseTerm.setCursorPos(1,yPos)
-        if(#line+#words[n]<w)then 
-            line = line.." "..words[n]
-        else
-            baseTerm.write(line)
-            line = words[n]
-            yPos = yPos + 1
-        end
-        if(n==#words)then
-            baseTerm.write(line)
-        end
+    if(basalt.logging)then
+        log(errMsg, "Error")
     end
+
+    local text = createText("Basalt error: "..errMsg, w)
+    local yPos = 1
+    for k,v in pairs(text)do
+        baseTerm.setCursorPos(1,yPos)
+        baseTerm.write(v)
+        yPos = yPos + 1
+    end 
     baseTerm.setCursorPos(1,yPos+1)
+    updaterActive = false
 end
 
 local function handleSchedules(event, p1, p2, p3, p4)
@@ -145,6 +136,7 @@ local function handleSchedules(event, p1, p2, p3, p4)
 end
 
 local function drawFrames()
+    if(updaterActive==false)then return end
     if(mainFrame~=nil)then
         mainFrame:draw()
         mainFrame:updateTerm()
@@ -192,12 +184,17 @@ local function basaltUpdateEvent(event, p1, p2, p3, p4)
     end
     if(event == "key")then
         if(activeFrame~=nil)then
-            activeFrame:keyHandler(p1)
+            activeFrame:keyHandler(p1, p2)
         end
         activeKey[p1] = true
     end
-
-    if(event~="mouse_click")and(event~="mouse_up")and(event~="mouse_scroll")and(event~="mouse_drag")and(event~="key")and(event~="key_up")and(event~="char")then
+    if(event == "terminate")then
+        if(activeFrame~=nil)then
+            activeFrame:eventHandler(event)
+            if(updaterActive==false)then return end
+        end
+    end
+    if(event~="mouse_click")and(event~="mouse_up")and(event~="mouse_scroll")and(event~="mouse_drag")and(event~="key")and(event~="key_up")and(event~="char")and(event~="terminate")then
         for k, v in pairs(frames) do
             v:eventHandler(event, p1, p2, p3, p4)
         end
@@ -206,8 +203,8 @@ local function basaltUpdateEvent(event, p1, p2, p3, p4)
     drawFrames()
 end
 
-local basalt = {}
 basalt = {
+    logging = false,
     setTheme = setTheme,
     getTheme = getTheme,
     drawFrames = drawFrames,
@@ -222,24 +219,29 @@ basalt = {
         baseTerm = _baseTerm
     end,
 
+    log = function(...)
+        log(...)
+    end,
+
     autoUpdate = function(isActive)
-        local pCall = pcall
         updaterActive = isActive
         if(isActive==nil)then updaterActive = true end
-        drawFrames()
-        while updaterActive do
-            local event, p1, p2, p3, p4 = os.pullEventRaw()
-            local ok, err = pCall(basaltUpdateEvent, event, p1, p2, p3, p4)
-            if not(ok)then
-                basaltError(err)
-                return
+        local function f()
+            drawFrames()
+            while updaterActive do
+                basaltUpdateEvent(os.pullEventRaw())
             end
+        end
+        local ok, err = xpcall(f, debug.traceback)
+        if not(ok)then
+            basaltError(err)
+            return
         end
     end,
     
     update = function(event, p1, p2, p3, p4)
         if (event ~= nil) then
-            local ok, err = pcall(basaltUpdateEvent, event, p1, p2, p3, p4)
+            local ok, err = xpcall(basaltUpdateEvent, debug.traceback, event, p1, p2, p3, p4)
             if not(ok)then
                 basaltError(err)
                 return

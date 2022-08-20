@@ -1,4 +1,5 @@
 local Object = require("Object")
+local log = require("basaltLogs")
 local xmlValue = require("utils").getValueFromXML
 
 return function(name)
@@ -154,7 +155,6 @@ return function(name)
 
                     if (barType == "vertical") then
                         for n = 0, h - 1 do
-
                             if (index == n + 1) then
                                 for curIndexOffset = 0, math.min(symbolSize - 1, h) do
                                     self.parent:writeText(obx, oby + n + curIndexOffset, symbol, symbolColor, symbolColor)

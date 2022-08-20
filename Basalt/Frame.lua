@@ -1,6 +1,5 @@
 local Object = require("Object")
 local _OBJECTS = require("loadObjects")
-local log = require("basaltLogs")
 local BasaltDraw = require("basaltDraw")
 local utils = require("utils")
 local layout = require("layout")
@@ -43,6 +42,7 @@ return function(name, parent, pTerm, basalt)
     local focusedObject
     local autoSize = true
     local autoScroll = true
+    local initialized = false
 
     local activeEvents = {}
 
@@ -461,7 +461,6 @@ return function(name, parent, pTerm, basalt)
                 local obx, oby = self:getAnchorPosition()
                 self.parent:setCursor(_blink or false, (_xCursor or 0)+obx-1, (_yCursor or 0)+oby-1, color or cursorColor)
             else
-                log(_blink)
                 local obx, oby = self:getAbsolutePosition(self:getAnchorPosition(self:getX(), self:getY(), true))
                 cursorBlink = _blink or false
                 if (_xCursor ~= nil) then
@@ -744,9 +743,7 @@ return function(name, parent, pTerm, basalt)
                     self:mouseHandler(1, p2, p3, true)
                 end
             end
-            if (event == "terminate") then
-                termObject.setCursorPos(1, 1)
-                termObject.clear()
+            if (event == "terminate")and(self.parent==nil)then
                 basalt.stop()
             end
         end,
@@ -873,7 +870,7 @@ return function(name, parent, pTerm, basalt)
             return false
         end,
 
-        keyHandler = function(self, key)
+        keyHandler = function(self, key, isHolding)
             if (self:isFocused())or(self.parent==nil)then
                 local val = self:getEventSystem():sendEvent("key", self, "key", key)
                 if(val==false)then return false end
@@ -882,7 +879,7 @@ return function(name, parent, pTerm, basalt)
                         if (events["key"][index] ~= nil) then
                             for _, value in rpairs(events["key"][index]) do
                                 if (value.keyHandler ~= nil) then
-                                    if (value:keyHandler(key)) then
+                                    if (value:keyHandler(key, isHolding)) then
                                         return true
                                     end
                                 end
@@ -1087,14 +1084,17 @@ return function(name, parent, pTerm, basalt)
         end,
 
         init = function(self)
-            if (parent ~= nil) then
-                base.width, base.height = parent:getSize()
-                self:setBackground(parent:getTheme("FrameBG"))
-                self:setForeground(parent:getTheme("FrameText"))
-            else
-                base.width, base.height = termObject.getSize()
-                self:setBackground(basalt.getTheme("BasaltBG"))
-                self:setForeground(basalt.getTheme("BasaltText"))
+            if not(initialized)then
+                if (parent ~= nil) then
+                    base.width, base.height = parent:getSize()
+                    self:setBackground(parent:getTheme("FrameBG"))
+                    self:setForeground(parent:getTheme("FrameText"))
+                else
+                    base.width, base.height = termObject.getSize()
+                    self:setBackground(basalt.getTheme("BasaltBG"))
+                    self:setForeground(basalt.getTheme("BasaltText"))
+                end
+                initialized = true
             end
         end,
     }

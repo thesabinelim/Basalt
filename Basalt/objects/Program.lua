@@ -445,14 +445,14 @@ return function(name, parent)
         end
     end
 
-    local function keyEvent(self, event, key)
+    local function keyEvent(self, event, key, isHolding)
         if (curProcess == nil) then
             return false
         end
         if not (curProcess:isDead()) then
             if not (paused) then
                 if (self.draw) then
-                    curProcess:resume(event, key)
+                    curProcess:resume(event, key, isHolding)
                     updateCursor(self)
                 end
             end
@@ -633,9 +633,9 @@ return function(name, parent)
             return false
         end,
 
-        keyHandler = function(self, key)
-            if(base.keyHandler(self, key))then
-                keyEvent(self, "key", key)
+        keyHandler = function(self, key, isHolding)
+            if(base.keyHandler(self, key, isHolding))then
+                keyEvent(self, "key", key, isHolding)
                 return true
             end
             return false
@@ -720,8 +720,10 @@ return function(name, parent)
                                 end
                             end
 
-                            if (event == "terminate") and (self:isFocused()) then
-                                self:stop()
+                            if (event == "terminate") then
+                                curProcess:resume(event)
+                                self.parent:setCursor(false)
+                                return true
                             end
                         end
                     else

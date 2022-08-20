@@ -52,6 +52,8 @@ local lerp = {
     easeInOutSine = easeInOutSine,
 }
 
+local activeAnimations = {}
+
 return function(name)
     local object = {}
     local objectType = "Animation"
