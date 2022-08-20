@@ -17,12 +17,16 @@ end
 
 function process:resume(event, ...)
     term.redirect(self.window)
+    if(self.filter~=nil)then
+        if(event~=self.filter)then return end
+        self.filter=nil
+    end
     local ok, result = coroutine.resume(self.coroutine, event, ...)
     self.window = term.current()
     if ok then
         self.filter = result
     else
-        basalt.debug(result)
+        error(result)
     end
 end
 

@@ -38,7 +38,7 @@ return function(name, parent, pTerm, basalt)
     local isMovable = false
     local isDragging =false
 
-    local focusedOBjectCache
+    local focusedObjectCache
     local focusedObject
     local autoSize = true
     local autoScroll = true
@@ -339,14 +339,15 @@ return function(name, parent, pTerm, basalt)
     end
 
     local function focusSystem(self)
-        if(focusedObject~=focusedOBjectCache)then
+        if(focusedObject~=focusedObjectCache)then
             if(focusedObject~=nil)then
                 focusedObject:loseFocusHandler()
             end
-            if(focusedOBjectCache~=nil)then
-                focusedOBjectCache:getFocusHandler()
+            if(focusedObjectCache~=nil)then
+                focusedObjectCache:getFocusHandler()
             end
-            focusedObject = focusedOBjectCache
+            focusedObject = focusedObjectCache
+            focusedObjectCache = nil
         end
     end
 
@@ -371,7 +372,7 @@ return function(name, parent, pTerm, basalt)
         end;
 
         setFocusedObject = function(self, obj)
-            focusedOBjectCache = obj
+            focusedObjectCache = obj
             return self
         end;
 
@@ -447,7 +448,7 @@ return function(name, parent, pTerm, basalt)
         end;
 
         removeFocusedObject = function(self)
-                focusedOBjectCache = nil
+                focusedObjectCache = nil
             return self
         end;
 
@@ -667,7 +668,7 @@ return function(name, parent, pTerm, basalt)
 
         loseFocusHandler = function(self)
             base.loseFocusHandler(self)
-            if(focusedObject~=nil)then focusedObject:loseFocusHandler() end
+            if(focusedObject~=nil)then focusedObject:loseFocusHandler() focusedObject = nil end
         end;
 
         getFocusHandler = function(self)

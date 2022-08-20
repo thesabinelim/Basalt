@@ -675,7 +675,7 @@ return function(name, parent)
                     end
                 end
             end
-        end;
+        end,
 
         loseFocusHandler = function(self)
             base.loseFocusHandler(self)
@@ -686,7 +686,7 @@ return function(name, parent)
                     end
                 end
             end
-        end;
+        end,
 
         eventHandler = function(self, event, p1, p2, p3, p4)
             if(base.eventHandler(self, event, p1, p2, p3, p4))then
@@ -721,6 +721,7 @@ return function(name, parent)
                             end
 
                             if (event == "terminate") then
+                                log(self:isFocused())
                                 curProcess:resume(event)
                                 self.parent:setCursor(false)
                                 return true
@@ -730,8 +731,9 @@ return function(name, parent)
                         table.insert(queuedEvent, { event = event, args = { p1, p2, p3, p4 } })
                     end
                 end
+                return false
             end
-        end;
+        end,
 
         draw = function(self)
             if (base.draw(self)) then
@@ -739,9 +741,6 @@ return function(name, parent)
                     local obx, oby = self:getAnchorPosition()
                     local w,h = self:getSize()
                     pWindow.basalt_reposition(obx, oby)
-                    if(self.bgColor~=false)then
-                        self.parent:drawBackgroundBox(obx, oby, w, h, self.bgColor)
-                    end
                     pWindow.basalt_update()
                 end
             end

@@ -1,5 +1,6 @@
 local basaltEvent = require("basaltEvent")
 local utils = require("utils")
+local log = require("basaltLogs")
 local split = utils.splitString
 local numberFromString = utils.numberFromString
 local xmlValue = utils.getValueFromXML
@@ -828,6 +829,7 @@ return function(name)
         getFocusHandler = function(self)
             local val = eventSystem:sendEvent("get_focus", self)
             if(val~=nil)then return val end
+            log("Focus "..self:getName())
             return true
         end;
 
@@ -835,6 +837,7 @@ return function(name)
             isDragging = false
             local val = eventSystem:sendEvent("lose_focus", self)
             if(val~=nil)then return val end
+            log("Losefocus "..self:getName())
             return true
         end;
 
