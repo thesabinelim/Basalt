@@ -14,6 +14,7 @@ return function(name)
     local anchor = "topLeft"
     local ignOffset = false
     local isVisible = true
+    local initialized = false
 
     local shadow = false
     local borderLeft = false
@@ -308,7 +309,7 @@ return function(name)
 
         setBackground = function(self, color, symbol, symbolCol)
             self.bgColor = color or false
-            self.bgSymbol = symbol or (color~=false and self.bgSymbol or false)
+            self.bgSymbol = symbol or (self.bgColor~=false and self.bgSymbol or false)
             self.bgSymbolColor = symbolCol or self.bgSymbolColor
             self:updateDraw()
             return self
@@ -406,8 +407,10 @@ return function(name)
                         self.parent:drawBackgroundBox(x, y, w, h, self.bgColor)
                     end
                     if(self.bgSymbol~=false)then
-                        self.parent:drawForegroundBox(x, y, w, h, self.bgSymbolColor)
                         self.parent:drawTextBox(x, y, w, h, self.bgSymbol)
+                        if(self.bgSymbol~=" ")then
+                            self.parent:drawForegroundBox(x, y, w, h, self.bgSymbolColor)
+                        end
                     end
                     if(shadow)then                        
                         self.parent:drawBackgroundBox(x+1, y+h, w, 1, shadowColor)
@@ -735,9 +738,6 @@ return function(name)
             if(self:isCoordsInObject(x, y))then
                 local val = eventSystem:sendEvent("mouse_up", self, "mouse_up", button, x, y)
                 if(val==false)then return false end
-                if(self.parent~=nil)then
-                    self.parent:setFocusedObject(self)
-                end
                 return true
             end
             return false
@@ -829,7 +829,6 @@ return function(name)
         getFocusHandler = function(self)
             local val = eventSystem:sendEvent("get_focus", self)
             if(val~=nil)then return val end
-            log("Focus "..self:getName())
             return true
         end;
 
@@ -837,7 +836,6 @@ return function(name)
             isDragging = false
             local val = eventSystem:sendEvent("lose_focus", self)
             if(val~=nil)then return val end
-            log("Losefocus "..self:getName())
             return true
         end;
 
@@ -848,6 +846,10 @@ return function(name)
                     self.parent:addEvent(k, self)
                     end
                 end
+            end
+            if not(initialized)then
+                initialized = true
+                return true
             end
         end
 

@@ -347,7 +347,6 @@ return function(name, parent, pTerm, basalt)
                 focusedObjectCache:getFocusHandler()
             end
             focusedObject = focusedObjectCache
-            focusedObjectCache = nil
         end
     end
 
@@ -389,7 +388,7 @@ return function(name, parent, pTerm, basalt)
                 if (objects[index] ~= nil) then
                     for _, value in pairs(objects[index]) do
                         if (value.eventHandler ~= nil) then
-                            value:sendEvent("basalt_resize", value, self)
+                            value:eventHandler("basalt_resize", value, self)
                         end
                     end
                 end
@@ -419,7 +418,7 @@ return function(name, parent, pTerm, basalt)
                 if (objects[index] ~= nil) then
                     for _, value in pairs(objects[index]) do
                         if (value.eventHandler ~= nil) then
-                            value:sendEvent("basalt_reposition", value, self)
+                            value:eventHandler("basalt_reposition", value, self)
                         end
                     end
                 end

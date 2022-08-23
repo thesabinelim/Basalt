@@ -79,8 +79,8 @@ return function(name)
             return self
         end,
 
-        setSize = function(self, width, height)
-            base.setSize(self, width, height)
+        setSize = function(self, width, height, rel)
+            base.setSize(self, width, height, rel)
             autoSize = false
             self:updateDraw()
             return self
@@ -96,40 +96,38 @@ return function(name)
                         if not(autoSize)then
                             local text = createText(self:getValue(), self:getWidth())
                             for k,v in pairs(text)do
-                                self.parent:setText(obx, oby+k-1, v)
+                                self.parent:writeText(obx, oby+k-1, v, self.bgColor, self.fgColor)
                             end
                         else
-                            for n = 1, h do
-                                if (n == verticalAlign) then
-                                    self.parent:setText(obx, oby + (n - 1), utils.getTextHorizontalAlign(self:getValue(), w, textHorizontalAlign))
-                                end
-                            end
+                            self.parent:writeText(obx, oby, self:getValue(), self.bgColor, self.fgColor)
                         end
                     else
-                        local tData = bigFont(fontsize, self:getValue(), self.fgColor, self.bgColor or colors.black)
+                        local tData = bigFont(fontsize, self:getValue(), self.fgColor, self.bgColor or colors.lightGray)
                         if(autoSize)then
                             self:setSize(#tData[1][1], #tData[1]-1)
                         end
-                        for n = 1, h do
-                            if (n == verticalAlign) then
-                                local oX, oY = self.parent:getSize()
-                                local cX, cY = #tData[1][1], #tData[1]
-                                obx = obx or math.floor((oX - cX) / 2) + 1
-                                oby = oby or math.floor((oY - cY) / 2) + 1
-                            
-                                for i = 1, cY do
-                                    self.parent:setFG(obx, oby + i + n - 2, utils.getTextHorizontalAlign(tData[2][i], w, textHorizontalAlign))
-                                    self.parent:setText(obx, oby + i + n - 2, utils.getTextHorizontalAlign(tData[1][i], w, textHorizontalAlign))
-                                end
+                            local oX, oY = self.parent:getSize()
+                            local cX, cY = #tData[1][1], #tData[1]
+                            obx = obx or math.floor((oX - cX) / 2) + 1
+                            oby = oby or math.floor((oY - cY) / 2) + 1
+                        
+                            for i = 1, cY do
+                                self.parent:setFG(obx, oby + i - 2, tData[2][i])
+                                self.parent:setBG(obx, oby + i - 2, tData[3][i])
+                                self.parent:setText(obx, oby + i - 2, tData[1][i])
                             end
-                        end
                     end
                 end
             end
         end,
         init = function(self)
-            self.bgColor = self.parent:getTheme("LabelBG")
-            self.fgColor = self.parent:getTheme("LabelText")
+            if(base.init(self))then
+                self.bgColor = self.parent:getTheme("LabelBG")
+                self.fgColor = self.parent:getTheme("LabelText")
+                if(self.parent.bgColor==colors.black)and(self.fgColor==colors.black)then
+                    self.fgColor = colors.lightGray
+                end
+            end
         end
 
     }

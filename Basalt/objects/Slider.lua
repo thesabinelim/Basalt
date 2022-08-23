@@ -139,7 +139,9 @@ return function(name)
                 index = math.min(index, (barType == "vertical" and h or w) - (symbolSize - 1))
                 self:setValue(maxValue / (barType == "vertical" and h or w) * index)
                 self:updateDraw()
+                return true
             end
+            return false
         end,
 
         draw = function(self)

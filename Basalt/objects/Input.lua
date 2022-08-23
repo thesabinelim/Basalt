@@ -57,10 +57,12 @@ return function(name)
         setValue = function(self, val)
             base.setValue(self, tostring(val))
             if not (internalValueChange) then
-                textX = tostring(val):len() + 1
-                wIndex = math.max(1, textX-self:getWidth()+1)
-                local obx, oby = self:getAnchorPosition()
-                self.parent:setCursor(true, obx + textX - wIndex, oby+math.floor(self.height/2), self.fgColor)
+                if(self:isFocused())then
+                    textX = tostring(val):len() + 1
+                    wIndex = math.max(1, textX-self:getWidth()+1)
+                    local obx, oby = self:getAnchorPosition()
+                    self.parent:setCursor(true, obx + textX - wIndex, oby+math.floor(self.height/2), self.fgColor)
+                end
             end
             self:updateDraw()
             return self

@@ -135,21 +135,20 @@ return function(name)
         end;
 
         draw = function(self)
-            if (base.draw(self)) then
-                if (self.parent ~= nil) then
-                    local obx, oby = self:getAnchorPosition()
-                    for _, value in pairs(list) do
-                        if (value == self:getValue()) then
-                            if (align == "left") then
-                                self.parent:writeText(value.x + obx - 1, value.y + oby - 1, symbol, boxSelectedBG, boxSelectedFG)
-                                self.parent:writeText(value.x + 2 + obx - 1, value.y + oby - 1, value.text, itemSelectedBG, itemSelectedFG)
-                            end
-                        else
-                            self.parent:drawBackgroundBox(value.x + obx - 1, value.y + oby - 1, 1, 1, boxNotSelectedBG or self.bgColor)
-                            self.parent:writeText(value.x + 2 + obx - 1, value.y + oby - 1, value.text, value.bgCol, value.fgCol)
+            if (self.parent ~= nil) then
+                local obx, oby = self:getAnchorPosition()
+                for _, value in pairs(list) do
+                    if (value == self:getValue()) then
+                        if (align == "left") then
+                            self.parent:writeText(value.x + obx - 1, value.y + oby - 1, symbol, boxSelectedBG, boxSelectedFG)
+                            self.parent:writeText(value.x + 2 + obx - 1, value.y + oby - 1, value.text, itemSelectedBG, itemSelectedFG)
                         end
+                    else
+                        self.parent:drawBackgroundBox(value.x + obx - 1, value.y + oby - 1, 1, 1, boxNotSelectedBG or self.bgColor)
+                        self.parent:writeText(value.x + 2 + obx - 1, value.y + oby - 1, value.text, value.bgCol, value.fgCol)
                     end
                 end
+                return true
             end
         end,
 

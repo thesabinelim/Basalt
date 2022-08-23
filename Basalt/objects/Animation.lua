@@ -403,6 +403,12 @@ return function(name)
 
         play = function(self, infinite)
             self:cancel()
+            if(_OBJ~=nil)then
+                if(activeAnimations[_OBJ:getName()]~=nil)then
+                    activeAnimations[_OBJ:getName()]:cancel()
+                end
+                activeAnimations[_OBJ:getName()] = self
+            end
             animationActive = true
             infinitePlay = infinite and true or false
             index = 1
@@ -421,6 +427,13 @@ return function(name)
         end;
 
         cancel = function(self)
+            if(_OBJ~=nil)then
+                if(activeAnimations[_OBJ:getName()]~=nil)then
+                    if(activeAnimations[_OBJ:getName()]==self)then
+                        activeAnimations[_OBJ:getName()] = nil
+                    end
+                end
+            end
             if(timerObj~=nil)then
                 os.cancelTimer(timerObj)
                 infinitePlay = false
