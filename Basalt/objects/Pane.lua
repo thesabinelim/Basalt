@@ -1,4 +1,5 @@
 local Object = require("Object")
+local log = require("basaltLogs")
 
 return function(name)
     -- Pane

@@ -1,4 +1,3 @@
-
 local xmlValue = require("utils").getValueFromXML
 local basaltEvent = require("basaltEvent")
 
@@ -134,9 +133,19 @@ return function(name)
     end
     
 
-    local function predefinedLerp(v1,v2,d,t,get,set)
+    local function predefinedLerp(v1,v2,d,t,get,set,typ,self)
         local x,y 
+        local name = ""
+        if(_OBJ.parent~=nil)then name = _OBJ.parent:getName() end
+        name = name.._OBJ:getName()
         addAnimationPart(t+0.05, function()
+            if(typ~=nil)then
+                if(activeAnimations[typ]==nil)then activeAnimations[typ] = {} end
+                    if(activeAnimations[typ][name]~=nil)then
+                        activeAnimations[typ][name]:cancel()
+                    end
+                activeAnimations[typ][name] = self
+            end
             x,y = get(_OBJ)
         end)
         for n=0.05,d+0.01,0.05 do
@@ -144,6 +153,13 @@ return function(name)
                 local _x = math.floor(lerp.lerp(x, v1, lerp[mode](n / d))+0.5)
                 local _y = math.floor(lerp.lerp(y, v2, lerp[mode](n / d))+0.5)
                 set(_OBJ, _x,_y)
+                if(typ~=nil)then
+                    if(n>=d-0.01)then
+                        if(activeAnimations[typ][name]==self)then
+                            activeAnimations[typ][name] = nil
+                        end
+                    end
+                end
             end)
         end
     end;
@@ -291,19 +307,19 @@ return function(name)
 
         move = function(self, x, y, duration, timer, obj)
             _OBJ = obj or _OBJ
-            predefinedLerp(x,y,duration,timer or 0,_OBJ.getPosition,_OBJ.setPosition)
+            predefinedLerp(x,y,duration,timer or 0,_OBJ.getPosition,_OBJ.setPosition, "position", self)
             return self
         end,
 
         offset = function(self, x, y, duration, timer, obj)
             _OBJ = obj or _OBJ
-            predefinedLerp(x,y,duration,timer or 0,_OBJ.getOffset,_OBJ.setOffset)
+            predefinedLerp(x,y,duration,timer or 0,_OBJ.getOffset,_OBJ.setOffset, "offset", self)
             return self
         end,
 
         size = function(self, w, h, duration, timer, obj)
             _OBJ = obj or _OBJ
-            predefinedLerp(w,h,duration,timer or 0,_OBJ.getSize,_OBJ.setSize)
+            predefinedLerp(w,h,duration,timer or 0,_OBJ.getSize,_OBJ.setSize, "size", self)
             return self
         end,
 
@@ -403,12 +419,6 @@ return function(name)
 
         play = function(self, infinite)
             self:cancel()
-            if(_OBJ~=nil)then
-                if(activeAnimations[_OBJ:getName()]~=nil)then
-                    activeAnimations[_OBJ:getName()]:cancel()
-                end
-                activeAnimations[_OBJ:getName()] = self
-            end
             animationActive = true
             infinitePlay = infinite and true or false
             index = 1
@@ -427,13 +437,6 @@ return function(name)
         end;
 
         cancel = function(self)
-            if(_OBJ~=nil)then
-                if(activeAnimations[_OBJ:getName()]~=nil)then
-                    if(activeAnimations[_OBJ:getName()]==self)then
-                        activeAnimations[_OBJ:getName()] = nil
-                    end
-                end
-            end
             if(timerObj~=nil)then
                 os.cancelTimer(timerObj)
                 infinitePlay = false

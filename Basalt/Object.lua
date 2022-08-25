@@ -1,6 +1,5 @@
 local basaltEvent = require("basaltEvent")
 local utils = require("utils")
-local log = require("basaltLogs")
 local split = utils.splitString
 local numberFromString = utils.numberFromString
 local xmlValue = utils.getValueFromXML
@@ -17,13 +16,14 @@ return function(name)
     local initialized = false
 
     local shadow = false
-    local borderLeft = false
-    local borderTop = false
-    local borderRight = false
-    local borderBottom = false
+    local borderColors = {
+        left = false,
+        right = false,
+        top = false,
+        bottom = false
+    }
 
     local shadowColor = colors.black
-    local borderColor = colors.black
     local isEnabled = true
     local isDragging = false
     local dragStartX, dragStartY, dragXOffset, dragYOffset = 0, 0, 0, 0
@@ -102,13 +102,12 @@ return function(name)
             if(xmlValue("enabled", data)~=nil)then if(xmlValue("enabled", data))then self:enable() else self:disable() end end
             if(xmlValue("zIndex", data)~=nil)then self:setZIndex(xmlValue("zIndex", data)) end
             if(xmlValue("anchor", data)~=nil)then self:setAnchor(xmlValue("anchor", data)) end
-            if(xmlValue("shadow", data)~=nil)then if(xmlValue("shadow", data))then self:showShadow(true) end end
             if(xmlValue("shadowColor", data)~=nil)then self:setShadow(colors[xmlValue("shadowColor", data)]) end
-            if(xmlValue("border", data)~=nil)then if(xmlValue("border", data))then borderLeft,borderTop,borderRight,borderBottom = true,true,true,true end end
-            if(xmlValue("borderLeft", data)~=nil)then if(xmlValue("borderLeft", data))then borderLeft = true else borderLeft = false end end
-            if(xmlValue("borderTop", data)~=nil)then if(xmlValue("borderTop", data))then borderTop = true else borderTop = false end end
-            if(xmlValue("borderRight", data)~=nil)then if(xmlValue("borderRight", data))then borderRight = true else borderRight = false end end
-            if(xmlValue("borderBottom", data)~=nil)then if(xmlValue("borderBottom", data))then borderBottom = true else borderBottom = false end end
+            if(xmlValue("border", data)~=nil)then self:setBorder(colors[xmlValue("border", data)]) end
+            if(xmlValue("borderLeft", data)~=nil)then borderColors["left"] = xmlValue("borderLeft", data) end
+            if(xmlValue("borderTop", data)~=nil)then borderColors["top"] = xmlValue("borderTop", data) end
+            if(xmlValue("borderRight", data)~=nil)then borderColors["right"] = xmlValue("borderRight", data) end
+            if(xmlValue("borderBottom", data)~=nil)then borderColors["bottom"] = xmlValue("borderBottom", data) end
             if(xmlValue("borderColor", data)~=nil)then self:setBorder(colors[xmlValue("borderColor", data)]) end
             if(xmlValue("ignoreOffset", data)~=nil)then if(xmlValue("ignoreOffset", data))then self:ignoreOffset(true) end end
             if(xmlValue("onClick", data)~=nil)then self:generateXMLEventFunction(self.onClick, xmlValue("onClick", data)) end
@@ -337,14 +336,13 @@ return function(name)
             return self.fgColor
         end;
 
-        showShadow = function(self, show)
-            shadow = show or (not shadow)
-            self:updateDraw()
-            return self
-        end;
-
         setShadow = function(self, color)
-            shadowColor = color
+            if(color==false)then
+                shadow = false
+            else
+                shadowColor = color
+                shadow = true
+            end
             self:updateDraw()
             return self
         end;
@@ -353,27 +351,24 @@ return function(name)
             return shadow;
         end;
 
-        showBorder = function(self, ...)
-            for _,v in pairs(table.pack(...))do
-                if(v=="left")or(...==nil)then
-                    borderLeft = true
-                end
-                if(v=="top")or(...==nil)then
-                    borderTop = true
-                end
-                if(v=="right")or(...==nil)then
-                    borderRight = true
-                end
-                if(v=="bottom")or(...==nil)then
-                    borderBottom = true
+        setBorder = function(self, ...)
+            if(...~=nil)then
+                local t = {...}
+                for k,v in pairs(t)do
+                    if(v=="left")or(#t==1)then
+                        borderColors["left"] = t[1]
+                    end
+                    if(v=="top")or(#t==1)then
+                        borderColors["top"] = t[1]
+                    end
+                    if(v=="right")or(#t==1)then
+                        borderColors["right"] = t[1]
+                    end
+                    if(v=="bottom")or(#t==1)then
+                        borderColors["bottom"] = t[1]
+                    end
                 end
             end
-            self:updateDraw()
-            return self
-        end;
-
-        setBorder = function(self, color)
-            borderColor = color
             self:updateDraw()
             return self
         end;
@@ -418,40 +413,41 @@ return function(name)
                         self.parent:drawForegroundBox(x+1, y+h, w, 1, shadowColor)
                         self.parent:drawForegroundBox(x+w, y+1, 1, h, shadowColor)
                     end
-                    if(borderLeft)then
+                    if(borderColors["left"]~=false)then
                         self.parent:drawTextBox(x-1, y, 1, h, "\149")
-                        self.parent:drawForegroundBox(x-1, y, 1, h, borderColor)
-                        if(self.bgColor~=false)then self.parent:drawBackgroundBox(x-1, y, 1, h, self.bgColor) end
+                        self.parent:drawBackgroundBox(x-1, y, 1, h, borderColors["left"])
+                        self.parent:drawForegroundBox(x-1, y, 1, h, self.parent.bgColor)
                     end
-                    if(borderLeft)and(borderTop)then
+                    if(borderColors["left"]~=false)and(borderColors["top"]~=false)then
                         self.parent:drawTextBox(x-1, y-1, 1, 1, "\151")
-                        self.parent:drawForegroundBox(x-1, y-1, 1, 1, borderColor)
-                        if(self.bgColor~=false)then self.parent:drawBackgroundBox(x-1, y-1, 1, 1, self.bgColor) end
+                        self.parent:drawBackgroundBox(x-1, y-1, 1, 1, borderColors["left"])
+                        self.parent:drawForegroundBox(x-1, y-1, 1, 1, self.parent.bgColor)
                     end
-                    if(borderTop)then
+                    if(borderColors["top"]~=false)then
+
                         self.parent:drawTextBox(x, y-1, w, 1, "\131")
-                        self.parent:drawForegroundBox(x, y-1, w, 1, borderColor)
-                        if(self.bgColor~=false)then self.parent:drawBackgroundBox(x, y-1, w, 1, self.bgColor) end
+                        self.parent:drawBackgroundBox(x, y-1, w, 1, borderColors["top"])
+                        self.parent:drawForegroundBox(x, y-1, w, 1, self.parent.bgColor)
                     end
-                    if(borderTop)and(borderRight)then
-                        self.parent:drawTextBox(x+w, y-1, 1, 1, "\149")
-                        self.parent:drawForegroundBox(x+w, y-1, 1, 1, borderColor)
+                    if(borderColors["top"]~=false)and(borderColors["right"]~=false)then
+                        self.parent:drawTextBox(x+w, y-1, 1, 1, "\148")
+                        self.parent:drawForegroundBox(x+w, y-1, 1, 1, borderColors["right"])
                     end
-                    if(borderRight)then
+                    if(borderColors["right"]~=false)then
                         self.parent:drawTextBox(x+w, y, 1, h, "\149")
-                        self.parent:drawForegroundBox(x+w, y, 1, h, borderColor)
+                        self.parent:drawForegroundBox(x+w, y, 1, h, borderColors["right"])
                     end
-                    if(borderRight)and(borderBottom)then
+                    if(borderColors["right"]~=false)and(borderColors["bottom"]~=false)then
                         self.parent:drawTextBox(x+w, y+h, 1, 1, "\129")
-                        self.parent:drawForegroundBox(x+w, y+h, 1, 1, borderColor)
+                        self.parent:drawForegroundBox(x+w, y+h, 1, 1, borderColors["right"])
                     end
-                    if(borderBottom)then
+                    if(borderColors["bottom"]~=false)then
                         self.parent:drawTextBox(x, y+h, w, 1, "\131")
-                        self.parent:drawForegroundBox(x, y+h, w, 1, borderColor)
+                        self.parent:drawForegroundBox(x, y+h, w, 1, borderColors["bottom"])
                     end
-                    if(borderBottom)and(borderLeft)then
-                        self.parent:drawTextBox(x-1, y+h, 1, 1, "\131")
-                        self.parent:drawForegroundBox(x-1, y+h, 1, 1, borderColor)
+                    if(borderColors["bottom"]~=false)and(borderColors["left"]~=false)then
+                        self.parent:drawTextBox(x-1, y+h, 1, 1, "\130")
+                        self.parent:drawForegroundBox(x-1, y+h, 1, 1, borderColors["left"])
                     end
                 end
                 draw = false

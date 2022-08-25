@@ -91,7 +91,7 @@ return function(name)
         setSelectedItem = function(self, bgCol, fgCol, active)
             itemSelectedBG = bgCol or self.bgColor
             itemSelectedFG = fgCol or self.fgColor
-            selectionColorActive = active
+            selectionColorActive = active~=nil and active or true
             self:updateDraw()
             return self
         end;

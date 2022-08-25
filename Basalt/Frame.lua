@@ -456,7 +456,6 @@ return function(name, parent, pTerm, basalt)
         end;
 
         setCursor = function(self, _blink, _xCursor, _yCursor, color)
-            --if(_blink==cursorBlink)and(xCursor==_xCursor)and(yCursor==_yCursor)and(cursorColor==color)then return self end
             if(self.parent~=nil)then
                 local obx, oby = self:getAnchorPosition()
                 self.parent:setCursor(_blink or false, (_xCursor or 0)+obx-1, (_yCursor or 0)+oby-1, color or cursorColor)
@@ -601,13 +600,13 @@ return function(name, parent, pTerm, basalt)
             return self
         end,
 
-        showBar = function(self, showIt)
+        showBar = function(self, showIt) -- deprecated
             self.barActive = showIt or not self.barActive
             self:updateDraw()
             return self
         end;
 
-        setBar = function(self, text, bgCol, fgCol)
+        setBar = function(self, text, bgCol, fgCol) -- deprecated
             self.barText = text or ""
             self.barBackground = bgCol or self.barBackground
             self.barTextcolor = fgCol or self.barTextcolor
@@ -615,7 +614,7 @@ return function(name, parent, pTerm, basalt)
             return self
         end;
 
-        setBarTextAlign = function(self, align)
+        setBarTextAlign = function(self, align) -- deprecated
             self.barTextAlign = align or "left"
             self:updateDraw()
             return self
