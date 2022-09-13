@@ -2,17 +2,18 @@ local basaltEvent = require("basaltEvent")()
 local Frame = require("Frame")
 local theme = require("theme")
 local utils = require("utils")
+local log = require("basaltLogs")
 local uuid = utils.uuid
 local createText = utils.createText
-
+local count = utils.tableCount
+local moveThrottle = 300
 
 local baseTerm = term.current()
-local version = "1.6.0"
-local debugger = true
+local version = "1.6.2"
 
 local projectDirectory = fs.getDir(table.pack(...)[2] or "")
 
-local activeKey, frames, monFrames, variables, schedules = {}, {}, {}, {}, {}
+local activeKey, frames, monFrames, monGroups, variables, schedules = {}, {}, {}, {}, {}, {}
 local mainFrame, activeFrame, focusedObject, updaterActive
 
 local basalt = {}
@@ -73,12 +74,19 @@ local bInstance = {
     end,
     
     getMonitorFrame = function(name)
-        return monFrames[name]
+        return monFrames[name] or monGroups[name][1]
     end,
 
-    setMonitorFrame = function(name, frame)
+    setMonitorFrame = function(name, frame, isGroupedMon)
         if(mainFrame == frame)then mainFrame = nil end
-        monFrames[name] = frame
+        if(isGroupedMon)then
+            monGroups[name] = {frame, sides}
+        else
+            monFrames[name] = frame
+        end
+        if(frame==nil)then
+            monGroups[name] = nil
+        end
     end,
 
     getBaseTerm = function()
@@ -144,6 +152,25 @@ local function drawFrames()
         v:draw()
         v:updateTerm()
     end
+    for _,v in pairs(monGroups)do
+        v[1]:draw()
+        v[1]:updateTerm()
+    end
+end
+
+local stopped, moveX, moveY = nil, nil, nil
+local moveTimer = nil
+local function mouseMoveEvent(stp, x, y)
+    stopped, moveX, moveY = stopped, x, y
+    if(moveTimer==nil)then
+        moveTimer = os.startTimer(moveThrottle/1000)
+    end
+end
+
+local function moveHandlerTimer()
+    moveTimer = nil
+    mainFrame:hoverHandler(moveX, moveY, stopped)
+    activeFrame = mainFrame
 end
 
 local function basaltUpdateEvent(event, p1, p2, p3, p4)
@@ -161,14 +188,24 @@ local function basaltUpdateEvent(event, p1, p2, p3, p4)
         elseif (event == "mouse_scroll") then
             mainFrame:scrollHandler(p1, p2, p3, p4)
             activeFrame = mainFrame
+        elseif (event == "mouse_move") then
+            mouseMoveEvent(p1, p2, p3)
         end
     end
+
     if(event == "monitor_touch") then
         if(monFrames[p1]~=nil)then
             monFrames[p1]:mouseHandler(1, p2, p3, true)
             activeFrame = monFrames[p1]
         end
+        if(count(monGroups)>0)then
+            for k,v in pairs(monGroups)do
+                v[1]:mouseHandler(1, p2, p3, true, p1)
+            end
+        end
     end
+
+
 
     if(event == "char")then
         if(activeFrame~=nil)then
@@ -193,9 +230,13 @@ local function basaltUpdateEvent(event, p1, p2, p3, p4)
             if(updaterActive==false)then return end
         end
     end
-    if(event~="mouse_click")and(event~="mouse_up")and(event~="mouse_scroll")and(event~="mouse_drag")and(event~="key")and(event~="key_up")and(event~="char")and(event~="terminate")then
-        for k, v in pairs(frames) do
-            v:eventHandler(event, p1, p2, p3, p4)
+    if(event~="mouse_click")and(event~="mouse_up")and(event~="mouse_scroll")and(event~="mouse_drag")and(event~="mouse_move")and(event~="key")and(event~="key_up")and(event~="char")and(event~="terminate")then
+        if(event=="timer")and(p1~=moveTimer)then
+            for k, v in pairs(frames) do
+                v:eventHandler(event, p1, p2, p3, p4)
+            end
+        else
+            moveHandlerTimer()
         end
     end
     handleSchedules(event, p1, p2, p3, p4)
@@ -220,6 +261,19 @@ basalt = {
 
     log = function(...)
         log(...)
+    end,
+
+    setMouseMoveThrottle = function(amount)
+        if(_HOST:find("CraftOS%-PC"))then
+            if(config.get("mouse_move_throttle")~=10)then config.set("mouse_move_throttle", 10) end
+            if(amount<100)then
+                moveThrottle = 100
+            else
+                moveThrottle = amount
+            end
+            return true
+        end
+        return false
     end,
 
     autoUpdate = function(isActive)

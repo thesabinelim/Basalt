@@ -3,6 +3,7 @@ local _OBJECTS = require("loadObjects")
 local BasaltDraw = require("basaltDraw")
 local utils = require("utils")
 local layout = require("layout")
+local basaltMon = require("basaltMon")
 local uuid = utils.uuid
 local rpairs = utils.rpairs
 local xmlValue = utils.getValueFromXML
@@ -27,6 +28,7 @@ return function(name, parent, pTerm, basalt)
 
     local monSide = ""
     local isMonitor = false
+    local isGroupedMonitor = false
     local monitorAttached = false
     local dragXOffset = 0
     local dragYOffset = 0
@@ -138,7 +140,7 @@ return function(name, parent, pTerm, basalt)
                     if (value == obj) then
                         table.remove(events[a][c], key)
                         if(self.parent~=nil)then
-                            if(tableCount(events[event])<=0)then
+                            if(tableCount(events[a])<=0)then
                                 self.parent:removeEvent(a, self)
                             end
                         end
@@ -148,13 +150,23 @@ return function(name, parent, pTerm, basalt)
         end
     end
 
-    local function removeObject(obj)
+    local function removeObject(self, obj)
         for a, b in pairs(objects) do
             for key, value in pairs(b) do
-                if (value == obj) then
-                    table.remove(objects[a], key)
-                    removeEvents(object, obj)
-                    return true;
+                if(type(obj)=="string")then
+                    if (value:getName() == obj) then
+                        table.remove(objects[a], key)
+                        removeEvents(object, value)
+                        self:updateDraw()
+                        return true;
+                    end
+                else
+                    if (value == obj) then
+                        table.remove(objects[a], key)
+                        removeEvents(object, value)
+                        self:updateDraw()
+                        return true;
+                    end
                 end
             end
         end
@@ -206,20 +218,22 @@ return function(name, parent, pTerm, basalt)
     end
 
     local function removeEvent(self, event, obj)
-        for a, b in pairs(events[event]) do
-            for key, value in pairs(b) do
-                if (value == obj) then
-                    table.remove(events[event][a], key)
-                    if(#events[event][a]<=0)then
-                        events[event][a] = nil
-                        if(self.parent~=nil)then
-                            if(tableCount(events[event])<=0)then
-                                activeEvents[event] = false
-                                self.parent:removeEvent(event, self)
+        if(events[event]~=nil)then
+            for a, b in pairs(events[event]) do
+                for key, value in pairs(b) do
+                    if (value == obj) then
+                        table.remove(events[event][a], key)
+                        if(#events[event][a]<=0)then
+                            events[event][a] = nil
+                            if(self.parent~=nil)then
+                                if(tableCount(events[event])<=0)then
+                                    activeEvents[event] = false
+                                    self.parent:removeEvent(event, self)
+                                end
                             end
                         end
+                        return true;
                     end
-                    return true;
                 end
             end
         end
@@ -338,6 +352,7 @@ return function(name, parent, pTerm, basalt)
         end
     end
 
+
     local function focusSystem(self)
         if(focusedObject~=focusedObjectCache)then
             if(focusedObject~=nil)then
@@ -372,6 +387,7 @@ return function(name, parent, pTerm, basalt)
 
         setFocusedObject = function(self, obj)
             focusedObjectCache = obj
+            focusSystem(self)
             return self
         end;
 
@@ -448,6 +464,7 @@ return function(name, parent, pTerm, basalt)
 
         removeFocusedObject = function(self)
                 focusedObjectCache = nil
+                focusSystem(self)
             return self
         end;
 
@@ -494,7 +511,7 @@ return function(name, parent, pTerm, basalt)
         end;
 
         setScrollable = function(self, scrollable)
-            isScrollable = scrollable and true or false
+            isScrollable = (scrollable or scrollable==nil) and true or false
             if(self.parent~=nil)then
                 self.parent:addEvent("mouse_scroll", self)
             end
@@ -510,15 +527,17 @@ return function(name, parent, pTerm, basalt)
 
 
         getScrollAmount = function(self)
-            return scrollAmount
+            return autoScroll and scrollAmount or calculateMaxScroll(self)
         end,
 
         show = function(self)
             base.show(self)
             if(self.parent==nil)then
                 basalt.setActiveFrame(self)
-                if(isMonitor)then
+                if(isMonitor)and not(isGroupedMonitor)then
                     basalt.setMonitorFrame(monSide, self)
+                elseif(isGroupedMonitor)then
+                    basalt.setMonitorFrame(self:getName(), self, monSide)
                 else
                     basalt.setMainFrame(self)
                 end
@@ -529,9 +548,13 @@ return function(name, parent, pTerm, basalt)
         hide = function (self)
             base.hide(self)
             if(self.parent==nil)then
-                if(activeFrame == self)then activeFrame = nil end
-                if(isMonitor)then
+                if(activeFrame == self)then activeFrame = nil end -- bug activeFrame always nil
+                if(isMonitor)and not(isGroupedMonitor)then
                     if(basalt.getMonitorFrame(monSide) == self)then
+                        basalt.setActiveFrame(nil)
+                    end
+                elseif(isGroupedMonitor)then
+                    if(basalt.getMonitorFrame(self:getName()) == self)then
                         basalt.setActiveFrame(nil)
                     end
                 else
@@ -637,25 +660,47 @@ return function(name, parent, pTerm, basalt)
             return self
         end,
 
-        setMonitor = function(self, side)
+        setMonitorScale = function(self, scale)
+            if(isMonitor)then
+                termObject.setTextScale(scale)
+            end
+            return self
+        end,
+
+        setMonitor = function(self, side, scale)
             if(side~=nil)and(side~=false)then
-                if(peripheral.getType(side)=="monitor")then
-                    termObject = peripheral.wrap(side)
+                if(type(side)=="string")then
+                    if(peripheral.getType(side)=="monitor")then
+                        termObject = peripheral.wrap(side)
+                        monitorAttached = true
+                    end
+                    if(self.parent~=nil)then
+                        self.parent:removeObject(self)
+                    end
+                    isMonitor = true
+                    basalt.setMonitorFrame(side, self)
+                elseif(type(side)=="table")then
+                    termObject = basaltMon(side)
                     monitorAttached = true
-                    
+                    isMonitor = true
+                    isGroupedMonitor = true
+                    basalt.setMonitorFrame(self:getName(), self, true)
                 end
-                if(self.parent~=nil)then
-                    self.parent:removeObject(self)
-                end
-                isMonitor = true
-                basalt.setMonitorFrame(side, self)
             else
                 termObject = parentTerminal
                 isMonitor = false
-                if(basalt.getMonitorFrame(monSide)==self)then
-                    basalt.setMonitorFrame(monSide, nil)
+                isGroupedMonitor = false
+                if(type(monSide)=="string")then
+                    if(basalt.getMonitorFrame(monSide)==self)then
+                        basalt.setMonitorFrame(monSide, nil)
+                    end
+                else
+                    if(basalt.getMonitorFrame(self:getName())==self)then
+                        basalt.setMonitorFrame(self:getName(), nil)
+                    end
                 end
             end
+            if(scale~=nil)then termObject.setTextScale(scale) end
             basaltDraw = BasaltDraw(termObject)
             self:setSize(termObject.getSize())
             autoSize = true
@@ -712,8 +757,18 @@ return function(name, parent, pTerm, basalt)
             end
             if(isMonitor)then
                 if(autoSize)then
-                    if(event=="monitor_resize")and(p1==monSide)then
-                        self:setSize(termObject.getSize())
+                    if(event=="monitor_resize")then
+                        if(type(monSide)=="string")then
+                            self:setSize(termObject.getSize())
+                        elseif(type(monSide)=="table")then
+                            for k,v in pairs(monSide)do
+                                for a,b in pairs(v)do
+                                    if(p1==b)then
+                                        self:setSize(termObject.getSize())
+                                    end
+                                end
+                            end
+                        end
                         autoSize = true
                         self:updateDraw()
                     end
@@ -747,7 +802,12 @@ return function(name, parent, pTerm, basalt)
             end
         end,
 
-        mouseHandler = function(self, button, x, y)
+        mouseHandler = function(self, button, x, y, _, side)
+            if(isGroupedMonitor)then
+                if(termObject.calculateClick~=nil)then
+                    x, y = termObject.calculateClick(side, x, y)
+                end
+            end
             if(base.mouseHandler(self, button, x, y))then
                 if(events["mouse_click"]~=nil)then
                     self:setCursor(false)
@@ -773,7 +833,6 @@ return function(name, parent, pTerm, basalt)
                     end
                 end
                 self:removeFocusedObject()
-                focusSystem(self)
                 return true
             end
             return false
@@ -829,9 +888,27 @@ return function(name, parent, pTerm, basalt)
                     end
                 end
                 self:removeFocusedObject()
-                focusSystem(self)
                 if(yOffset==cache)then return false end
                 return true
+            end
+            return false
+        end,
+
+        hoverHandler = function(self, x, y, stopped)
+            if(base.hoverHandler(self, x, y, stopped))then
+                if(events["mouse_move"]~=nil)then
+                    for _, index in pairs(eventZIndex["mouse_move"]) do
+                        if (events["mouse_move"][index] ~= nil) then
+                            for _, value in rpairs(events["mouse_move"][index]) do
+                                if (value.hoverHandler ~= nil) then
+                                    if (value:hoverHandler(x, y, stopped)) then
+                                        return true
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
             end
             return false
         end,
@@ -850,14 +927,16 @@ return function(name, parent, pTerm, basalt)
                 self:updateDraw()
                 return true
             end
-            if(events["mouse_drag"]~=nil)then
-                for _, index in ipairs(eventZIndex["mouse_drag"]) do
-                    if (events["mouse_drag"][index] ~= nil) then
-                        for _, value in rpairs(events["mouse_drag"][index]) do
-                            if (value.dragHandler ~= nil) then
-                                if (value:dragHandler(button, x, y)) then
-                                    focusSystem(self)
-                                    return true
+            if(self:isVisible())and(self:isEnabled())then
+                if(events["mouse_drag"]~=nil)then
+                    for _, index in ipairs(eventZIndex["mouse_drag"]) do
+                        if (events["mouse_drag"][index] ~= nil) then
+                            for _, value in rpairs(events["mouse_drag"][index]) do
+                                if (value.dragHandler ~= nil) then
+                                    if (value:dragHandler(button, x, y)) then
+                                        focusSystem(self)
+                                        return true
+                                    end
                                 end
                             end
                         end
@@ -976,6 +1055,17 @@ return function(name, parent, pTerm, basalt)
             end
         end;
 
+        blit = function (self, x, y, t, b, f)
+            local obx, oby = self:getAnchorPosition()
+            if (y >= 1) and (y <= self:getHeight()) then
+                if (self.parent ~= nil) then
+                    self.parent:blit(max(x + (obx - 1), obx), oby + y - 1, sub(text, max(1 - x + 1, 1), self:getWidth() - x + 1), bgCol, fgCol)
+                else
+                    basaltDraw.blit(max(x + (obx - 1), obx), oby + y - 1, sub(text, max(1 - x + 1, 1), max(self:getWidth() - x + 1,1)), bgCol, fgCol)
+                end
+            end
+        end,
+
         drawBackgroundBox = function(self, x, y, width, height, bgCol)
             local obx, oby = self:getAnchorPosition()
             
@@ -1066,9 +1156,7 @@ return function(name, parent, pTerm, basalt)
             return addObject(obj)
         end;
 
-        removeObject = function(self, obj)
-            return removeObject(obj)
-        end;
+        removeObject = removeObject,
 
         getObject = function(self, obj)
             return getObject(obj)
