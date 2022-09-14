@@ -7,6 +7,7 @@ local uuid = utils.uuid
 local createText = utils.createText
 local count = utils.tableCount
 local moveThrottle = 300
+local dragThrottle = 50
 
 local baseTerm = term.current()
 local version = "1.6.2"
@@ -173,6 +174,21 @@ local function moveHandlerTimer()
     activeFrame = mainFrame
 end
 
+local btn, dragX, dragY = nil, nil, nil
+local dragTimer = nil
+local function mouseDragEvent(b, x, y)
+    btn, dragX, dragY = b, x, y
+    if(dragTimer==nil)then
+        dragTimer = os.startTimer(dragThrottle/1000)
+    end
+end
+
+local function dragHandlerTimer()
+    dragTimer = nil
+    mainFrame:dragHandler(btn, dragX, dragY)
+    activeFrame = mainFrame
+end
+
 local function basaltUpdateEvent(event, p1, p2, p3, p4)
     if(basaltEvent:sendEvent("basaltEventCycle", event, p1, p2, p3, p4)==false)then return end
     if(mainFrame~=nil)then
@@ -180,8 +196,9 @@ local function basaltUpdateEvent(event, p1, p2, p3, p4)
             mainFrame:mouseHandler(p1, p2, p3, false)
             activeFrame = mainFrame
         elseif (event == "mouse_drag") then
-            mainFrame:dragHandler(p1, p2, p3, p4)
-            activeFrame = mainFrame
+            --mainFrame:dragHandler(p1, p2, p3, p4)
+            --activeFrame = mainFrame
+            mouseDragEvent(p1, p2, p3)
         elseif (event == "mouse_up") then
             mainFrame:mouseUpHandler(p1, p2, p3, p4)
             activeFrame = mainFrame
@@ -231,12 +248,14 @@ local function basaltUpdateEvent(event, p1, p2, p3, p4)
         end
     end
     if(event~="mouse_click")and(event~="mouse_up")and(event~="mouse_scroll")and(event~="mouse_drag")and(event~="mouse_move")and(event~="key")and(event~="key_up")and(event~="char")and(event~="terminate")then
-        if(event=="timer")and(p1~=moveTimer)then
+        if(event=="timer")and(p1==moveTimer)then
+            moveHandlerTimer()
+        elseif(event=="timer")and(p1==dragTimer)then
+            dragHandlerTimer()
+        else
             for k, v in pairs(frames) do
                 v:eventHandler(event, p1, p2, p3, p4)
             end
-        else
-            moveHandlerTimer()
         end
     end
     handleSchedules(event, p1, p2, p3, p4)
@@ -274,6 +293,14 @@ basalt = {
             return true
         end
         return false
+    end,
+
+    setMouseDragThrottle = function(amount)
+        if(amount<50)then
+            dragThrottle = 5
+        else
+            dragThrottle = amount
+        end
     end,
 
     autoUpdate = function(isActive)
