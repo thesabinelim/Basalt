@@ -3,7 +3,7 @@ local function loadNFP(path)
 end
 
 local function loadBIMG(path)
-    local f = fs.open(path, "r")
+    local f = fs.open(path, "rb")
     local content = load("return "..f.readAll())()
     f.close()
     if(content~=nil)then
