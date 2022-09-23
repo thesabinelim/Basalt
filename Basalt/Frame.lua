@@ -352,19 +352,6 @@ return function(name, parent, pTerm, basalt)
         end
     end
 
-
-    local function focusSystem(self)
-        if(focusedObject~=focusedObjectCache)then
-            if(focusedObject~=nil)then
-                focusedObject:loseFocusHandler()
-            end
-            if(focusedObjectCache~=nil)then
-                focusedObjectCache:getFocusHandler()
-            end
-            focusedObject = focusedObjectCache
-        end
-    end
-
     object = {
         barActive = false,
         barBackground = colors.gray,
@@ -386,8 +373,15 @@ return function(name, parent, pTerm, basalt)
         end;
 
         setFocusedObject = function(self, obj)
-            focusedObjectCache = obj
-            focusSystem(self)
+            if(focusedObject~=obj)then
+                if(focusedObject~=nil)then
+                    focusedObject:loseFocusHandler()
+                end
+                if(obj~=nil)then
+                    obj:getFocusHandler()
+                end
+                focusedObject = obj
+            end
             return self
         end;
 
@@ -463,8 +457,10 @@ return function(name, parent, pTerm, basalt)
         end;
 
         removeFocusedObject = function(self)
-                focusedObjectCache = nil
-                focusSystem(self)
+            if(focusedObject~=nil)then
+                focusedObject:loseFocusHandler()
+            end
+            focusedObject = nil
             return self
         end;
 
@@ -816,7 +812,7 @@ return function(name, parent, pTerm, basalt)
                             for _, value in rpairs(events["mouse_click"][index]) do
                                 if (value.mouseHandler ~= nil) then
                                     if (value:mouseHandler(button, x, y)) then
-                                        focusSystem(self)
+                                        
                                         return true
                                     end
                                 end
@@ -849,7 +845,6 @@ return function(name, parent, pTerm, basalt)
                             for _, value in rpairs(events["mouse_up"][index]) do
                                 if (value.mouseUpHandler ~= nil) then
                                     if (value:mouseUpHandler(button, x, y)) then
-                                        focusSystem(self)
                                         return true
                                     end
                                 end
@@ -857,7 +852,6 @@ return function(name, parent, pTerm, basalt)
                         end
                     end
                 end
-                focusSystem(self)
                 return true
             end
             return false
@@ -871,7 +865,6 @@ return function(name, parent, pTerm, basalt)
                             for _, value in rpairs(events["mouse_scroll"][index]) do
                                 if (value.scrollHandler ~= nil) then
                                     if (value:scrollHandler(dir, x, y)) then
-                                        focusSystem(self)
                                         return true
                                     end
                                 end
@@ -934,7 +927,6 @@ return function(name, parent, pTerm, basalt)
                             for _, value in rpairs(events["mouse_drag"][index]) do
                                 if (value.dragHandler ~= nil) then
                                     if (value:dragHandler(button, x, y)) then
-                                        focusSystem(self)
                                         return true
                                     end
                                 end
@@ -943,7 +935,7 @@ return function(name, parent, pTerm, basalt)
                     end
                 end
             end
-            focusSystem(self)
+            
             base.dragHandler(self, button, x, y)
             return false
         end,

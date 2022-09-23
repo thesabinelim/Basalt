@@ -428,7 +428,7 @@ return function(name, parent)
         local obx, oby = self:getAnchorPosition()
         local w,h = self:getSize()
         if (obx + xCur - 1 >= 1 and obx + xCur - 1 <= obx + w - 1 and yCur + oby - 1 >= 1 and yCur + oby - 1 <= oby + h - 1) then
-            self.parent:setCursor(pWindow.getCursorBlink(), obx + xCur - 1, yCur + oby - 1, pWindow.getTextColor())
+            self.parent:setCursor(self:isFocused() and pWindow.getCursorBlink(), obx + xCur - 1, yCur + oby - 1, pWindow.getTextColor())
         end
     end
 
@@ -684,11 +684,9 @@ return function(name, parent)
                         if (self.parent ~= nil) then
                             local xCur, yCur = pWindow.getCursorPos()
                             local obx, oby = self:getAnchorPosition()
-                            if (self.parent ~= nil) then
-                                local w,h = self:getSize()
-                                if (obx + xCur - 1 >= 1 and obx + xCur - 1 <= obx + w - 1 and yCur + oby - 1 >= 1 and yCur + oby - 1 <= oby + h - 1) then
-                                    self.parent:setCursor(pWindow.getCursorBlink(), obx + xCur - 1, yCur + oby - 1, pWindow.getTextColor())
-                                end
+                            local w,h = self:getSize()
+                            if (obx + xCur - 1 >= 1 and obx + xCur - 1 <= obx + w - 1 and yCur + oby - 1 >= 1 and yCur + oby - 1 <= oby + h - 1) then
+                                self.parent:setCursor(pWindow.getCursorBlink(), obx + xCur - 1, yCur + oby - 1, pWindow.getTextColor())
                             end
                         end
                     end
@@ -757,9 +755,13 @@ return function(name, parent)
             if (base.draw(self)) then
                 if (self.parent ~= nil) then
                     local obx, oby = self:getAnchorPosition()
+                    local xCur, yCur = pWindow.getCursorPos()
                     local w,h = self:getSize()
                     pWindow.basalt_reposition(obx, oby)
                     pWindow.basalt_update()
+                    if (obx + xCur - 1 >= 1 and obx + xCur - 1 <= obx + w - 1 and yCur + oby - 1 >= 1 and yCur + oby - 1 <= oby + h - 1) then
+                        self.parent:setCursor(self:isFocused() and pWindow.getCursorBlink(), obx + xCur - 1, yCur + oby - 1, pWindow.getTextColor())
+                    end
                 end
             end
         end,

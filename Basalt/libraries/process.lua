@@ -2,6 +2,8 @@ local processes = {}
 local process = {}
 local processId = 0
 
+local newPackage = dofile("rom/modules/main/cc/require.lua").make
+
 function process:new(path, window, newEnv, ...)
     local args = {...}
     local newP = setmetatable({ path = path }, { __index = self })
@@ -11,11 +13,12 @@ function process:new(path, window, newEnv, ...)
     newP.processId = processId
     if(type(path)=="string")then
     newP.coroutine = coroutine.create(function()
+        local pPath = shell.resolveProgram(path)
         local env = setmetatable(newEnv, {__index=_ENV})
         env.shell = shell
         env.basaltProgram=true
         env.arg = {[0]=path, table.unpack(args)}
-        local pPath = shell.resolveProgram(path)
+        env.require, env.package = newPackage(env, fs.getDir(pPath))
         if(fs.exists(pPath))then
             local file = fs.open(pPath, "r")
             local content = file.readAll()
