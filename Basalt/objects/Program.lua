@@ -2,7 +2,6 @@ local Object = require("Object")
 local tHex = require("tHex")
 local process = require("process")
 local xmlValue = require("utils").getValueFromXML
-local log = require("basaltLogs")
 
 local sub = string.sub
 
@@ -436,9 +435,7 @@ return function(name, parent)
     local function resumeProcess(self, event, ...)
         local ok, result = curProcess:resume(event, ...)
         if (ok==false)and(result~=nil)and(result~="Terminated")then
-            log(result)
             local val = self:sendEvent("program_error", self, result)
-            log(val)
             if(val~=false)then
                 error("Basalt Program - "..result)
             end
@@ -768,7 +765,6 @@ return function(name, parent)
         end,
 
         onError = function(self, ...)
-            log("Registered event")
             for _,v in pairs(table.pack(...))do
                 if(type(v)=="function")then
                     self:registerEvent("program_error", v)
