@@ -52,8 +52,12 @@ return function(name)
                         
                     elseif(format=="bimg")then
                         for y,v in ipairs(image[1])do
-                            self.parent:blit(obx, oby+y-1, unpack(v))
-                            
+                            local t, f, b  = unpack(v)
+                            t = t:sub(1,w)
+                            f = f:sub(1,w)
+                            b = b:sub(1,w)
+                            self.parent:blit(obx, oby+y-1, t, f, b)
+                            if(y==h)then break end
                         end
                     end
                 end
