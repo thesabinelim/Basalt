@@ -435,14 +435,14 @@ return function(name, parent)
     local function resumeProcess(self, event, ...)
         local ok, result = curProcess:resume(event, ...)
         if (ok==false)and(result~=nil)and(result~="Terminated")then
-            local val = self:sendEvent("program_error", self, result)
+            local val = self:sendEvent("program_error", result)
             if(val~=false)then
                 error("Basalt Program - "..result)
             end
         end
         
         if(curProcess:getStatus()=="dead")then
-            self:sendEvent("program_done", self)
+            self:sendEvent("program_done")
         end
     end
 
@@ -540,6 +540,7 @@ return function(name, parent)
             pWindow.setBackgroundColor(self.bgColor)
             pWindow.setTextColor(self.fgColor)
             pWindow.basalt_setVisible(true)
+
             resumeProcess(self)
             paused = false
             if(self.parent~=nil)then
