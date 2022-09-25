@@ -565,6 +565,8 @@ return function(name)
                 if(self.parent~=nil)then
                     self.parent:addEvent("mouse_click", self)
                     activeEvents["mouse_click"] = true
+                    self.parent:addEvent("mouse_up", self)
+                    activeEvents["mouse_up"] = true
                 end
             return self
         end;
@@ -576,6 +578,8 @@ return function(name)
                     end
                 end
                 if(self.parent~=nil)then
+                    self.parent:addEvent("mouse_click", self)
+                    activeEvents["mouse_click"] = true
                     self.parent:addEvent("mouse_up", self)
                     activeEvents["mouse_up"] = true
                 end
@@ -749,7 +753,7 @@ return function(name)
         isCoordsInObject = function(self, x, y)
             if(isVisible)and(isEnabled)then
                 if(x==nil)or(y==nil)then return false end
-                local objX, objY = self:getAbsolutePosition(self:getAnchorPosition())
+                local objX, objY = self:getAbsolutePosition()
                 local w, h = self:getSize()            
                 if (objX <= x) and (objX + w > x) and (objY <= y) and (objY + h > y) then
                     return true
@@ -760,7 +764,8 @@ return function(name)
 
         mouseHandler = function(self, button, x, y, isMon)
             if(self:isCoordsInObject(x, y))then
-                local val = eventSystem:sendEvent("mouse_click", self, "mouse_click", button, x, y, isMon)
+                local objX, objY = self:getAbsolutePosition()
+                local val = eventSystem:sendEvent("mouse_click", self, "mouse_click", button, x - (objX-1), y - (objY-1), isMon)
                 if(val==false)then return false end
                 if(self.parent~=nil)then
                     self.parent:setFocusedObject(self)
@@ -775,7 +780,8 @@ return function(name)
         mouseUpHandler = function(self, button, x, y)
             isDragging = false
             if(self:isCoordsInObject(x, y))then
-                local val = eventSystem:sendEvent("mouse_up", self, "mouse_up", button, x, y)
+                local objX, objY = self:getAbsolutePosition()
+                local val = eventSystem:sendEvent("mouse_up", self, "mouse_up", button, x - (objX-1), y - (objY-1))
                 if(val==false)then return false end
                 return true
             end
@@ -784,9 +790,8 @@ return function(name)
 
         dragHandler = function(self, button, x, y)
             if(isDragging)then 
-                local objX, objY = self:getAbsolutePosition(self:getAnchorPosition())
-                local dX, dY = x - objX + 1, y - objY + 1
-                local val = eventSystem:sendEvent("mouse_drag", self, "mouse_drag", button, dX, dY, dragStartX-x, dragStartY-y, x, y)
+                local objX, objY = self:getAbsolutePosition()
+                local val = eventSystem:sendEvent("mouse_drag", self, "mouse_drag", button, x - (objX-1), y - (objY-1), dragStartX-x, dragStartY-y, x, y)
                 dragStartX, dragStartY = x, y 
                 if(val~=nil)then return val end
                 if(self.parent~=nil)then
@@ -805,7 +810,8 @@ return function(name)
 
         scrollHandler = function(self, dir, x, y)
             if(self:isCoordsInObject(x, y))then
-                local val = eventSystem:sendEvent("mouse_scroll", self, "mouse_scroll", dir, x, y)
+                local objX, objY = self:getAbsolutePosition()
+                local val = eventSystem:sendEvent("mouse_scroll", self, "mouse_scroll", dir, x - (objX-1), y - (objY-1))
                 if(val==false)then return false end
                 if(self.parent~=nil)then
                     self.parent:setFocusedObject(self)

@@ -29,6 +29,39 @@ local function stop()
     baseTerm.setCursorPos(1, 1)
 end
 
+local basaltError = function(errMsg)
+    baseTerm.clear()
+    baseTerm.setBackgroundColor(colors.black)
+    baseTerm.setTextColor(colors.red)
+    local w,h = baseTerm.getSize()
+    if(basalt.logging)then
+        log(errMsg, "Error")
+    end
+
+    local text = createText("Basalt error: "..errMsg, w)
+    local yPos = 1
+    for k,v in pairs(text)do
+        baseTerm.setCursorPos(1,yPos)
+        baseTerm.write(v)
+        yPos = yPos + 1
+    end 
+    baseTerm.setCursorPos(1,yPos+1)
+    updaterActive = false
+end
+
+local function schedule(f)
+assert(f~="function", "Schedule needs a function in order to work!")
+return function(...)
+        local co = coroutine.create(f)
+        local ok, result = coroutine.resume(co, ...)
+        if(ok)then
+            table.insert(schedules, co)
+        else
+            basaltError(result)
+        end
+    end
+end
+
 local setVariable = function(name, var)
     variables[name] = var
 end
@@ -94,6 +127,8 @@ local bInstance = {
         return baseTerm
     end,
 
+    schedule = schedule,
+
     stop = stop,
     newFrame = Frame,
 
@@ -101,26 +136,6 @@ local bInstance = {
         return projectDirectory
     end
 }
-
-local basaltError = function(errMsg)
-    baseTerm.clear()
-    baseTerm.setBackgroundColor(colors.black)
-    baseTerm.setTextColor(colors.red)
-    local w,h = baseTerm.getSize()
-    if(basalt.logging)then
-        log(errMsg, "Error")
-    end
-
-    local text = createText("Basalt error: "..errMsg, w)
-    local yPos = 1
-    for k,v in pairs(text)do
-        baseTerm.setCursorPos(1,yPos)
-        baseTerm.write(v)
-        yPos = yPos + 1
-    end 
-    baseTerm.setCursorPos(1,yPos+1)
-    updaterActive = false
-end
 
 local function handleSchedules(event, p1, p2, p3, p4)
     if(#schedules>0)then
@@ -175,18 +190,22 @@ local function moveHandlerTimer()
 end
 
 local btn, dragX, dragY = nil, nil, nil
-local dragTimer = nil
-local function mouseDragEvent(b, x, y)
-    btn, dragX, dragY = b, x, y
-    if(dragTimer==nil)then
-        dragTimer = os.startTimer(dragThrottle/1000)
-    end
-end
-
 local function dragHandlerTimer()
     dragTimer = nil
     mainFrame:dragHandler(btn, dragX, dragY)
     activeFrame = mainFrame
+end
+
+local dragTimer = nil
+local function mouseDragEvent(b, x, y)
+    btn, dragX, dragY = b, x, y
+    if(dragThrottle<50)then 
+        dragHandlerTimer() 
+    else
+        if(dragTimer==nil)then
+            dragTimer = os.startTimer(dragThrottle/1000)
+        end
+    end
 end
 
 local function basaltUpdateEvent(event, p1, p2, p3, p4)
@@ -296,8 +315,8 @@ basalt = {
     end,
 
     setMouseDragThrottle = function(amount)
-        if(amount<50)then
-            dragThrottle = 50
+        if(amount<0)then
+            dragThrottle = 0
         else
             dragThrottle = amount
         end
@@ -365,18 +384,7 @@ basalt = {
         end
     end,
 
-    schedule = function(f)
-        assert(f~="function", "Schedule needs a function in order to work!")
-        return function(...)
-            local co = coroutine.create(f)
-            local ok, result = coroutine.resume(co, ...)
-            if(ok)then
-                table.insert(schedules, co)
-            else
-                basaltError(result)
-            end
-        end
-    end,
+    schedule = schedule,
     
     createFrame = function(name)
         name = name or uuid()
