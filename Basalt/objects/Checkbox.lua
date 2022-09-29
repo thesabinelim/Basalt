@@ -76,6 +76,7 @@ return function(name)
             self.bgColor = self.parent:getTheme("CheckboxBG")
             self.fgColor = self.parent:getTheme("CheckboxText")       
             self.parent:addEvent("mouse_click", self)
+            self.parent:addEvent("mouse_up", self)
         end,
     }
 

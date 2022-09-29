@@ -202,12 +202,12 @@ return function(name)
                 if (text:len() < inputLimit or inputLimit <= 0) then
                     if (inputType == "number") then
                         local cache = text
-                        if (char == ".") or (tonumber(char) ~= nil) then
+                        if (#text==0 and char == "-") or (char == ".") or (tonumber(char) ~= nil) then
                             self:setValue(text:sub(1, textX - 1) .. char .. text:sub(textX, text:len()))
                             textX = textX + 1
                         end
                         if (tonumber(base.getValue()) == nil) then
-                            self:setValue(cache)
+                            --self:setValue(cache)
                         end
                     else
                         self:setValue(text:sub(1, textX - 1) .. char .. text:sub(textX, text:len()))

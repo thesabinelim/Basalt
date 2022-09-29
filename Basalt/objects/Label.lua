@@ -31,7 +31,7 @@ return function(name)
             text = tostring(text)
             base:setValue(text)
             if (autoSize) then
-                self.width = text:len()
+                base.width = text:len()
             end
             self:updateDraw()
             return self
