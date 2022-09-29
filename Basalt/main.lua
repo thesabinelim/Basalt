@@ -192,7 +192,6 @@ end
 local btn, dragX, dragY = nil, nil, nil
 local dragTimer = nil
 local function dragHandlerTimer()
-    log("Event registered")
     dragTimer = nil
     mainFrame:dragHandler(btn, dragX, dragY)
     activeFrame = mainFrame
@@ -203,7 +202,6 @@ local function mouseDragEvent(b, x, y)
     if(dragThrottle<50)then 
         dragHandlerTimer() 
     else
-        log("Draggi"..(tostring(dragTimer)..(dragThrottle/1000)))
         if(dragTimer==nil)then
             dragTimer = os.startTimer(dragThrottle/1000)
         end
@@ -315,7 +313,6 @@ basalt = {
     end,
 
     setMouseDragThrottle = function(amount)
-        log("Drag Throttle "..amount)
         if(amount<=0)then
             dragThrottle = 0
         else
