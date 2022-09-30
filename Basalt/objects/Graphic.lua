@@ -2,6 +2,7 @@ local Object = require("Object")
 local tHex = require("tHex")
 local xmlValue = require("utils").getValueFromXML
 local bimgLib = require("bimgLibrary")
+local images = require("images")
 
 local sub,len,max,min = string.sub,string.len,math.max,math.min
 
@@ -46,7 +47,7 @@ return function(name)
             x = _x or x
             y = _y or y
             imgData.blit(text, fg, bg, x, y)
-            bimg = imgData.getBimgData()[1]
+            bimg = imgData.getBimgData()
             self:updateDraw()
             return self
         end,
@@ -55,7 +56,7 @@ return function(name)
             x = _x or x
             y = _y or y
             imgData.text(text, x, y)
-            bimg = imgData.getBimgData()[1]
+            bimg = imgData.getBimgData()
             self:updateDraw()
             return self
         end,
@@ -64,7 +65,7 @@ return function(name)
             x = _x or x
             y = _y or y
             imgData.bg(bg, x, y)
-            bimg = imgData.getBimgData()[1]
+            bimg = imgData.getBimgData()
             self:updateDraw()
             return self
         end,
@@ -73,7 +74,7 @@ return function(name)
             x = _x or x
             y = _y or y
             imgData.fg(fg, x, y)
-            bimg = imgData.getBimgData()[1]
+            bimg = imgData.getBimgData()
             self:updateDraw()
             return self
         end,
@@ -84,8 +85,22 @@ return function(name)
 
         setImageSize = function(self, w, h)
             imgData.setSize(w, h)
-            bimg = imgData.getBimgData()[1]
+            bimg = imgData.getBimgData()
             self:updateDraw()
+            return self
+        end,
+
+        resizeImage = function(self, w, h)
+            bimg = images.resizeBIMG(bimg, w, h)
+            imgData.setBimgData(bimg)
+            return self
+        end,
+
+        loadImage = function(self, path, _format)
+            if(fs.exists(path))then
+                bimg = images.loadBIMG(path, _format)
+                imgData.setBimgData(bimg)
+            end     
             return self
         end,
 
@@ -106,7 +121,7 @@ return function(name)
                     local obx, oby = self:getAnchorPosition()
                     local w,h = self:getSize()
                     if(bimg~=nil)then
-                        for k,v in pairs(bimg)do
+                        for k,v in pairs(bimg[1])do
                             if(k<=h-yOffset)and(k+yOffset>=1)then
                                 self.parent:blit(obx+xOffset, oby+k-1+yOffset, v[1], v[2], v[3])
                             end

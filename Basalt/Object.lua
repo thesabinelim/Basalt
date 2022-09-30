@@ -15,6 +15,7 @@ return function(name)
     local isVisible = true
     local initialized = false
     local isHovered = false
+    local isClicked = false
 
     local shadow = false
     local borderColors = {
@@ -586,6 +587,20 @@ return function(name)
             return self
         end;
 
+        onRelease = function(self, ...)
+                for _,v in pairs(table.pack(...))do
+                    if(type(v)=="function")then
+                        self:registerEvent("mouse_release", v)
+                    end
+                end
+                if(self.parent~=nil)then
+                    self.parent:addEvent("mouse_click", self)
+                    activeEvents["mouse_click"] = true
+                    self.parent:addEvent("mouse_up", self)
+                    activeEvents["mouse_up"] = true
+                end
+            return self
+        end;
 
         onScroll = function(self, ...)
             for _,v in pairs(table.pack(...))do
@@ -770,6 +785,7 @@ return function(name)
                 if(self.parent~=nil)then
                     self.parent:setFocusedObject(self)
                 end
+                isClicked = true
                 isDragging = true
                 dragStartX, dragStartY = x, y 
                 return true
@@ -779,6 +795,11 @@ return function(name)
 
         mouseUpHandler = function(self, button, x, y)
             isDragging = false
+            if(isClicked)then
+                local objX, objY = self:getAbsolutePosition()
+                local val = eventSystem:sendEvent("mouse_release", self, "mouse_release", button, x - (objX-1), y - (objY-1))
+                isClicked = false
+            end
             if(self:isCoordsInObject(x, y))then
                 local objX, objY = self:getAbsolutePosition()
                 local val = eventSystem:sendEvent("mouse_up", self, "mouse_up", button, x - (objX-1), y - (objY-1))

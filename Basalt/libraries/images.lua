@@ -1,3 +1,5 @@
+local sub = string.sub
+
 local function loadNFP(path)
     return paintutils.loadImage(path), "nfp"
 end
@@ -24,9 +26,32 @@ local function loadImage(path, f)
     -- ...
 end
 
+local function resizeBIMG(source, w, h)
+    local oW, oH = #source[1][1][1], #source[1]
+    local xRatio, yRatio = oW / w, oH / h
+    local newImg = {{}}
+    for k,v in pairs(source)do if(k~=1)then newImg[k] = v end end
+    local img = source[1]
+    for y=1, h do
+        local xT,xFG,xBG = "","",""
+        local yR = math.floor(y / h * oH + 0.5)
+        if(img[yR]~=nil)then
+            for x=1, w do
+                local xR = math.floor(x / w * oW + 0.5)
+                xT = xT..sub(img[yR][1], xR,xR)
+                xFG = xFG..sub(img[yR][2], xR,xR)
+                xBG = xBG..sub(img[yR][3], xR,xR)
+            end
+            table.insert(newImg[1], {xT, xFG, xBG})
+        end
+    end
+    return newImg
+end
+
 return {
     loadNFP = loadNFP,
     loadBIMG = loadBIMG,
     loadImage = loadImage,
+    resizeBIMG = resizeBIMG,
 
 }

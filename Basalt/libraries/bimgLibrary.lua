@@ -101,6 +101,16 @@ return function()
             w, h = _w, _h
         end,
 
+        setBimgData = function(data)
+            w, h = 0, 0
+            for k,v in pairs(data[1])do
+                t[k], fg[k], bg[k] = v[1], v[2], v[3]
+                if(#v[1] > w)then w = #v[1] end
+            end
+            h = #data[1]
+            recalculateSize()
+        end,        
+
         getBimgData = function()
             local data = {}
             for k,v in pairs(t)do
