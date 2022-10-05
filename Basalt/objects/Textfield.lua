@@ -144,6 +144,7 @@ return function(name)
 
         editLine = function(self, index, text)
             lines[index] = text or lines[index]
+            updateColors(self, index)
             self:updateDraw()
             return self
         end;
@@ -163,18 +164,20 @@ return function(name)
                     lines[1] = text
                     bgLines[1] = tHex[self.bgColor]:rep(text:len())
                     fgLines[1] = tHex[self.fgColor]:rep(text:len())
+                    updateColors(self, 1)
                     return self
                 end
                 if (index ~= nil) then
                     table.insert(lines, index, text)
                     table.insert(bgLines, index, tHex[self.bgColor]:rep(text:len()))
-                    table.insert(fgLines, tHex[self.fgColor]:rep(text:len()))
+                    table.insert(fgLines, index, tHex[self.fgColor]:rep(text:len()))
                 else
                     table.insert(lines, text)
                     table.insert(bgLines, tHex[self.bgColor]:rep(text:len()))
                     table.insert(fgLines, tHex[self.fgColor]:rep(text:len()))
                 end
             end
+            updateColors(self, index or #lines)
             self:updateDraw()
             return self
         end;

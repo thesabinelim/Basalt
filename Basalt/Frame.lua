@@ -1,9 +1,10 @@
+local module = require("module")
 local Object = require("Object")
 local _OBJECTS = require("loadObjects")
 local BasaltDraw = require("basaltDraw")
 local utils = require("utils")
-local layout = require("layout")
-local basaltMon = require("basaltMon")
+local layout = module("layout")
+local basaltMon = module("basaltMon")
 local uuid = utils.uuid
 local rpairs = utils.rpairs
 local xmlValue = utils.getValueFromXML
@@ -523,7 +524,7 @@ return function(name, parent, pTerm, basalt)
 
 
         getScrollAmount = function(self)
-            return autoScroll and scrollAmount or calculateMaxScroll(self)
+            return autoScroll and calculateMaxScroll(self) or scrollAmount
         end,
 
         show = function(self)
@@ -728,14 +729,14 @@ return function(name, parent, pTerm, basalt)
             if(focusedObject~=nil)then focusedObject:getFocusHandler() end
         end;
 
-        eventHandler = function(self, event, p1, p2, p3, p4)
-            base.eventHandler(self, event, p1, p2, p3, p4)
+        eventHandler = function(self, event, ...)
+            base.eventHandler(self, event, ...)
             if(events["other_event"]~=nil)then
                 for _, index in ipairs(eventZIndex["other_event"]) do
                     if (events["other_event"][index] ~= nil) then
                         for _, value in rpairs(events["other_event"][index]) do
                             if (value.eventHandler ~= nil) then
-                                if (value:eventHandler(event, p1, p2, p3, p4)) then
+                                if (value:eventHandler(event, ...)) then
                                     return true
                                 end
                             end

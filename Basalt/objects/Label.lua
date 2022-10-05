@@ -144,9 +144,9 @@ return function(name)
                             oby = oby or math.floor((oY - cY) / 2) + 1
                         
                             for i = 1, cY do
-                                self.parent:setFG(obx, oby + i - 2, tData[2][i])
-                                self.parent:setBG(obx, oby + i - 2, tData[3][i])
-                                self.parent:setText(obx, oby + i - 2, tData[1][i])
+                                self.parent:setFG(obx, oby + i - 1, tData[2][i])
+                                self.parent:setBG(obx, oby + i - 1, tData[3][i])
+                                self.parent:setText(obx, oby + i - 1, tData[1][i])
                             end
                     end
                 end

@@ -28,7 +28,6 @@ end
 
 local function resizeBIMG(source, w, h)
     local oW, oH = #source[1][1][1], #source[1]
-    local xRatio, yRatio = oW / w, oH / h
     local newImg = {{}}
     for k,v in pairs(source)do if(k~=1)then newImg[k] = v end end
     local img = source[1]
