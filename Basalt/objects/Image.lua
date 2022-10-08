@@ -14,7 +14,9 @@ return function(name)
 
     local object = {
         init = function(self)
-            self.bgColor = self.parent:getTheme("ImageBG")
+            if(base.init(self))then
+                self.bgColor = self.parent:getTheme("ImageBG")
+            end
         end,
         getType = function(self)
             return objectType

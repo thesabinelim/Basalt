@@ -353,14 +353,16 @@ return function(name)
         end,
 
         init = function(self)
-            self.bgColor = self.parent:getTheme("InputBG")
-            self.fgColor = self.parent:getTheme("InputText")
             if(self.parent~=nil)then
                 self.parent:addEvent("mouse_click", self)
                 self.parent:addEvent("key", self)
                 self.parent:addEvent("char", self)
                 self.parent:addEvent("other_event", self)
                 self.parent:addEvent("mouse_drag", self)
+            end
+            if(base.init(self))then
+                self.bgColor = self.parent:getTheme("InputBG")
+                self.fgColor = self.parent:getTheme("InputText")
             end
         end,
     }

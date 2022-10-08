@@ -132,7 +132,9 @@ return function(name)
         end,
 
         init = function(self)
-            self.bgColor = self.parent:getTheme("GraphicBG")
+            if(base.init(self))then
+                self.bgColor = self.parent:getTheme("GraphicBG")
+            end
         end,
     }
 

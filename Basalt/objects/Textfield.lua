@@ -608,14 +608,16 @@ return function(name)
         end,
 
         init = function(self)
-            self.bgColor = self.parent:getTheme("TextfieldBG")
-            self.fgColor = self.parent:getTheme("TextfieldText")
             self.parent:addEvent("mouse_click", self)
             self.parent:addEvent("mouse_scroll", self)
             self.parent:addEvent("mouse_drag", self)
             self.parent:addEvent("key", self)
             self.parent:addEvent("char", self)
             self.parent:addEvent("other_event", self)
+            if(base.init(self))then
+                self.bgColor = self.parent:getTheme("TextfieldBG")
+                self.fgColor = self.parent:getTheme("TextfieldText")
+            end
         end,
     }
 

@@ -153,13 +153,13 @@ return function(name)
             end
         end,
         init = function(self)
+            self.parent:addEvent("other_event", self)
             if(base.init(self))then
                 self.bgColor = self.parent:getTheme("LabelBG")
                 self.fgColor = self.parent:getTheme("LabelText")
                 if(self.parent.bgColor==colors.black)and(self.fgColor==colors.black)then
                     self.fgColor = colors.lightGray
                 end
-                self.parent:addEvent("other_event", self)
             end
         end
 

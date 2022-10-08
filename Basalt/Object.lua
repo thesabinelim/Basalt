@@ -925,6 +925,7 @@ return function(name)
                 initialized = true
                 return true
             end
+            return false
         end
 
     }
