@@ -176,8 +176,8 @@ end
 
 local stopped, moveX, moveY = nil, nil, nil
 local moveTimer = nil
-local function mouseMoveEvent(stp, x, y)
-    stopped, moveX, moveY = stopped, x, y
+local function mouseMoveEvent(_, stp, x, y)
+    stopped, moveX, moveY = stp, x, y
     if(moveTimer==nil)then
         moveTimer = os.startTimer(moveThrottle/1000)
     end
@@ -197,7 +197,7 @@ local function dragHandlerTimer()
     activeFrame = mainFrame
 end
 
-local function mouseDragEvent(b, x, y)
+local function mouseDragEvent(_, b, x, y)
     btn, dragX, dragY = b, x, y
     if(dragThrottle<50)then 
         dragHandlerTimer() 
@@ -208,74 +208,69 @@ local function mouseDragEvent(b, x, y)
     end
 end
 
-local function basaltUpdateEvent(event, p1, p2, p3, p4)
-    if(basaltEvent:sendEvent("basaltEventCycle", event, p1, p2, p3, p4)==false)then return end
+local function basaltUpdateEvent(event, ...)
+    local a = {...}
+    if(basaltEvent:sendEvent("basaltEventCycle", event, ...)==false)then return end
+    if(event=="terminate")then basalt.stop() end
     if(mainFrame~=nil)then
-        if (event == "mouse_click") then
-            mainFrame:mouseHandler(p1, p2, p3, false)
-            activeFrame = mainFrame
-        elseif (event == "mouse_drag") then
-            mouseDragEvent(p1, p2, p3)
-        elseif (event == "mouse_up") then
-            mainFrame:mouseUpHandler(p1, p2, p3, p4)
-            activeFrame = mainFrame
-        elseif (event == "mouse_scroll") then
-            mainFrame:scrollHandler(p1, p2, p3, p4)
-            activeFrame = mainFrame
-        elseif (event == "mouse_move") then
-            mouseMoveEvent(p1, p2, p3)
+        local mouseEvents = {
+            mouse_click = mainFrame.mouseHandler,
+            mouse_up = mainFrame.mouseUpHandler,
+            mouse_scroll = mainFrame.mouseScrollHandler,
+            mouse_drag = mouseDragEvent,
+            mouse_move = mouseMoveEvent,
+        }
+        local mouseEvent = mouseEvents[event]
+        if(mouseEvent~=nil)then
+            mouseEvent(mainFrame, ...)
+            drawFrames()
+            return
         end
     end
 
     if(event == "monitor_touch") then
         if(monFrames[p1]~=nil)then
-            monFrames[p1]:mouseHandler(1, p2, p3, true)
+            monFrames[p1]:mouseHandler(1, a[2], a[3], true)
             activeFrame = monFrames[p1]
         end
         if(count(monGroups)>0)then
             for k,v in pairs(monGroups)do
-                v[1]:mouseHandler(1, p2, p3, true, p1)
+                v[1]:mouseHandler(1, a[2], a[3], true, a[1])
             end
         end
+        drawFrames()
+        return
     end
 
-
-
-    if(event == "char")then
-        if(activeFrame~=nil)then
-            activeFrame:charHandler(p1)
-        end
-    end
-    if(event == "key_up")then
-        if(activeFrame~=nil)then
-            activeFrame:keyUpHandler(p1)
-        end
-        activeKey[p1] = false
-    end
-    if(event == "key")then
-        if(activeFrame~=nil)then
-            activeFrame:keyHandler(p1, p2)
-        end
-        activeKey[p1] = true
-    end
-    if(event == "terminate")then
-        if(activeFrame~=nil)then
-            activeFrame:eventHandler(event)
-            if(updaterActive==false)then return end
-        end
-    end
-    if(event~="mouse_click")and(event~="mouse_up")and(event~="mouse_scroll")and(event~="mouse_drag")and(event~="mouse_move")and(event~="key")and(event~="key_up")and(event~="char")and(event~="terminate")then
-        if(event=="timer")and(p1==moveTimer)then
-            moveHandlerTimer()
-        elseif(event=="timer")and(p1==dragTimer)then
-            dragHandlerTimer()
-        else
-            for k, v in pairs(frames) do
-                v:eventHandler(event, p1, p2, p3, p4)
+    if(activeFrame~=nil)then
+    local keyEvents = {
+        char = activeFrame.charHandler,
+        key = activeFrame.keyHandler,
+        key_up = activeFrame.keyUpHandler,
+    }
+    local keyEvent = keyEvents[event]
+        if(keyEvent~=nil)then
+            if(event == "key")then
+                activeKey[a[1]] = true
+            elseif(event == "key_up")then
+                activeKey[a[1]] = false
             end
+            keyEvent(activeFrame, ...)
+            drawFrames()
+            return
         end
     end
-    handleSchedules(event, p1, p2, p3, p4)
+
+    if(event=="timer")and(a[1]==moveTimer)then
+        moveHandlerTimer()
+    elseif(event=="timer")and(a[1]==dragTimer)then
+        dragHandlerTimer()
+    else
+        for k, v in pairs(frames) do
+            v:eventHandler(event, ...)
+        end
+    end
+    handleSchedules(event, ...)
     drawFrames()
 end
 
@@ -337,9 +332,9 @@ basalt = {
         end
     end,
     
-    update = function(event, p1, p2, p3, p4)
+    update = function(event, ...)
         if (event ~= nil) then
-            local ok, err = xpcall(basaltUpdateEvent, debug.traceback, event, p1, p2, p3, p4)
+            local ok, err = xpcall(basaltUpdateEvent, debug.traceback, event, ...)
             if not(ok)then
                 basaltError(err)
                 return
