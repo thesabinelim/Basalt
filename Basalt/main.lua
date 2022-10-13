@@ -216,7 +216,7 @@ local function basaltUpdateEvent(event, ...)
         local mouseEvents = {
             mouse_click = mainFrame.mouseHandler,
             mouse_up = mainFrame.mouseUpHandler,
-            mouse_scroll = mainFrame.mouseScrollHandler,
+            mouse_scroll = mainFrame.scrollHandler,
             mouse_drag = mouseDragEvent,
             mouse_move = mouseMoveEvent,
         }

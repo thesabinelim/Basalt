@@ -84,7 +84,7 @@ return function(name)
 
         clear = function(self)
             list = {}
-            self:setValue({})
+            self:setValue({}, false)
             self:updateDraw()
             return self
         end;
@@ -101,7 +101,7 @@ return function(name)
         end;
 
         selectItem = function(self, index)
-            self:setValue(list[index] or {})
+            self:setValue(list[index] or {}, false)
             self:updateDraw()
             return self
         end;

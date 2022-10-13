@@ -240,11 +240,11 @@ return function(name, parent, pTerm, basalt)
         end
         return false
     end
-
+    local math = math
     local function stringToNumber(str)
-        local ok, err = pcall(load("return " .. str))
+        local ok, result = pcall(load("return " .. str, "", nil, {math=math}))
         if not(ok)then error(str.." is not a valid dynamic code") end
-        return load("return " .. str)()
+        return result
     end
 
     local function newDynamicValue(_, obj, str)
@@ -328,7 +328,7 @@ return function(name, parent, pTerm, basalt)
                 if (objects[index] ~= nil) then
                     for _, value in pairs(objects[index]) do
                         if (value.eventHandler ~= nil) then
-                            value:eventHandler("dynamicValueEvent", self)
+                            value:eventHandler("basalt_dynamicvalue", self)
                         end
                     end
                 end
@@ -341,12 +341,14 @@ return function(name, parent, pTerm, basalt)
     end
 
     local function calculateMaxScroll(self)
-        for _, value in pairs(objects) do
-            for _, b in pairs(value) do
-                if(b.getHeight~=nil)and(b.getY~=nil)then
-                    local h, y = b:getHeight(), b:getY()
-                    if (h + y - self:getHeight() > scrollAmount) then
-                        scrollAmount = max(h + y - self:getHeight(), 0)
+        if(autoScroll)then
+            for _, value in pairs(objects) do
+                for _, b in pairs(value) do
+                    if(b.getHeight~=nil)and(b.getY~=nil)then
+                        local h, y = b:getHeight(), b:getY()
+                        if (h + y - self:getHeight() ~= scrollAmount) then
+                            scrollAmount = max(h + y - self:getHeight() - 1, 0)
+                        end
                     end
                 end
             end
@@ -398,8 +400,8 @@ return function(name, parent, pTerm, basalt)
             for _, index in pairs(objZIndex) do
                 if (objects[index] ~= nil) then
                     for _, value in pairs(objects[index]) do
-                        if (value.eventHandler ~= nil) then
-                            value:eventHandler("basalt_resize", value, self)
+                        if (value.customEventHandler ~= nil) then
+                            value:customEventHandler("basalt_resize", self)
                         end
                     end
                 end
@@ -425,15 +427,6 @@ return function(name, parent, pTerm, basalt)
 
         setPosition = function(self, x, y, rel)
             base.setPosition(self, x, y, rel)
-            for _, index in pairs(objZIndex) do
-                if (objects[index] ~= nil) then
-                    for _, value in pairs(objects[index]) do
-                        if (value.eventHandler ~= nil) then
-                            value:eventHandler("basalt_reposition", value, self)
-                        end
-                    end
-                end
-            end
             self:recalculateDynamicValues()
             return self
         end;
@@ -793,9 +786,6 @@ return function(name, parent, pTerm, basalt)
                 if(event=="monitor_touch")and(mirrorSide==p1)then
                     self:mouseHandler(1, p2, p3, true)
                 end
-            end
-            if (event == "terminate")and(self.parent==nil)then
-                basalt.stop()
             end
         end,
 

@@ -195,11 +195,13 @@ return function(name)
             return self
         end;
 
-        setValue = function(self, _value)
+        setValue = function(self, _value, valueChangedHandler)
             if (value ~= _value) then
                 value = _value
                 self:updateDraw()
-                self:valueChangedHandler()
+                if(valueChangedHandler~=false)then
+                    self:valueChangedHandler()
+                end
             end
             return self
         end;
@@ -245,7 +247,7 @@ return function(name)
                 end
                 self.parent:recalculateDynamicValues()
             end
-            eventSystem:sendEvent("basalt_reposition", self)
+            self:customEventHandler("basalt_reposition")
             self:updateDraw()
             return self
         end;
@@ -288,7 +290,7 @@ return function(name)
                 end
                 self.parent:recalculateDynamicValues()
             end
-            eventSystem:sendEvent("basalt_resize", self)
+            self:customEventHandler("basalt_resize")
             self:updateDraw()
             return self
         end;
@@ -676,13 +678,25 @@ return function(name)
                 for _,v in pairs(table.pack(...))do
                     if(type(v)=="function")then
                         self:registerEvent("key", v)
-                        self:registerEvent("char", v)
                     end
                 end
                 if(self.parent~=nil)then
                     self.parent:addEvent("key", self)
-                    self.parent:addEvent("char", self)
                     activeEvents["key"] = true
+                end
+            end
+            return self
+        end;
+
+        onChar = function(self, ...)
+            if(isEnabled)then
+                for _,v in pairs(table.pack(...))do
+                    if(type(v)=="function")then
+                        self:registerEvent("char", v)
+                    end
+                end
+                if(self.parent~=nil)then
+                    self.parent:addEvent("char", self)
                     activeEvents["char"] = true
                 end
             end
@@ -882,7 +896,7 @@ return function(name)
         charHandler = function(self, char)
             if(isEnabled)and(isVisible)then
                 if (self:isFocused()) then
-                    local val = eventSystem:sendEvent("char", self, "char", char)
+                local val = eventSystem:sendEvent("char", self, "char", char)
                 if(val==false)then return false end
                 return true
                 end
@@ -894,8 +908,14 @@ return function(name)
             eventSystem:sendEvent("value_changed", self, value)
         end;
 
-        eventHandler = function(self, event, p1, p2, p3, p4)
-            local val = eventSystem:sendEvent("other_event", self, event, p1, p2, p3, p4)
+        eventHandler = function(self, event, ...)
+            local val = eventSystem:sendEvent("other_event", self, event, ...)
+            if(val~=nil)then return val end
+            return true
+        end;
+
+        customEventHandler = function(self, event, ...)
+            local val = eventSystem:sendEvent(event, self, event, ...)
             if(val~=nil)then return val end
             return true
         end;

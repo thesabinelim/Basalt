@@ -3,7 +3,7 @@ local tHex = require("tHex")
 local log = require("basaltLogs")
 local xmlValue = require("utils").getValueFromXML
 
-local rep = string.rep
+local rep,find,gmatch,sub,len = string.rep,string.find,string.gmatch,string.sub,string.len
 
 return function(name)
     local base = Object(name)
@@ -23,13 +23,13 @@ return function(name)
     local function stringGetPositions(str, word)
         local pos = {}
         if(str:len()>0)then
-            for w in string.gmatch(str, word)do
-                local s, e = string.find(str, w)
+            for w in gmatch(str, word)do
+                local s, e = find(str, w)
                 if(s~=nil)and(e~=nil)then
                     table.insert(pos,s)
                     table.insert(pos,e)
-                    local startL = string.sub(str, 1, (s-1))
-                    local endL = string.sub(str, e+1, str:len())
+                    local startL = sub(str, 1, (s-1))
+                    local endL = sub(str, e+1, str:len())
                     str = startL..(":"):rep(w:len())..endL
                 end
             end

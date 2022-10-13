@@ -188,6 +188,10 @@ uuid = function()
     return uuid()
 end,
 
+array = function(arraysize, hashsize)
+    return load("return {" .. ("nil,"):rep(arraysize) .. ("[0]=nil,"):rep(hashsize) .. "}")()
+end,
+
 shrink = function(image, bgCol)
 	local results, width, height, bgCol = {{}, {}, {}}, 0, #image + #image % 3, bgCol or colours.black
 	for i = 1, #image do if #image[i] > width then width = #image[i] end end
