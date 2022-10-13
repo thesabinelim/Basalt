@@ -342,12 +342,13 @@ return function(name, parent, pTerm, basalt)
 
     local function calculateMaxScroll(self)
         if(autoScroll)then
+            scrollAmount = 0
             for _, value in pairs(objects) do
                 for _, b in pairs(value) do
                     if(b.getHeight~=nil)and(b.getY~=nil)then
                         local h, y = b:getHeight(), b:getY()
-                        if (h + y - self:getHeight() ~= scrollAmount) then
-                            scrollAmount = max(h + y - self:getHeight() - 1, 0)
+                        if (h + y - self:getHeight() >= scrollAmount) then
+                            scrollAmount = max(h + y - self:getHeight(), 0)
                         end
                     end
                 end
