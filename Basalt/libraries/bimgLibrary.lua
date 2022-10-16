@@ -1,9 +1,11 @@
 local sub,rep = string.sub,string.rep
 
-return function()
-    local w, h = 0,0
+local function frame(base, manager)
+    local w, h = 0, 0
     local t,fg,bg = {}, {}, {}
     local x, y = 1,1
+
+    local data = {}
 
     local function recalculateSize()
         for y=1,h do
@@ -35,7 +37,7 @@ return function()
         end
         if(#t[y]>w)then w = #t[y] end
         if(y > h)then h = y end  
-        recalculateSize()
+        manager.updateSize(w, h)
     end
 
     local addBg = function(b, _x, _y)
@@ -48,7 +50,7 @@ return function()
         end
         if(#bg[y]>w)then w = #bg[y] end
         if(y > h)then h = y end  
-        recalculateSize()
+        manager.updateSize(w, h)
     end
 
     local addFg = function(f, _x, _y)
@@ -61,15 +63,61 @@ return function()
         end
         if(#fg[y]>w)then w = #fg[y] end
         if(y > h)then h = y end  
-        recalculateSize()
+        manager.updateSize(w, h)
     end
 
-    local public = {
+    local function setFrame(frm)
+        data = {}
+        t, fg, bg = {}, {}, {}
+        for k,v in pairs(base)do
+            if(type(k)=="string")then
+                data[k] = v
+            else
+                t[k], fg[k], bg[k] = v[1], v[2], v[3]
+            end
+        end
+        manager.updateSize(w, h)
+    end
+
+    if(base~=nil)then
+        setFrame(base)
+    end 
+
+    return {
+        recalculateSize = recalculateSize,
+        setFrame = setFrame,
+
+        getFrame = function()
+            local f = {}
+
+            for k,v in pairs(data)do
+                f[k] = v
+            end
+
+            for k,v in pairs(t)do
+                table.insert(f, {v, fg[k], bg[k]})
+            end
+            return f
+        end,
+
+        getImage = function()
+            local i = {}
+            for k,v in pairs(t)do
+                table.insert(i, {v, fg[k], bg[k]})
+            end
+            return i
+        end,
+
+        setFrameData = function(key, value)
+            data[key] = value
+        end,
+
         blit = function(text, fgCol, bgCol, x, y)
             addText(text, x, y)
             addFg(fgCol, x, y)
             addBg(bgCol, x, y)
         end,
+        
         text = addText,
         fg = addFg,
         bg = addBg,
@@ -100,24 +148,142 @@ return function()
             t, fg, bg = nt, nfg, nbg
             w, h = _w, _h
         end,
-
-        setBimgData = function(data)
-            w, h = 0, 0
-            for k,v in pairs(data[1])do
-                t[k], fg[k], bg[k] = v[1], v[2], v[3]
-                if(#v[1] > w)then w = #v[1] end
-            end
-            h = #data[1]
-            recalculateSize()
-        end,        
-
-        getBimgData = function()
-            local data = {}
-            for k,v in pairs(t)do
-                data[k] = {t[k], fg[k], bg[k]}
-            end
-            return {[1]=data,creator="Basalt Graphic 1.0",version="1.0.0"}
-        end
     }
-    return public
+end
+
+return function(img)
+    local frames = {}
+    local metadata = {creator="Bimg Library by NyoriE", date=os.date("!%Y-%m-%dT%TZ")}
+    local width,height = 0, 0
+
+    local manager = {}
+
+    local function addFrame(id, data)
+        id = id or #frames+1
+        frames[id] = frame(data, manager)
+        frames[id].setSize(width, height)
+    end
+
+    manager = {
+        updateSize = function(w, h)
+            local changed = false
+            if(w > width)then changed = true width = w end
+            if(h > height)then changed = true height = h end
+            if(changed)then
+                for k,v in pairs(frames)do
+                    v.setSize(width, height)
+                    v.recalculateSize()
+                end
+            end
+        end,
+
+        text = function(frame, text, x, y)
+            local f = frames[frame]
+            if(f==nil)then
+                f = addFrame(frame)
+            end
+            f.text(text, x, y)
+        end,
+
+        fg = function(frame, fg, x, y)
+            local f = frames[frame]
+            if(f==nil)then
+                f = addFrame(frame)
+            end
+            f.fg(fg, x, y)
+        end,
+
+        bg = function(frame, bg, x, y)
+            local f = frames[frame]
+            if(f==nil)then
+                f = addFrame(frame)
+            end
+            f.bg(bg, x, y)
+        end,
+
+        blit = function(frame, text, fg, bg, x, y)
+            local f = frames[frame]
+            if(f==nil)then
+                f = addFrame(frame)
+            end
+            f.blit(text, fg, bg, x, y)
+        end,
+
+        setSize = function(w, h)
+            width = w
+            height = h
+            for k,v in pairs(frames)do
+                v.setSize(w, h)
+            end
+        end,
+
+        getFrame = function(id)
+            if(frames[id]~=nil)then
+                return frames[id].getFrame()
+            end
+        end,
+
+        getFrameObjects = function()
+                return frames
+        end,
+
+        getFrameObject = function(id)
+            return frames[id]
+        end,
+
+        addFrame = function(id)
+            local f = frame()
+            if(#frames<=1)then
+                metadata.animated = true
+                metadata.secondsPerFrame = 1
+            end
+            addFrame(id)
+            return f
+        end,
+
+        setFrameData = function(id, key, value)
+            if(frames[id]~=nil)then
+                frames[id].setFrameData(key, value)
+            end
+        end,
+
+        getSize = function()
+            return width, height
+        end,
+
+        setAnimation = function(anim)
+            metadata.animation = anim
+        end,
+
+        setMetadata = function(key, val)
+            meta[key] = val
+        end,
+
+        createBimg = function()
+            local bimg = {}
+            for k,v in pairs(frames)do
+                table.insert(bimg, v.getFrame())
+            end
+            for k,v in pairs(metadata)do
+                bimg[k] = v
+            end
+            bimg.width = width
+            bimg.height = height
+            return bimg
+        end,
+    }
+
+    if(img~=nil)then
+        for k,v in pairs(img)do
+            if(type(k)=="string")then
+                metadata[k] = v
+            else
+                addFrame(k, v)
+            end
+        end
+    else
+        addFrame(1, manager)
+    end
+
+    return manager
 end

@@ -49,6 +49,8 @@ return function(name, parent, pTerm, basalt)
 
     local activeEvents = {}
 
+    local colorTheme = {}
+
     base:setZIndex(10)
 
     local basaltDraw = BasaltDraw(termObject)
@@ -426,6 +428,25 @@ return function(name, parent, pTerm, basalt)
             return theme[name] or (self.parent~=nil and self.parent:getTheme(name) or basalt.getTheme(name))
         end,
 
+        getThemeColor = function(self, col)
+            return colorTheme[col]
+        end,
+
+        setThemeColor = function(self, col, ...)
+            if(self.parent==nil)then
+                if(type(col)=="string")then
+                    colorTheme[col] = ...
+                    termObject.setPaletteColor(colors[col], ...)
+                elseif(type(col)=="table")then
+                    for k,v in pairs(col)do
+                        colorTheme[k] = v
+                        termObject.setPaletteColor(k, type(v)=="number" and v or table.unpack(v))
+                    end
+                end
+            end
+            return self
+        end,
+
         setPosition = function(self, x, y, rel)
             base.setPosition(self, x, y, rel)
             self:recalculateDynamicValues()
@@ -524,6 +545,14 @@ return function(name, parent, pTerm, basalt)
         show = function(self)
             base.show(self)
             if(self.parent==nil)then
+                for k,v in pairs(colors)do
+                    if(type(v)=="number")then
+                        termObject.setPaletteColor(v, colors.packRGB(term.nativePaletteColor((v))))
+                    end
+                end
+                for k,v in pairs(colorTheme)do
+                    termObject.setPaletteColor(colors[k], type(v)=="number" and v or table.unpack(v))
+                end
                 basalt.setActiveFrame(self)
                 if(isMonitor)and not(isGroupedMonitor)then
                     basalt.setMonitorFrame(monSide, self)

@@ -1,4 +1,8 @@
-local sub = string.sub
+local sub,floor = string.sub,math.floor
+
+local function loadNFPAsBimg(path)
+    return {[1]={{}, {}, paintutils.loadImage(path)}}, "bimg"
+end
 
 local function loadNFP(path)
     return paintutils.loadImage(path), "nfp"
@@ -6,11 +10,19 @@ end
 
 local function loadBIMG(path)
     local f = fs.open(path, "rb")
-    local content = load("return "..f.readAll())()
+    local content = textutils.unserialize(f.readAll())
     f.close()
     if(content~=nil)then
         return content, "bimg"
     end
+end
+
+local function loadBBF(path)
+
+end
+
+local function loadBBFAsBimg(path)
+
 end
 
 local function loadImage(path, f)
@@ -26,6 +38,18 @@ local function loadImage(path, f)
     -- ...
 end
 
+local function loadImageAsBimg(path, f)
+    if(f==nil)then
+        if(path:find(".bimg"))then
+            return loadBIMG(path)
+        elseif(path:find(".bbf"))then
+            return loadBBFAsBimg(path)
+        else
+            return loadNFPAsBimg(path)
+        end
+    end
+end
+
 local function resizeBIMG(source, w, h)
     local oW, oH = #source[1][1][1], #source[1]
     local newImg = {{}}
@@ -33,10 +57,10 @@ local function resizeBIMG(source, w, h)
     local img = source[1]
     for y=1, h do
         local xT,xFG,xBG = "","",""
-        local yR = math.floor(y / h * oH + 0.5)
+        local yR = floor(y / h * oH + 0.5)
         if(img[yR]~=nil)then
             for x=1, w do
-                local xR = math.floor(x / w * oW + 0.5)
+                local xR = floor(x / w * oW + 0.5)
                 xT = xT..sub(img[yR][1], xR,xR)
                 xFG = xFG..sub(img[yR][2], xR,xR)
                 xBG = xBG..sub(img[yR][3], xR,xR)
@@ -52,5 +76,6 @@ return {
     loadBIMG = loadBIMG,
     loadImage = loadImage,
     resizeBIMG = resizeBIMG,
+    loadImageAsBimg = loadImageAsBimg,
 
 }

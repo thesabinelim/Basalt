@@ -10,7 +10,7 @@ local moveThrottle = 300
 local dragThrottle = 50
 
 local baseTerm = term.current()
-local version = "1.6.2"
+local version = "1.6.4"
 
 local projectDirectory = fs.getDir(table.pack(...)[2] or "")
 
@@ -23,13 +23,26 @@ if not  term.isColor or not term.isColor() then
     error('Basalt requires an advanced (golden) computer to run.', 0)
 end
 
+local defaultColors = {}
+for k,v in pairs(colors)do
+    if(type(v)=="number")then
+        defaultColors[k] = {baseTerm.getPaletteColor(v)}
+    end
+end
+
+
 local function stop()
     updaterActive = false    
     baseTerm.clear()
     baseTerm.setCursorPos(1, 1)
+    for k,v in pairs(colors)do
+        if(type(v)=="number")then
+            baseTerm.setPaletteColor(v, colors.packRGB(table.unpack(defaultColors[k])))
+        end
+    end
 end
 
-local basaltError = function(errMsg)
+local function basaltError(errMsg)
     baseTerm.clear()
     baseTerm.setBackgroundColor(colors.black)
     baseTerm.setTextColor(colors.red)

@@ -11,7 +11,9 @@ return function(name)
     local base = Object(name)
     local objectType = "Graphic"
     local imgData = bimgLib()
+    local bimgFrame = imgData.getFrameObject(1)
     local bimg
+    local selectedFrame = 1
     base:setZIndex(5)
 
     local xOffset, yOffset = 0, 0
@@ -43,11 +45,25 @@ return function(name)
             return self
         end,
 
-        setPixel = function(self, text, fg, bg, _x, _y)
+        selectFrame = function(self, id)
+            if(imgData.getFrameObject(id)==nil)then
+                imgData.addFrame(id)
+            end
+            bimgFrame = imgData.getFrameObject(id)
+            bimg = bimgFrame.getImage(id)
+            selectedFrame = id
+            self:updateDraw()
+        end,
+
+        getSelectedFrame = function(self)
+            return selectedFrame
+        end,
+
+        blit = function(self, text, fg, bg, _x, _y)
             x = _x or x
             y = _y or y
-            imgData.blit(text, fg, bg, x, y)
-            bimg = imgData.getBimgData()
+            bimgFrame.blit(text, fg, bg, x, y)
+            bimg = bimgFrame.getImage()
             self:updateDraw()
             return self
         end,
@@ -55,8 +71,8 @@ return function(name)
         setText = function(self, text, _x, _y)
             x = _x or x
             y = _y or y
-            imgData.text(text, x, y)
-            bimg = imgData.getBimgData()
+            bimgFrame.text(text, x, y)
+            bimg = imgData.getFrame()
             self:updateDraw()
             return self
         end,
@@ -64,8 +80,8 @@ return function(name)
         setBg = function(self, bg, _x, _y)
             x = _x or x
             y = _y or y
-            imgData.bg(bg, x, y)
-            bimg = imgData.getBimgData()
+            bimgFrame.bg(bg, x, y)
+            bimg = bimgFrame.getImage()
             self:updateDraw()
             return self
         end,
@@ -73,8 +89,8 @@ return function(name)
         setFg = function(self, fg, _x, _y)
             x = _x or x
             y = _y or y
-            imgData.fg(fg, x, y)
-            bimg = imgData.getBimgData()
+            bimgFrame.fg(fg, x, y)
+            bimg = bimgFrame.getImage()
             self:updateDraw()
             return self
         end,
@@ -85,21 +101,29 @@ return function(name)
 
         setImageSize = function(self, w, h)
             imgData.setSize(w, h)
-            bimg = imgData.getBimgData()
+            bimg = bimgFrame.getImage()
             self:updateDraw()
             return self
         end,
 
         resizeImage = function(self, w, h)
-            bimg = images.resizeBIMG(bimg, w, h)
-            imgData.setBimgData(bimg)
+            local newBimg = images.resizeBIMG(imgData.createBimg(), w, h)
+            imgData = bimgLib(newBimg)
+            selectedFrame = 1
+            bimgFrame = imgData.getFrameObject(1)
+            bimg = bimgFrame.getImage()
+            self:updateDraw()
             return self
         end,
 
-        loadImage = function(self, path, _format)
+        loadImage = function(self, path)
             if(fs.exists(path))then
-                bimg = images.loadBIMG(path, _format)
-                imgData.setBimgData(bimg)
+                local newBimg = images.loadBIMG(path)
+                imgData = bimgLib(newBimg)
+                selectedFrame = 1
+                bimgFrame = imgData.getFrameObject(1)
+                bimg = bimgFrame.getImage()
+                self:updateDraw()
             end     
             return self
         end,
@@ -112,7 +136,7 @@ return function(name)
         end,
 
         getImage = function(self)
-            return imgData.getBimgData()
+            return imgData.createBimg()
         end,
 
         draw = function(self)
@@ -121,7 +145,7 @@ return function(name)
                     local obx, oby = self:getAnchorPosition()
                     local w,h = self:getSize()
                     if(bimg~=nil)then
-                        for k,v in pairs(bimg[1])do
+                        for k,v in pairs(bimg)do
                             if(k<=h-yOffset)and(k+yOffset>=1)then
                                 self.parent:blit(obx+xOffset, oby+k-1+yOffset, v[1], v[2], v[3])
                             end
