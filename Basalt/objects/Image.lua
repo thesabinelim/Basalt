@@ -1,7 +1,6 @@
 local Object = require("Object")
 local xmlValue = require("utils").getValueFromXML
 local images = require("images")
-local log = require("basaltLogs")
 
 local unpack,sub = table.unpack,string.sub
 return function(name)
@@ -89,6 +88,7 @@ return function(name)
                 os.cancelTimer(animTimer)
             end
             self:updateDraw()
+            return self
         end,
 
         getImageSize = function(self)
@@ -113,7 +113,6 @@ return function(name)
                     local obx, oby = self:getAnchorPosition()
                     local w,h = self:getSize()
                     for y,v in ipairs(image[curFrame])do
-                        log(unpack(v))
                         local t, f, b  = unpack(v)
                         t = sub(t, 1,w)
                         f = sub(f, 1,w)

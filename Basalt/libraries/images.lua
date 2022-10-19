@@ -51,7 +51,7 @@ local function loadImageAsBimg(path, f)
 end
 
 local function resizeBIMG(source, w, h)
-    local oW, oH = #source[1][1][1], #source[1]
+    local oW, oH = source.width or #source[1][1][1], source.height or #source[1]
     local newImg = {{}}
     for k,v in pairs(source)do if(k~=1)then newImg[k] = v end end
     local img = source[1]

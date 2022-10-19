@@ -80,8 +80,10 @@ local function frame(base, manager)
     end
 
     if(base~=nil)then
+        w = #base[1][1]
+        h = #base
         setFrame(base)
-    end 
+    end
 
     return {
         recalculateSize = recalculateSize,
@@ -97,7 +99,8 @@ local function frame(base, manager)
             for k,v in pairs(t)do
                 table.insert(f, {v, fg[k], bg[k]})
             end
-            return f
+            
+            return f, w, h
         end,
 
         getImage = function()
@@ -161,12 +164,14 @@ return function(img)
     local function addFrame(id, data)
         id = id or #frames+1
         frames[id] = frame(data, manager)
-        frames[id].setSize(width, height)
+        if(data==nil)then
+            frames[id].setSize(width, height)
+        end
     end
 
     manager = {
-        updateSize = function(w, h)
-            local changed = false
+        updateSize = function(w, h, force)
+            local changed = force==true and true or false
             if(w > width)then changed = true width = w end
             if(h > height)then changed = true height = h end
             if(changed)then
@@ -224,7 +229,16 @@ return function(img)
         end,
 
         getFrameObjects = function()
-                return frames
+            return frames
+        end,
+
+        getFrames = function()
+            local f = {}
+            for k,v in pairs(frames)do
+                local frame = v.getFrame()
+                table.insert(f, frame)
+            end
+            return f
         end,
 
         getFrameObject = function(id)
@@ -235,7 +249,7 @@ return function(img)
             local f = frame()
             if(#frames<=1)then
                 metadata.animated = true
-                metadata.secondsPerFrame = 1
+                metadata.secondsPerFrame = 0.2
             end
             addFrame(id)
             return f
@@ -262,7 +276,8 @@ return function(img)
         createBimg = function()
             local bimg = {}
             for k,v in pairs(frames)do
-                table.insert(bimg, v.getFrame())
+                local f = v.getFrame()
+                table.insert(bimg, f)
             end
             for k,v in pairs(metadata)do
                 bimg[k] = v
@@ -281,8 +296,16 @@ return function(img)
                 addFrame(k, v)
             end
         end
+        if(metadata.width==nil)or(metadata.height==nil)then
+            for k,v in pairs(frames)do
+                local w, h = v.getSize()
+                if(w>width)then w = width end
+                if(h>height)then h = height end
+            end
+            manager.updateSize(width, height, true)
+        end
     else
-        addFrame(1, manager)
+        addFrame(1)
     end
 
     return manager

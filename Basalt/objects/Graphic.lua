@@ -55,6 +55,25 @@ return function(name)
             self:updateDraw()
         end,
 
+        addFrame = function(self)
+            local id = #imgData.getFrames()+1
+            if(imgData.getFrameObject(id)==nil)then
+                imgData.addFrame(id)
+            end
+        end,
+
+        getFrame = function(self, id)
+            return imgData.getFrame(id)
+        end,
+
+        getFrames = function(self)
+            return imgData.getFrames()
+        end,
+
+        getFrameCount = function(self)
+            return #imgData.getFrames()
+        end,
+
         getSelectedFrame = function(self)
             return selectedFrame
         end,
@@ -72,7 +91,7 @@ return function(name)
             x = _x or x
             y = _y or y
             bimgFrame.text(text, x, y)
-            bimg = imgData.getFrame()
+            bimg = bimgFrame.getImage()
             self:updateDraw()
             return self
         end,

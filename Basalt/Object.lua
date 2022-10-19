@@ -2,7 +2,7 @@ local basaltEvent = require("basaltEvent")
 local utils = require("utils")
 local split = utils.splitString
 local numberFromString = utils.numberFromString
-local xmlValue = utils.getValueFromXML
+local xmlValue = utils.getValueFromXML 
 
 return function(name)
     -- Base object

@@ -901,8 +901,8 @@ return function(name, parent, pTerm, basalt)
                         self:updateDraw()
                     end
                 end
-                self:removeFocusedObject()
                 if(yOffset==cache)then return false end
+                self:removeFocusedObject()
                 return true
             end
             return false
