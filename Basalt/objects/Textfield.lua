@@ -1,6 +1,5 @@
 local Object = require("Object")
 local tHex = require("tHex")
-local log = require("basaltLogs")
 local xmlValue = require("utils").getValueFromXML
 
 local rep,find,gmatch,sub,len = string.rep,string.find,string.gmatch,string.sub,string.len
@@ -227,9 +226,14 @@ return function(name)
         end;
 
         removeLine = function(self, index)
-            table.remove(lines, index or #lines)
-            if (#lines <= 0) then
-                table.insert(lines, "")
+            if(#lines>1)then
+                table.remove(lines, index or #lines)
+                table.remove(bgLines, index or #bgLines)
+                table.remove(fgLines, index or #fgLines)
+            else
+                lines = {""}
+                bgLines = {""}
+                fgLines = {""}
             end
             self:updateDraw()
             return self
@@ -430,9 +434,14 @@ return function(name)
                         end
                     end
 
+                if not((obx + textX - wIndex >= obx and obx + textX - wIndex < obx + w) and (oby + textY - hIndex >= oby and oby + textY - hIndex < oby + h)) then
+                    wIndex = math.max(1, lines[textY]:len()-w+1)
+                    hIndex = math.max(1, textY - h + 1)
+                end
+
                 local cursorX = (textX <= lines[textY]:len() and textX - 1 or lines[textY]:len()) - (wIndex - 1)
-                if (cursorX > self.x + w - 1) then
-                    cursorX = self.x + w - 1
+                if (cursorX > self:getX() + w - 1) then
+                    cursorX = self:getX() + w - 1
                 end
                 local cursorY = (textY - hIndex < h and textY - hIndex or textY - hIndex - 1)
                 if (cursorX < 1) then
@@ -458,9 +467,14 @@ return function(name)
                 updateColors(self)
                 self:setValue("")
 
+                if not((obx + textX - wIndex >= obx and obx + textX - wIndex < obx + w) and (oby + textY - hIndex >= oby and oby + textY - hIndex < oby + h)) then
+                    wIndex = math.max(1, lines[textY]:len()-w+1)
+                    hIndex = math.max(1, textY - h + 1)
+                end
+
                 local cursorX = (textX <= lines[textY]:len() and textX - 1 or lines[textY]:len()) - (wIndex - 1)
-                if (cursorX > self.x + w - 1) then
-                    cursorX = self.x + w - 1
+                if (cursorX > self:getX() + w - 1) then
+                    cursorX = self:getX() + w - 1
                 end
                 local cursorY = (textY - hIndex < h and textY - hIndex or textY - hIndex - 1)
                 if (cursorX < 1) then
@@ -490,9 +504,8 @@ return function(name)
                                 wIndex = 1
                             end
                         end
-                        if (self.parent ~= nil) then
-                            self.parent:setCursor(true, anchx + textX - wIndex, anchy + textY - hIndex, self.fgColor)
-                        end
+                        self.parent:setCursor(true, anchx + textX - wIndex, anchy + textY - hIndex, self.fgColor)
+
                         self:updateDraw()
                     end
                 end
@@ -514,12 +527,10 @@ return function(name)
                     hIndex = 1
                 end
 
-                if (self.parent ~= nil) then
-                    if (obx + textX - wIndex >= obx and obx + textX - wIndex < obx + w) and (oby + textY - hIndex >= oby and oby + textY - hIndex < oby + h) then
-                        self.parent:setCursor(true, anchx + textX - wIndex, anchy + textY - hIndex, self.fgColor)
-                    else
-                        self.parent:setCursor(false)
-                    end
+                if (obx + textX - wIndex >= obx and obx + textX - wIndex < obx + w) and (anchy + textY - hIndex >= anchy and anchy + textY - hIndex < anchy + h) then
+                    self.parent:setCursor(true, anchx + textX - wIndex, anchy + textY - hIndex, self.fgColor)
+                else
+                    self.parent:setCursor(false)
                 end
                 self:updateDraw()
                 return true
@@ -601,7 +612,7 @@ return function(name)
                     end
                     if(self:isFocused())then
                         local anchx, anchy = self:getAnchorPosition()
-                        self.parent:setCursor(true, anchx + textX - wIndex, anchy + textY - hIndex, self.fgColor)
+                        --self.parent:setCursor(true, anchx + textX - wIndex, anchy + textY - hIndex, self.fgColor)
                     end
                 end
             end
