@@ -92,6 +92,10 @@ local getTheme = function(name)
 end
 
 local bInstance = {
+    getDynamicValueEventSetting = function()
+        return basalt.dynamicValueEvents
+    end,
+    
     getMainFrame = function()
         return mainFrame
     end,
@@ -289,6 +293,7 @@ end
 
 basalt = {
     logging = false,
+    dynamicValueEvents = false,
     setTheme = setTheme,
     getTheme = getTheme,
     drawFrames = drawFrames,

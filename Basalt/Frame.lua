@@ -326,11 +326,13 @@ return function(name, parent, pTerm, basalt)
                     end
                 end
             end
-            for _, index in pairs(objZIndex) do
-                if (objects[index] ~= nil) then
-                    for _, value in pairs(objects[index]) do
-                        if (value.eventHandler ~= nil) then
-                            value:eventHandler("basalt_dynamicvalue", self)
+            if(basalt.getDynamicValueEventSetting())then
+                for _, index in pairs(objZIndex) do
+                    if (objects[index] ~= nil) then
+                        for _, value in pairs(objects[index]) do
+                            if (value.eventHandler ~= nil) then
+                                value:eventHandler("basalt_dynamicvalue", self)
+                            end
                         end
                     end
                 end
@@ -348,9 +350,13 @@ return function(name, parent, pTerm, basalt)
             for _, value in pairs(objects) do
                 for _, b in pairs(value) do
                     if(b.getHeight~=nil)and(b.getY~=nil)then
-                        local h, y = b:getHeight(), b:getY()
-                        if (h + y - self:getHeight() >= scrollAmount) then
-                            scrollAmount = max(h + y - self:getHeight(), 0)
+                        if(b:getType()=="Dropdown")then
+
+                        else
+                            local h, y = b:getHeight(), b:getY()
+                            if (h + y - self:getHeight() >= scrollAmount) then
+                                scrollAmount = max(h + y - self:getHeight(), 0)
+                            end
                         end
                     end
                 end

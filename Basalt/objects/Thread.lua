@@ -54,6 +54,7 @@ return function(name)
             func = f
             cRoutine = coroutine.create(func)
             isActive = true
+            filter=nil
             local ok, result = coroutine.resume(cRoutine)
             filter = result
             if not (ok) then
@@ -119,7 +120,7 @@ return function(name)
 
         eventHandler = function(self, event, ...)
             if (isActive) then
-                if (coroutine.status(cRoutine) ~= "dead") then
+                if (coroutine.status(cRoutine) == "suspended") then
                     if(filter~=nil)then
                         if(event~=filter)then return end
                         filter=nil
