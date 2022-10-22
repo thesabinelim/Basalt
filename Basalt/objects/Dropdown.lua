@@ -120,6 +120,10 @@ return function(name)
             return self
         end,
 
+        getDropdownSize = function(self)
+            return dropdownW, dropdownH
+        end,
+
         mouseHandler = function(self, button, x, y)
             if (isOpened) then
                 local obx, oby = self:getAbsolutePosition(self:getAnchorPosition())

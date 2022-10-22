@@ -344,23 +344,48 @@ return function(name, parent, pTerm, basalt)
         return dynamicValues[id][1]
     end
 
-    local function calculateMaxScroll(self)
-        if(autoScroll)then
-            scrollAmount = 0
-            for _, value in pairs(objects) do
-                for _, b in pairs(value) do
-                    if(b.getHeight~=nil)and(b.getY~=nil)then
-                        if(b:getType()=="Dropdown")then
-
-                        else
-                            local h, y = b:getHeight(), b:getY()
-                            if (h + y - self:getHeight() >= scrollAmount) then
-                                scrollAmount = max(h + y - self:getHeight(), 0)
-                            end
+    local function getVerticalScrollAmount(self)
+        local amount = 0
+        for _, value in pairs(objects) do
+            for _, b in pairs(value) do
+                if(b.getHeight~=nil)and(b.getY~=nil)then
+                    if(b:getType()=="Dropdown")then
+                        local h, y = b:getHeight(), b:getY()
+                        local wD, hD = b:getDropdownSize()
+                        h = h + hD - 1
+                        if (h + y - self:getHeight() >= amount) then
+                            amount = max(h + y - self:getHeight(), 0)
+                        end
+                    else
+                        local h, y = b:getHeight(), b:getY()
+                        if (h + y - self:getHeight() >= amount) then
+                            amount = max(h + y - self:getHeight(), 0)
                         end
                     end
                 end
             end
+        end
+        return amount
+    end
+
+    local function getHorizontalScrollAmount(self)
+        local amount = 0
+        for _, value in pairs(objects) do
+            for _, b in pairs(value) do
+                if(b.getWidth~=nil)and(b.getX~=nil)then
+                    local h, y = b:getWidth(), b:getX()
+                    if (h + y - self:getWidth() >= amount) then
+                        amount = max(h + y - self:getWidth(), 0)
+                    end
+                end
+            end
+        end
+        return amount
+    end
+
+    local function calculateMaxScroll(self)
+        if(autoScroll)then
+            scrollAmount = getVerticalScrollAmount(self)
         end
     end
 
@@ -547,6 +572,9 @@ return function(name, parent, pTerm, basalt)
         getScrollAmount = function(self)
             return autoScroll and calculateMaxScroll(self) or scrollAmount
         end,
+
+        getCalculatedVerticalScroll = getVerticalScrollAmount,
+        getCalculatedHorizontalScroll = getHorizontalScrollAmount,
 
         show = function(self)
             base.show(self)
