@@ -793,7 +793,7 @@ return function(name, parent)
 
         init = function(self)
             if(base.init(self))then
-                elf.bgColor = self.parent:getTheme("ProgramBG")
+                self.bgColor = self.parent:getTheme("ProgramBG")
             end
         end,
 
