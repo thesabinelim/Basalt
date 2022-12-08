@@ -1,6 +1,6 @@
 return { -- The default main theme for basalt!
-    BasaltBG = colors.lightGray,
-    BasaltText = colors.black,
+    BaseFrameBG = colors.lightGray,
+    BaseFrameText = colors.black,
     FrameBG = colors.gray,
     FrameText = colors.black,
     ButtonBG = colors.gray,

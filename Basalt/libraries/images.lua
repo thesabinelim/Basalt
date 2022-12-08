@@ -52,22 +52,30 @@ end
 
 local function resizeBIMG(source, w, h)
     local oW, oH = source.width or #source[1][1][1], source.height or #source[1]
-    local newImg = {{}}
-    for k,v in pairs(source)do if(k~=1)then newImg[k] = v end end
-    local img = source[1]
-    for y=1, h do
-        local xT,xFG,xBG = "","",""
-        local yR = floor(y / h * oH + 0.5)
-        if(img[yR]~=nil)then
-            for x=1, w do
-                local xR = floor(x / w * oW + 0.5)
-                xT = xT..sub(img[yR][1], xR,xR)
-                xFG = xFG..sub(img[yR][2], xR,xR)
-                xBG = xBG..sub(img[yR][3], xR,xR)
+    local newImg = {}
+    for k,v in pairs(source)do
+        if(type(k)=="number")then
+            local frame = {}
+            for y=1, h do
+                local xT,xFG,xBG = "","",""
+                local yR = floor(y / h * oH + 0.5)
+                if(v[yR]~=nil)then
+                    for x=1, w do
+                        local xR = floor(x / w * oW + 0.5)
+                        xT = xT..sub(v[yR][1], xR,xR)
+                        xFG = xFG..sub(v[yR][2], xR,xR)
+                        xBG = xBG..sub(v[yR][3], xR,xR)
+                    end
+                    table.insert(frame, {xT, xFG, xBG})
+                end
             end
-            table.insert(newImg[1], {xT, xFG, xBG})
+            table.insert(newImg, k, frame)
+        else
+            newImg[k] = v
         end
     end
+    newImg.width = w
+    newImg.height = h
     return newImg
 end
 

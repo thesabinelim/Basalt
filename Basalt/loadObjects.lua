@@ -1,4 +1,5 @@
 local _OBJECTS = {}
+
 if(packaged)then
     for k,v in pairs(getProject("objects"))do
         _OBJECTS[k] = v()

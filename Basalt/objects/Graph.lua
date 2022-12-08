@@ -8,7 +8,7 @@ return function(name)
     local base = Object(name)
     local objectType = "Graph"
 
-    local graphAmount = {}
+    local graphData = {}
     local lastTime = 0
 
     base:setZIndex(5)
@@ -27,23 +27,26 @@ return function(name)
 
         setValuesByXMLData = function(self, data)
             base.setValuesByXMLData(self, data)
-
-            return self
-        end,
-
-        add = function(self, val)
             
             return self
         end,
 
-        clear = function(self)
+        add = function(self, val)
+            local t = lastTime==0 and 0 or os.epoch("local")-lastTime
+            lastTime = os.epoch("local")
+            graphData[t] = val
+            return self
+        end,
 
+        clear = function(self)
+            graphData = {}
+            lastTime = 0
             return self
         end,
 
         draw = function(self)
             if (base.draw(self)) then
-
+                
             end
         end,
 

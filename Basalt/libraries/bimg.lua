@@ -92,12 +92,12 @@ local function frame(base, manager)
         getFrame = function()
             local f = {}
 
-            for k,v in pairs(data)do
-                f[k] = v
-            end
-
             for k,v in pairs(t)do
                 table.insert(f, {v, fg[k], bg[k]})
+            end
+
+            for k,v in pairs(data)do
+                f[k] = v
             end
             
             return f, w, h
@@ -112,7 +112,29 @@ local function frame(base, manager)
         end,
 
         setFrameData = function(key, value)
-            data[key] = value
+            if(value~=nil)then
+                data[key] = value
+            else
+                if(type(key)=="table")then
+                    data = key
+                end
+            end
+        end,
+
+        setFrameImage = function(imgData)
+            for k,v in pairs(imgData.t)do
+                t[k] = imgData.t[k]
+                fg[k] = imgData.fg[k]
+                bg[k] = imgData.bg[k]
+            end
+        end,
+
+        getFrameImage = function()
+            return {t = t, fg = fg, bg = bg}
+        end,
+
+        getFrameData = function(key)
+            return (key~= nil and data[key] or data)
         end,
 
         blit = function(text, fgCol, bgCol, x, y)
@@ -163,9 +185,24 @@ return function(img)
 
     local function addFrame(id, data)
         id = id or #frames+1
-        frames[id] = frame(data, manager)
+        table.insert(frames, id, frame(data, manager))
         if(data==nil)then
             frames[id].setSize(width, height)
+        end
+    end
+
+    local function removeFrame(id)
+        table.remove(frames, id or #frames)
+    end
+
+    local function moveFrame(id, dir)
+        local f = frames[id]
+        if(f~=nil)then
+        local newId = id+dir
+            if(newId>=1)and(newId<=#frames)then
+                table.remove(frames, id)
+                table.insert(frames, newId, f)
+            end
         end
     end
 
@@ -248,17 +285,39 @@ return function(img)
         addFrame = function(id)
             local f = frame()
             if(#frames<=1)then
+                if(metadata.animated==nil)then
                 metadata.animated = true
-                metadata.secondsPerFrame = 0.2
+                end
+                if(metadata.secondsPerFrame==nil)then
+                    metadata.secondsPerFrame = 0.2
+                end
             end
             addFrame(id)
             return f
         end,
 
+        removeFrame = function(id)
+            removeFrame(id)
+            if(#frames<=1)then
+                if(metadata.animated==nil)then
+                    metadata.animated = true
+                end
+                if(metadata.secondsPerFrame==nil)then
+                    metadata.secondsPerFrame = 0.2
+                end
+            end
+        end,
+
+        moveFrame = moveFrame,
+
         setFrameData = function(id, key, value)
             if(frames[id]~=nil)then
                 frames[id].setFrameData(key, value)
             end
+        end,
+
+        getFrameData = function(id, key)
+            return frames[id]~=nil and frames[id].getFrameData(key)
         end,
 
         getSize = function()
@@ -270,7 +329,17 @@ return function(img)
         end,
 
         setMetadata = function(key, val)
-            meta[key] = val
+            if(val~=nil)then
+                metadata[key] = val
+            else
+               if(type(key)=="table")then
+                    metadata = key
+               end
+            end
+        end,
+
+        getMetadata = function(key)
+            return key~=nil and metadata[key] or metadata
         end,
 
         createBimg = function()

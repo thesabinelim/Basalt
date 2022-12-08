@@ -13,9 +13,32 @@ return function(name)
     local curFrame = 1
     local infinitePlay = false
     local animTimer
+    local usePalette = false
 
     base.width = 24
     base.height = 8
+
+    local function getPalette(id)
+        if(originalImage~=nil)then
+            local p = {}
+            for k,v in pairs(colors)do
+                if(type(v)=="number")then
+                    p[k] = {term.nativePaletteColor(v)}
+                end
+            end
+            if(originalImage.palette~=nil)then
+                for k,v in pairs(originalImage.palette)do
+                    p[k] = tonumber(v)
+                end
+            end
+            if(originalImage[id]~=nil)and(originalImage[id].palette~=nil)then
+                for k,v in pairs(originalImage[id].palette)do
+                    p[k] = tonumber(v)
+                end
+            end
+            return p
+        end
+    end
 
     local object = {
         init = function(self)
@@ -32,9 +55,28 @@ return function(name)
             originalImage = images.loadImageAsBimg(path, f)
             curFrame = 1
             image = originalImage
+            if(animTimer~=nil)then
+                os.cancelTimer(animTimer)
+            end
             self:updateDraw()
             return self
         end;
+
+        setImage = function(self, data)
+            originalImage = data
+            image = originalImage
+            curFrame = 1
+            if(animTimer~=nil)then
+                os.cancelTimer(animTimer)
+            end
+            self:updateDraw()
+            return self
+        end,
+
+        usePalette = function(self, use)
+            usePalette = use~=nil and use or true
+            return self
+        end,
 
         play = function(self, inf)
             if(originalImage.animated)then
@@ -80,17 +122,6 @@ return function(name)
             return originalImage[key]
         end,
 
-        setImage = function(self, data)
-            originalImage = data
-            image = originalImage
-            curFrame = 1
-            if(animTimer~=nil)then
-                os.cancelTimer(animTimer)
-            end
-            self:updateDraw()
-            return self
-        end,
-
         getImageSize = function(self)
             return originalImage.width, originalImage.height
         end,
@@ -110,6 +141,9 @@ return function(name)
         draw = function(self)
             if (base.draw(self)) then
                 if (image ~= nil) then
+                    if(usePalette)then
+                        self:getBaseFrame():setThemeColor(getPalette(curFrame))
+                    end
                     local obx, oby = self:getAnchorPosition()
                     local w,h = self:getSize()
                     for y,v in ipairs(image[curFrame])do

@@ -1,73 +1,69 @@
-local Object = require("Object")
 local utils = require("utils")
-local xmlValue = utils.getValueFromXML
 local tHex = require("tHex")
 
-return function(name)
+return function(name, basalt)
     -- Button
-    local base = Object(name)
+    local base = basalt.getObject("VisualObject")(name, basalt)
     local objectType = "Button"
     local textHorizontalAlign = "center"
     local textVerticalAlign = "center"
 
+    local text = "Button"
+
+    base:setSize(12, 3)
     base:setZIndex(5)
-    base:setValue("Button")
-    base.width = 12
-    base.height = 3
 
     local object = {
         init = function(self)
             if(base.init(self))then
-                self.bgColor = self.parent:getTheme("ButtonBG")
-                self.fgColor = self.parent:getTheme("ButtonText")    
+                local parent = self:getParent()
+                self:setBackground(parent:getTheme("ButtonBG"))
+                self:setForeground(parent:getTheme("ButtonText")) 
             end    
         end,
         getType = function(self)
             return objectType
-        end;
+        end,
+
+        getBase = function(self)
+            return base
+        end,  
+        
         setHorizontalAlign = function(self, pos)
             textHorizontalAlign = pos
             self:updateDraw()
             return self
-        end;
+        end,
 
         setVerticalAlign = function(self, pos)
             textVerticalAlign = pos
             self:updateDraw()
             return self
-        end;
+        end,
 
-        setText = function(self, text)
-            base:setValue(text)
+        setText = function(self, newText)
+            text = newText
             self:updateDraw()
-            return self
-        end;
-
-        setValuesByXMLData = function(self, data)
-            base.setValuesByXMLData(self, data)
-            if(xmlValue("text", data)~=nil)then self:setText(xmlValue("text", data)) end
-            if(xmlValue("horizontalAlign", data)~=nil)then textHorizontalAlign = xmlValue("horizontalAlign", data) end
-            if(xmlValue("verticalAlign", data)~=nil)then textVerticalAlign = xmlValue("verticalAlign", data) end
             return self
         end,
 
         draw = function(self)
-            if (base.draw(self)) then
-                if (self.parent ~= nil) then
-                    local obx, oby = self:getAnchorPosition()
-                    local w,h = self:getSize()
-                    local verticalAlign = utils.getTextVerticalAlign(h, textVerticalAlign)
+            base.draw(self)
+            self:addDraw("button", function()
+                local parent = self:getParent()
+                local obx, oby = self:getPosition()
+                local w,h = self:getSize()
+                local verticalAlign = utils.getTextVerticalAlign(h, textVerticalAlign)
 
-                    for n = 1, h do
-                        if (n == verticalAlign) then
-                            self.parent:setText(obx, oby + (n - 1), utils.getTextHorizontalAlign(self:getValue(), w, textHorizontalAlign))
-                            self.parent:setFG(obx, oby + (n - 1), utils.getTextHorizontalAlign(tHex[self.fgColor]:rep(self:getValue():len()), w, textHorizontalAlign))
-                        end
+                for n = 1, h do
+                    if (n == verticalAlign) then
+                        parent:setText(obx, oby + (n - 1), utils.getTextHorizontalAlign(text, w, textHorizontalAlign))
+                        parent:setFG(obx, oby + (n - 1), utils.getTextHorizontalAlign(tHex[self:getForeground()]:rep(text:len()), w, textHorizontalAlign))
                     end
                 end
-            end
+            end)
         end,
-
     }
+    object.__index = object
     return setmetatable(object, base)
 end

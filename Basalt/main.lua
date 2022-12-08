@@ -1,5 +1,7 @@
 local basaltEvent = require("basaltEvent")()
-local Frame = require("Frame")
+local BaseFrame = require("BaseFrame")
+local _OBJECTS = require("loadObjects")
+local pluginSystem = require("plugin")
 local theme = require("theme")
 local utils = require("utils")
 local log = require("basaltLogs")
@@ -10,7 +12,7 @@ local moveThrottle = 300
 local dragThrottle = 50
 
 local baseTerm = term.current()
-local version = "1.6.4"
+local version = "1.7.0"
 
 local projectDirectory = fs.getDir(table.pack(...)[2] or "")
 
@@ -18,6 +20,8 @@ local activeKey, frames, monFrames, monGroups, variables, schedules = {}, {}, {}
 local mainFrame, activeFrame, focusedObject, updaterActive
 
 local basalt = {}
+
+_OBJECTS = pluginSystem.addPlugins(_OBJECTS)
 
 if not  term.isColor or not term.isColor() then
     error('Basalt requires an advanced (golden) computer to run.', 0)
@@ -73,6 +77,32 @@ return function(...)
             basaltError(result)
         end
     end
+end
+
+basalt.debug = function(...)
+    local args = { ... }
+    if(mainFrame==nil)then print(...) return end
+    if (mainFrame.name ~= "basaltDebuggingFrame") then
+        if (mainFrame ~= basalt.debugFrame) then
+            basalt.debugLabel:setParent(mainFrame)
+        end
+    end
+    local str = ""
+    for key, value in pairs(args) do
+        str = str .. tostring(value) .. (#args ~= key and ", " or "")
+    end
+    basalt.debugLabel:setText("[Debug] " .. str)
+    for k,v in pairs(createText(str, basalt.debugList:getWidth()))do
+        basalt.debugList:addItem(v)
+    end
+    if (basalt.debugList:getItemCount() > 50) then
+        basalt.debugList:removeItem(1)
+    end
+    basalt.debugList:setValue(basalt.debugList:getItem(basalt.debugList:getItemCount()))
+    if(basalt.debugList.getItemCount() > basalt.debugList:getHeight())then
+        basalt.debugList:setOffset(basalt.debugList:getItemCount() - basalt.debugList:getHeight())
+    end
+    basalt.debugLabel:show()
 end
 
 local setVariable = function(name, var)
@@ -140,7 +170,7 @@ local bInstance = {
         end
     end,
 
-    getBaseTerm = function()
+    getTerm = function()
         return baseTerm
     end,
 
@@ -148,6 +178,15 @@ local bInstance = {
 
     stop = stop,
     newFrame = Frame,
+    debug = basalt.debug,
+
+    getObjects = function()
+        return _OBJECTS
+    end,
+
+    getObject = function(id)
+        return _OBJECTS[id]
+    end,
 
     getDirectory = function()
         return projectDirectory
@@ -178,15 +217,15 @@ end
 local function drawFrames()
     if(updaterActive==false)then return end
     if(mainFrame~=nil)then
-        mainFrame:draw()
+        mainFrame:redraw()
         mainFrame:updateTerm()
     end
     for _,v in pairs(monFrames)do
-        v:draw()
+        v:redraw()
         v:updateTerm()
     end
     for _,v in pairs(monGroups)do
-        v[1]:draw()
+        v[1]:redraw()
         v[1]:updateTerm()
     end
 end
@@ -381,7 +420,7 @@ basalt = {
     end,
     
     setActiveFrame = function(frame)
-        if (frame:getType() == "Frame") then
+        if (frame:getType() == "Container") then
             activeFrame = frame
             return true
         end
@@ -399,14 +438,14 @@ basalt = {
     schedule = schedule,
     
     createFrame = function(name)
-        name = name or uuid()
         for _, v in pairs(frames) do
             if (v.name == name) then
                 return nil
             end
         end
-        local newFrame = Frame(name,nil,nil,bInstance)
+        local newFrame = BaseFrame(name, bInstance)
         newFrame:init()
+        newFrame:draw()
         table.insert(frames, newFrame)
         if(mainFrame==nil)and(newFrame:getName()~="basaltDebuggingFrame")then
             newFrame:show()
@@ -422,36 +461,21 @@ basalt = {
         projectDirectory = dir
     end,
 
-    debug = function(...)
-        local args = { ... }
-        if(mainFrame==nil)then print(...) return end
-        if (mainFrame.name ~= "basaltDebuggingFrame") then
-            if (mainFrame ~= basalt.debugFrame) then
-                basalt.debugLabel:setParent(mainFrame)
-            end
-        end
-        local str = ""
-        for key, value in pairs(args) do
-            str = str .. tostring(value) .. (#args ~= key and ", " or "")
-        end
-        basalt.debugLabel:setText("[Debug] " .. str)
-        for k,v in pairs(createText(str, basalt.debugList:getWidth()))do
-            basalt.debugList:addItem(v)
-        end
-        if (basalt.debugList:getItemCount() > 50) then
-            basalt.debugList:removeItem(1)
-        end
-        basalt.debugList:setValue(basalt.debugList:getItem(basalt.debugList:getItemCount()))
-        if(basalt.debugList.getItemCount() > basalt.debugList:getHeight())then
-            basalt.debugList:setOffset(basalt.debugList:getItemCount() - basalt.debugList:getHeight())
-        end
-        basalt.debugLabel:show()
-    end,
+    debug = basalt.debug,
 }
 
+local basaltPlugins = pluginSystem.get("basalt")
+if(basaltPlugins~=nil)then
+    for k,v in pairs(basaltPlugins)do
+        for a,b in pairs(v(basalt))do
+            basalt[a] = b
+        end
+    end
+end
+--[[
 basalt.debugFrame = basalt.createFrame("basaltDebuggingFrame"):showBar():setBackground(colors.lightGray):setBar("Debug", colors.black, colors.gray)
 basalt.debugFrame:addButton("back"):setAnchor("topRight"):setSize(1, 1):setText("\22"):onClick(function() if(basalt.oldFrame~=nil)then basalt.oldFrame:show() end end):setBackground(colors.red):show()
 basalt.debugList = basalt.debugFrame:addList("debugList"):setSize("parent.w - 2", "parent.h - 3"):setPosition(2, 3):setScrollable(true):show()
 basalt.debugLabel = basalt.debugFrame:addLabel("debugLabel"):onClick(function() basalt.oldFrame = mainFrame basalt.debugFrame:show() end):setBackground(colors.black):setForeground(colors.white):setAnchor("bottomLeft"):ignoreOffset():setZIndex(20):show()
-
+]]
 return basalt

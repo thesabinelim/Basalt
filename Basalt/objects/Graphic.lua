@@ -1,7 +1,7 @@
 local Object = require("Object")
 local tHex = require("tHex")
 local xmlValue = require("utils").getValueFromXML
-local bimgLib = require("bimgLibrary")
+local bimgLib = require("bimg")
 local images = require("images")
 
 local sub,len,max,min = string.sub,string.len,math.max,math.min
@@ -55,15 +55,44 @@ return function(name)
             self:updateDraw()
         end,
 
-        addFrame = function(self)
-            local id = #imgData.getFrames()+1
-            if(imgData.getFrameObject(id)==nil)then
-                imgData.addFrame(id)
-            end
+        addFrame = function(self, id)
+            imgData.addFrame(id)
+            return self
+        end,
+
+        getFrameMetadata = function(self, id, key)
+            return imgData.getFrameData(id, key)
+        end,
+
+        setFrameMetadata = function(self, id, key, val)
+            imgData.setFrameData(id, key, val)
+            return self
+        end,
+
+        getMetadata = function(self, key)
+            return imgData.getMetadata(key)
+        end,
+
+        setMetadata = function(self, key, value)
+            return imgData.setMetadata(key, value)
         end,
 
         getFrame = function(self, id)
             return imgData.getFrame(id)
+        end,
+
+        getFrameObject = function(self, id)
+            return imgData.getFrameObject(id)
+        end,
+
+        removeFrame = function(self, id)
+            imgData.removeFrame(id)
+            return self
+        end,
+
+        moveFrame = function(self, id, dir)
+            imgData.moveFrame(id, dir)
+            return self
         end,
 
         getFrames = function(self)
