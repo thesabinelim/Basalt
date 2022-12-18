@@ -39,14 +39,12 @@ local function loadImage(path, f)
 end
 
 local function loadImageAsBimg(path, f)
-    if(f==nil)then
-        if(path:find(".bimg"))then
-            return loadBIMG(path)
-        elseif(path:find(".bbf"))then
-            return loadBBFAsBimg(path)
-        else
-            return loadNFPAsBimg(path)
-        end
+    if(path:find(".bimg"))then
+        return loadBIMG(path)
+    elseif(path:find(".bbf"))then
+        return loadBBFAsBimg(path)
+    else
+        return loadNFPAsBimg(path)
     end
 end
 

@@ -1,7 +1,5 @@
-local VisualObject = require("VisualObject")
-
-return function(name)
-    local base = VisualObject(name)
+return function(name, basalt)
+    local base = basalt.getObject("VisualObject")(name, basalt)
     -- Base object
     local objectType = "ChangeableObject"
 

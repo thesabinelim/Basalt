@@ -24,11 +24,14 @@ return function(name, basalt)
             return true
         end,
 
+        load = function(self)
+        end,
+
         getType = function(self)
             return objectType
         end,
         isType = function(self, t)
-            return objectType==t or base.isType~=nil and base.isType(t) or false
+            return objectType==t
         end,
         
         getName = function(self)
@@ -106,7 +109,7 @@ return function(name, basalt)
         end,
 
         removeEvent = function(self, event, index)
-            if(eventSystem:getEventCount(event)<=1)then
+            if(eventSystem:getEventCount(event)<1)then
                 if(parent~=nil)then
                     parent:removeEvent(event, self)
                 end

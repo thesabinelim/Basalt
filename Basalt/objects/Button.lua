@@ -14,15 +14,11 @@ return function(name, basalt)
     base:setZIndex(5)
 
     local object = {
-        init = function(self)
-            if(base.init(self))then
-                local parent = self:getParent()
-                self:setBackground(parent:getTheme("ButtonBG"))
-                self:setForeground(parent:getTheme("ButtonText")) 
-            end    
-        end,
         getType = function(self)
             return objectType
+        end,
+        isType = function(self, t)
+            return objectType==t or base.isType~=nil and base.isType(t) or false
         end,
 
         getBase = function(self)

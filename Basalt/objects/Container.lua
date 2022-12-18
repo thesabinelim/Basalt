@@ -1,9 +1,8 @@
-local VisualObject = require("VisualObject")
 local utils = require("utils")
 local rpairs = utils.rpairs
 
 return function(name, basalt)
-    local base = VisualObject(name, basalt)
+    local base = basalt.getObject("VisualObject")(name, basalt)
     local objectType = "Container"
 
     local objects = {}
@@ -54,6 +53,9 @@ return function(name, basalt)
         obj:setParent(self, true)
         if(obj.init~=nil)then
             obj:init()
+        end
+        if(obj.load~=nil)then
+            obj:load()
         end
         if(obj.draw~=nil)then
             obj:draw()
@@ -131,7 +133,6 @@ return function(name, basalt)
             events[event][zIndex] = {}
         end
         table.insert(events[event][zIndex], obj)
-        return obj
     end
 
     local function removeEvent(self, event, obj)
@@ -143,9 +144,9 @@ return function(name, basalt)
                         table.remove(events[event][a], key)
                         if(#events[event][a]<=0)then
                             events[event][a] = nil
-                            if(parent~=nil)then
-                                if(tableCount(events[event])<=0)then
-                                    activeEvents[event] = false
+                            if(tableCount(events[event])<=0)then
+                                activeEvents[event] = false
+                                if(parent~=nil)then
                                     parent:removeEvent(event, self)
                                 end
                             end
@@ -177,7 +178,7 @@ return function(name, basalt)
 
         removeFocusedObject = function(self)
             if(focusedObject~=nil)then
-                if(getObject(focusedObject)~=nil)then
+                if(getObject(self, focusedObject)~=nil)then
                     focusedObject:loseFocusHandler()
                 end
             end
@@ -188,12 +189,12 @@ return function(name, basalt)
         setFocusedObject = function(self, obj)
             if(focusedObject~=obj)then
                 if(focusedObject~=nil)then
-                    if(getObject(focusedObject)~=nil)then
+                    if(getObject(self, focusedObject)~=nil)then
                         focusedObject:loseFocusHandler()
                     end
                 end
                 if(obj~=nil)then
-                    if(getObject(obj)~=nil)then
+                    if(getObject(self, obj)~=nil)then
                         obj:getFocusHandler()
                     end
                 end
@@ -228,40 +229,47 @@ return function(name, basalt)
             end
         end,
 
+        loseFocusHandler = function(self)
+            base.loseFocusHandler(self)
+            if(focusedObject~=nil)then focusedObject:loseFocusHandler() focusedObject = nil end
+        end,
+
         getBasalt = function(self)
             return basalt
-        end
+        end,
     }
 
-    for k,v in pairs({mouse_click="mouseHandler",mouse_up="mouseUpHandler",mouse_drag="dragHandler",mouse_scroll="scrollHandler",mouse_hover="hoverHandler", other_event="eventHandler"})do
-        container[v] = function(self, ...)
-            if(base[v]~=nil)then
-                if(base[v](self, ...))then
-                    if(events[k]~=nil)then
+    for k,v in pairs({mouse_click={"mouseHandler", true},mouse_up={"mouseUpHandler", false},mouse_drag={"dragHandler", true},mouse_scroll={"scrollHandler", true},mouse_hover={"hoverHandler", false}, other_event={"eventHandler", false}})do
+        container[v[1]] = function(self, ...)
+            if(events[k]~=nil)then
+                if(base[v[1]]~=nil)then
+                    if(base[v[1]](self, ...))then
                         for _, index in ipairs(eventZIndex[k]) do
                             if (events[k][index] ~= nil) then
                                 for _, value in rpairs(events[k][index]) do
-                                    if (value[v] ~= nil) then
-                                        if (value[v](value, ...)) then                           
-                                            return true
+                                    if (value[v[1]] ~= nil) then
+                                        if (value[v[1]](value, ...)) then
+                                            if(k~="other_event")then             
+                                                return true
+                                            end
                                         end
                                     end
                                 end
                             end
                         end
+                        if(v[2])then
+                            self:removeFocusedObject()
+                        end
                     end
-                    self:removeFocusedObject()
-                    return true
                 end
             end
             return false
         end
     end
 
-
     for k,v in pairs({key="keyHandler",key_up="keyUpHandler",char="charHandler"})do
         container[v] = function(self, ...)
-            if (self:isFocused())or(self:getParent()==nil)then
+            if (self:isFocused())then
                 local val = self:getEventSystem():sendEvent(k, self, k, ...)
                 if(val==false)then return false end
                 if(events[k]~=nil)then

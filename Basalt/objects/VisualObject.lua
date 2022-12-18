@@ -1,8 +1,7 @@
-local Object = require("Object")
 local utils = require("utils")
 
 return function(name, basalt)   
-    local base = Object(name, basalt)
+    local base = basalt.getObject("Object")(name, basalt)
     -- Base object
     local objectType = "VisualObject" -- not changeable
 
@@ -20,7 +19,7 @@ return function(name, basalt)
     local x, y, width, height = 1,1,1,1
     local dragStartX, dragStartY, dragXOffset, dragYOffset = 0, 0, 0, 0
 
-    local bgColor,bgSymbol,bgSymbolColor,fgColor,transparentColor = colors.black, " ", colors.black, colors.white, false
+    local bgColor,fgColor = colors.black, colors.white
     local bimg, texture, textureTimerId, textureMode, parent
     local textureId, infinitePlay = 1, true
 
@@ -37,7 +36,7 @@ return function(name, basalt)
         getBase = function(self)
             return base
         end,  
-        
+      
         isType = function(self, t)
             return objectType==t or base.isType~=nil and base.isType(t) or false
         end,
@@ -139,8 +138,10 @@ return function(name, basalt)
             if(type(newHeight)=="number")then
                 height = rel and height+newHeight or newHeight
             end
-            if(parent~=nil)then parent:customEventHandler("basalt_FrameResize", self) end
-            if(self:getType()=="Container")then parent:customEventHandler("basalt_FrameResize", self) end
+            if(parent~=nil)then 
+                parent:customEventHandler("basalt_FrameResize", self)
+                if(self:getType()=="Container")then parent:customEventHandler("basalt_FrameResize", self) end
+            end
             self:updateDraw()
             return self
         end,
@@ -157,16 +158,14 @@ return function(name, basalt)
             return width, height
         end,
 
-        setBackground = function(self, color, symbol, symbolCol)
-            bgColor = color or false
-            bgSymbol = symbol or (bgColor~=false and bgSymbol or false)
-            bgSymbolColor = symbolCol or bgSymbolColor
+        setBackground = function(self, color)
+            bgColor = color or bgColor
             self:updateDraw()
             return self
         end,
 
         getBackground = function(self)
-            return bgColor, bgSymbol, bgSymbolColor
+            return bgColor
         end,
 
         setForeground = function(self, color)
@@ -243,7 +242,7 @@ return function(name, basalt)
             if (parent ~= nil) then
                 return parent:getFocusedObject() == self
             end
-            return false
+            return true
         end,
 
         onResize = function(self, ...)
@@ -265,7 +264,7 @@ return function(name, basalt)
         end,
 
         mouseHandler = function(self, button, x, y, isMon)
-            if(self:isCoordsInObject(x, y))then
+            if(self:isCoordsInObject(x, y))then 
                 local objX, objY = self:getAbsolutePosition()
                 local val = self:sendEvent("mouse_click", self, "mouse_click", button, x - (objX-1), y - (objY-1), x, y, isMon)
                 if(val==false)then return false end
@@ -345,7 +344,7 @@ return function(name, basalt)
         end,
 
         keyHandler = function(self, key, isHolding)
-            if(isEnabled)and(isVisible)then
+            if(self:isEnabled())and(isVisible)then
                 if (self:isFocused()) then
                 local val = self:sendEvent("key", self, "key", key, isHolding)
                 if(val==false)then return false end
@@ -356,7 +355,7 @@ return function(name, basalt)
         end,
 
         keyUpHandler = function(self, key)
-            if(isEnabled)and(isVisible)then
+            if(self:isEnabled())and(isVisible)then
                 if (self:isFocused()) then
                     local val = self:sendEvent("key_up", self, "key_up", key)
                 if(val==false)then return false end
@@ -367,8 +366,8 @@ return function(name, basalt)
         end,
 
         charHandler = function(self, char)
-            if(isEnabled)and(isVisible)then
-                if (self:isFocused()) then
+            if(self:isEnabled())and(isVisible)then
+                if(self:isFocused())then
                 local val = self:sendEvent("char", self, "char", char)
                 if(val==false)then return false end
                 return true
@@ -468,31 +467,18 @@ return function(name, basalt)
 
         draw = function(self)
             self:addDraw("base", function()
-                if(parent~=nil)then
-                    local x, y = self:getPosition()
-                    local w,h = self:getSize()
-                    local wP,hP = parent:getSize()
-                    if(x+w<1)or(x>wP)or(y+h<1)or(y>hP)then return false end
-                    if(bgColor~=false)then
-                        parent:drawBackgroundBox(x, y, w, h, bgColor)
-                    end
-                    if(bgSymbol~=false)then
-                        parent:drawTextBox(x, y, w, h, bgSymbol)
-                        if(bgSymbol~=" ")then
-                            parent:drawForegroundBox(x, y, w, h, bgSymbolColor)
-                        end
-                    end
+                local obj = self:getParent() or self
+                local x, y = self:getPosition()
+                local w,h = self:getSize()
+                local wP,hP = obj:getSize()
+                if(x+w<1)or(x>wP)or(y+h<1)or(y>hP)then return false end
+                if(bgColor~=false)then
+                    obj:drawForegroundBox(x, y, w, h, fgColor)
+                    obj:drawTextBox(x, y, w, h, " ")
+                    obj:drawBackgroundBox(x, y, w, h, bgColor)
                 end
             end, 1)
         end,
-
-        init = function(self)
-            if not(initialized)then
-                initialized = true
-                return true
-            end
-            return false
-        end
     }
     object.__index = object
     return setmetatable(object, base)

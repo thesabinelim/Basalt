@@ -2,7 +2,6 @@ local basaltEvent = require("basaltEvent")()
 local BaseFrame = require("BaseFrame")
 local _OBJECTS = require("loadObjects")
 local pluginSystem = require("plugin")
-local theme = require("theme")
 local utils = require("utils")
 local log = require("basaltLogs")
 local uuid = utils.uuid
@@ -105,6 +104,10 @@ basalt.debug = function(...)
     basalt.debugLabel:show()
 end
 
+basalt.log = function(...)
+    log(...)
+end
+
 local setVariable = function(name, var)
     variables[name] = var
 end
@@ -179,6 +182,7 @@ local bInstance = {
     stop = stop,
     newFrame = Frame,
     debug = basalt.debug,
+    log = basalt.log,
 
     getObjects = function()
         return _OBJECTS
@@ -285,9 +289,9 @@ local function basaltUpdateEvent(event, ...)
     end
 
     if(event == "monitor_touch") then
-        if(monFrames[p1]~=nil)then
-            monFrames[p1]:mouseHandler(1, a[2], a[3], true)
-            activeFrame = monFrames[p1]
+        if(monFrames[a[2]]~=nil)then
+            monFrames[a[2]]:mouseHandler(1, a[2], a[3], true)
+            activeFrame = monFrames[a[2]]
         end
         if(count(monGroups)>0)then
             for k,v in pairs(monGroups)do
@@ -336,6 +340,7 @@ basalt = {
     setTheme = setTheme,
     getTheme = getTheme,
     drawFrames = drawFrames,
+    log = log,
     getVersion = function()
         return version
     end,
@@ -345,10 +350,6 @@ basalt = {
 
     setBaseTerm = function(_baseTerm)
         baseTerm = _baseTerm
-    end,
-
-    log = function(...)
-        log(...)
     end,
 
     setMouseMoveThrottle = function(amount)
@@ -445,6 +446,7 @@ basalt = {
         end
         local newFrame = BaseFrame(name, bInstance)
         newFrame:init()
+        newFrame:load()
         newFrame:draw()
         table.insert(frames, newFrame)
         if(mainFrame==nil)and(newFrame:getName()~="basaltDebuggingFrame")then
@@ -469,6 +471,14 @@ if(basaltPlugins~=nil)then
     for k,v in pairs(basaltPlugins)do
         for a,b in pairs(v(basalt))do
             basalt[a] = b
+        end
+    end
+end
+local basaltPlugins = pluginSystem.get("basaltInternal")
+if(basaltPlugins~=nil)then
+    for k,v in pairs(basaltPlugins)do
+        for a,b in pairs(v(basalt))do
+            bInstance[a] = b
         end
     end
 end
