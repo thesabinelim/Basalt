@@ -126,8 +126,8 @@ return function(drawTerm)
         end
     end
 
-    local function blit(x, y, t, fg, bg)
-        if(#t == #fg)or(#t == #bg)then
+--[[    local function blit(x, y, t, fg, bg)
+        if(#t == #fg)and(#t == #bg)then
             if (y >= 1) and (y <= height) then
                 if (x + t:len() > 0) and (x <= width) then
                     local oldCacheT = cacheT[y]
@@ -170,6 +170,37 @@ return function(drawTerm)
                 end
             end
         end
+    end]]
+
+    local function blit(x, y, t, fg, bg)
+        if #t == #fg and #t == #bg then
+            if y >= 1 and y <= height then
+                if x + #t > 0 and x <= width then
+                    local newCacheT, newCacheFG, newCacheBG
+                    local oldCacheT, oldCacheFG, oldCacheBG = cacheT[y], cacheFG[y], cacheBG[y]
+                    local startN, endN = 1, #t
+    
+                    if x < 1 then
+                        startN = 1 - x + 1
+                        endN = width - x + 1
+                    elseif x + #t > width then
+                        endN = width - x + 1
+                    end
+    
+                    newCacheT = sub(oldCacheT, 1, x - 1) .. sub(t, startN, endN)
+                    newCacheFG = sub(oldCacheFG, 1, x - 1) .. sub(fg, startN, endN)
+                    newCacheBG = sub(oldCacheBG, 1, x - 1) .. sub(bg, startN, endN)
+    
+                    if x + #t <= width then
+                        newCacheT = newCacheT .. sub(oldCacheT, x + #t, width)
+                        newCacheFG = newCacheFG .. sub(oldCacheFG, x + #t, width)
+                        newCacheBG = newCacheBG .. sub(oldCacheBG, x + #t, width)
+                    end
+    
+                    cacheT[y], cacheFG[y], cacheBG[y] = newCacheT, newCacheFG, newCacheBG
+                end
+            end
+        end
     end
 
     local drawHelper = {
@@ -201,28 +232,17 @@ return function(drawTerm)
             for n = 1, height do
                 setBG(x, y + (n - 1), rep(tHex[bgCol], width))
             end
-        end;
+        end,
         drawForegroundBox = function(x, y, width, height, fgCol)
             for n = 1, height do
-                setFG(x, y + (n - 1) ,rep(tHex[fgCol], width))
+                setFG(x, y + (n - 1), rep(tHex[fgCol], width))
             end
-        end;
+        end,
         drawTextBox = function(x, y, width, height, symbol)
             for n = 1, height do
                 setText(x, y + (n - 1), rep(symbol, width))
             end
-        end;
-        writeText = function(x, y, text, bgCol, fgCol)
-            if(text~=nil)then
-                setText(x, y, text)
-                if(bgCol~=nil)and(bgCol~=false)then
-                    setBG(x, y, rep(tHex[bgCol], text:len()))
-                end
-                if(fgCol~=nil)and(fgCol~=false)then
-                    setFG(x, y, rep(tHex[fgCol], text:len()))
-                end
-            end
-        end;
+        end,
 
         update = function()
             local xC, yC = terminal.getCursorPos()

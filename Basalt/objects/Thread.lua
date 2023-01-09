@@ -1,6 +1,5 @@
-local Object = require("Object")
-return function(...)
-    local base = Object(...)
+return function(name, basalt)
+    local base = basalt.getObject("Object")(name, basalt)
 
     local objectType = "Thread"
 

@@ -1,5 +1,6 @@
 local utils = require("utils")
 local rpairs = utils.rpairs
+local tableCount = utils.tableCount
 
 return function(name, basalt)
     local base = basalt.getObject("VisualObject")(name, basalt)
@@ -90,14 +91,14 @@ return function(name, basalt)
                         table.remove(objects[a], key)
                         removeEvents(container, value)
                         self:updateDraw()
-                        return true;
+                        return true
                     end
                 else
                     if (value == obj) then
                         table.remove(objects[a], key)
                         removeEvents(container, value)
                         self:updateDraw()
-                        return true;
+                        return true
                     end
                 end
             end
@@ -151,7 +152,7 @@ return function(name, basalt)
                                 end
                             end
                         end
-                        return true;
+                        return true
                     end
                 end
             end
@@ -174,7 +175,52 @@ return function(name, basalt)
         
         isType = function(self, t)
             return objectType==t or base.isType~=nil and base.isType(t) or false
-        end,      
+        end,
+        
+        setSize = function(self, ...)
+            base.setSize(self, ...)
+            self:customEventHandler("basalt_FrameResize")
+            return self
+        end,
+
+        setPosition = function(self, ...)
+            base.setPosition(self, ...)
+            self:customEventHandler("basalt_FrameReposition")
+            return self
+        end,
+
+        setImportant = function(self, obj)
+            for a, b in pairs(events) do
+                for c, d in pairs(b) do
+                    for key, value in pairs(d) do
+                        if (value == obj) then
+                            table.remove(events[a][c], key)
+                            table.insert(events[a][c], value)
+                        end
+                    end
+                end
+            end
+            for a, b in pairs(objects) do
+                for key, value in pairs(b) do
+                    if(type(obj)=="string")then
+                        if (value:getName() == obj) then
+                            table.remove(objects[a], key)
+                            table.insert(objects[a], value)
+                            self:updateDraw()
+                            return true
+                        end
+                    else
+                        if (value == obj) then
+                            table.remove(objects[a], key)
+                            table.insert(objects[a], value)
+                            self:updateDraw()
+                            return true
+                        end
+                    end
+                end
+            end
+            return false
+        end,
 
         removeFocusedObject = function(self)
             if(focusedObject~=nil)then
@@ -216,6 +262,17 @@ return function(name, basalt)
         addEvent = addEvent,
         removeEvent = removeEvent,
 
+        listenEvent = function(self, event)
+            activeEvents[event] = true
+            if(events[event]==nil)then events[event] = {} end
+            if(eventZIndex[event]==nil)then eventZIndex[event] = {} end
+            local parent = self:getParent()
+            if(parent~=nil)then
+                parent:addEvent(event, self)
+            end
+            return self
+        end,
+
         customEventHandler = function(self, ...)
             base.customEventHandler(self, ...)
             for _, index in rpairs(objZIndex) do
@@ -237,9 +294,26 @@ return function(name, basalt)
         getBasalt = function(self)
             return basalt
         end,
+
+        eventHandler = function(self, ...)
+            if(events["other_event"]~=nil)then
+                if(base.eventHandler~=nil)then
+                    base.eventHandler(self, ...)
+                    for _, index in ipairs(eventZIndex["other_event"]) do
+                        if (events["other_event"][index] ~= nil) then
+                            for _, value in rpairs(events["other_event"][index]) do
+                                if (value.eventHandler ~= nil) then
+                                    value.eventHandler(value, ...)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end,
     }
 
-    for k,v in pairs({mouse_click={"mouseHandler", true},mouse_up={"mouseUpHandler", false},mouse_drag={"dragHandler", true},mouse_scroll={"scrollHandler", true},mouse_hover={"hoverHandler", false}, other_event={"eventHandler", false}})do
+    for k,v in pairs({mouse_click={"mouseHandler", true},mouse_up={"mouseUpHandler", false},mouse_drag={"dragHandler", false},mouse_scroll={"scrollHandler", true},mouse_hover={"hoverHandler", false}})do
         container[v[1]] = function(self, ...)
             if(events[k]~=nil)then
                 if(base[v[1]]~=nil)then
@@ -260,10 +334,10 @@ return function(name, basalt)
                         if(v[2])then
                             self:removeFocusedObject()
                         end
+                        return true
                     end
                 end
             end
-            return false
         end
     end
 

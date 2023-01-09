@@ -32,7 +32,7 @@ return function(name, basalt)
 
         valueChangedHandler = function(self)
             self:sendEvent("value_changed", self, value)
-        end;
+        end,
     }
 
     object.__index = object

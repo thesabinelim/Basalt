@@ -1,6 +1,4 @@
-local Object = require("Object")
 local tHex = require("tHex")
-local xmlValue = require("utils").getValueFromXML
 local bimgLib = require("bimg")
 local images = require("images")
 

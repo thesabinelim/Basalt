@@ -5,7 +5,7 @@ local pluginSystem = require("plugin")
 local utils = require("utils")
 local log = require("basaltLogs")
 local uuid = utils.uuid
-local createText = utils.createText
+local wrapText = utils.wrapText
 local count = utils.tableCount
 local moveThrottle = 300
 local dragThrottle = 50
@@ -54,7 +54,7 @@ local function basaltError(errMsg)
         log(errMsg, "Error")
     end
 
-    local text = createText("Basalt error: "..errMsg, w)
+    local text = wrapText("Basalt error: "..errMsg, w)
     local yPos = 1
     for k,v in pairs(text)do
         baseTerm.setCursorPos(1,yPos)
@@ -91,7 +91,7 @@ basalt.debug = function(...)
         str = str .. tostring(value) .. (#args ~= key and ", " or "")
     end
     basalt.debugLabel:setText("[Debug] " .. str)
-    for k,v in pairs(createText(str, basalt.debugList:getWidth()))do
+    for k,v in pairs(wrapText(str, basalt.debugList:getWidth()))do
         basalt.debugList:addItem(v)
     end
     if (basalt.debugList:getItemCount() > 50) then

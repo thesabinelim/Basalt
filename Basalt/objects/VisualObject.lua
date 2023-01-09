@@ -92,7 +92,7 @@ return function(name, basalt)
         end,
 
         getZIndex = function(self)
-            return zIndex;
+            return zIndex
         end,
 
         updateDraw = function(self)
@@ -159,7 +159,7 @@ return function(name, basalt)
         end,
 
         setBackground = function(self, color)
-            bgColor = color or bgColor
+            bgColor = color
             self:updateDraw()
             return self
         end,
@@ -264,7 +264,7 @@ return function(name, basalt)
         end,
 
         mouseHandler = function(self, button, x, y, isMon)
-            if(self:isCoordsInObject(x, y))then 
+            if(self:isCoordsInObject(x, y))then
                 local objX, objY = self:getAbsolutePosition()
                 local val = self:sendEvent("mouse_click", self, "mouse_click", button, x - (objX-1), y - (objY-1), x, y, isMon)
                 if(val==false)then return false end
@@ -276,7 +276,6 @@ return function(name, basalt)
                 dragStartX, dragStartY = x, y 
                 return true
             end
-            return false
         end,
 
         mouseUpHandler = function(self, button, x, y)
@@ -292,7 +291,6 @@ return function(name, basalt)
                 if(val==false)then return false end
                 return true
             end
-            return false
         end,
 
         dragHandler = function(self, button, x, y)
@@ -312,7 +310,6 @@ return function(name, basalt)
                 dragStartX, dragStartY = x, y 
                 dragXOffset, dragYOffset = objX - x, objY - y
             end
-            return false
         end,
 
         scrollHandler = function(self, dir, x, y)
@@ -325,7 +322,6 @@ return function(name, basalt)
                 end
                 return true
             end
-            return false
         end,
 
         hoverHandler = function(self, x, y, stopped)
@@ -340,7 +336,6 @@ return function(name, basalt)
                 if(val==false)then return false end
                 isHovered = false
             end
-            return false
         end,
 
         keyHandler = function(self, key, isHolding)
@@ -351,7 +346,6 @@ return function(name, basalt)
                 return true
                 end
             end
-            return false
         end,
 
         keyUpHandler = function(self, key)
@@ -362,7 +356,6 @@ return function(name, basalt)
                 return true
                 end
             end
-            return false
         end,
 
         charHandler = function(self, char)
@@ -373,7 +366,6 @@ return function(name, basalt)
                 return true
                 end
             end
-            return false
         end,
 
         eventHandler = function(self, event, ...)
@@ -473,7 +465,9 @@ return function(name, basalt)
                 local wP,hP = obj:getSize()
                 if(x+w<1)or(x>wP)or(y+h<1)or(y>hP)then return false end
                 if(bgColor~=false)then
-                    obj:drawForegroundBox(x, y, w, h, fgColor)
+                    if(fgColor~=false)then
+                        obj:drawForegroundBox(x, y, w, h, fgColor)
+                    end
                     obj:drawTextBox(x, y, w, h, " ")
                     obj:drawBackgroundBox(x, y, w, h, bgColor)
                 end

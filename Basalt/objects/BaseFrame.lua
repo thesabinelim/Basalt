@@ -8,6 +8,8 @@ return function(name, basalt)
     local base = basalt.getObject("Container")(name, basalt)
     local objectType = "BaseFrame"
 
+    local xOffset, yOffset = 0, 0
+
     local colorTheme = {}
 
     local redrawRequired = true
@@ -16,6 +18,11 @@ return function(name, basalt)
     local basaltDraw = drawSystem(termObject)
 
     local xCursor, yCursor, cursorBlink, cursorColor = 1, 1, false, colors.white
+
+    local function getPosition()
+        local x, y = base:getPosition()
+        return x + xOffset, y + yOffset
+    end
 
     local object = {   
         init = function(self)
@@ -36,13 +43,23 @@ return function(name, basalt)
             return base
         end,
 
+        getOffset = function(self)
+            return xOffset, yOffset
+        end,
+
+        setOffset = function(self, xOff, yOff)
+            xOffset = xOff or xOffset
+            yOffset = yOff or yOffset
+            return self
+        end,
+
         updateDraw = function(self)
             redrawRequired = true
             return self
         end,
 
-        setSize = function(self, w, h, rel)
-            base.setSize(self, w, h, rel)
+        setSize = function(self, ...)
+            base.setSize(self, ...)
             basaltDraw = drawSystem(termObject)
             return self
         end,
@@ -113,18 +130,22 @@ return function(name, basalt)
         end,
 
         blit = function (self, x, y, t, f, b)
-            local obx, oby = self:getPosition()
-            if (y >= 1) and (y <= self:getHeight()) then
-                local w = self:getWidth()
-                t = sub(t, max(1 - x + 1, 1), max(w - x + 1,1))
-                f = sub(f, max(1 - x + 1, 1), max(w - x + 1,1))
-                b = sub(b, max(1 - x + 1, 1), max(w - x + 1,1))
-                basaltDraw.blit(max(x + (obx - 1), obx), oby + y - 1, t, f, b)
+            local obx, oby = getPosition()
+            local w, h = self:getWidth(), self:getHeight()
+            local xPos = x + obx - 1
+            local yPos = oby + y - 1
+            if y >= 1 and y <= h then
+                local xMin = x < 1 and 1 - x + 1 or 1
+                local xMax = x > w and w - x + 1 or w
+                t = sub(t, xMin, xMax)
+                f = sub(f, xMin, xMax)
+                b = sub(b, xMin, xMax)
+                basaltDraw.blit(xPos, yPos, t, f, b)
             end
         end,
 
         setCursor = function(self, _blink, _xCursor, _yCursor, color)
-            local obx, oby = self:getAbsolutePosition(self:getPosition(self:getX(), self:getY(), true))
+            local obx, oby = self:getAbsolutePosition(getPosition())
             cursorBlink = _blink or false
             if (_xCursor ~= nil) then
                 xCursor = obx + _xCursor - 1
@@ -146,20 +167,26 @@ return function(name, basalt)
 
     for k,v in pairs({"drawBackgroundBox", "drawForegroundBox", "drawTextBox"})do
         object[v] = function(self, x, y, width, height, symbol)
-            local obx, oby = self:getPosition()
-            local w, h  = self:getSize()            
-            height = (y < 1 and (height + y > h and h or height + y - 1) or (height + y > h and h - y + 1 or height))
-            width = (x < 1 and (width + x > w and w or width + x - 1) or (width + x > w and w - x + 1 or width))
-            basaltDraw[v](max(x + (obx - 1), obx), max(y + (oby - 1), oby), width, height, symbol)
+            local obx, oby = getPosition()
+            local w, h  = self:getSize()
+            height = max(0, min(h - y + 1, height))
+            width = max(0, min(w - x + 1, width))
+            if height > 0 and width > 0 then
+                basaltDraw[v](max(x + (obx - 1), obx), max(y + (oby - 1), oby), width, height, symbol)
+            end
         end
     end
 
-    for k,v in pairs({"setBG", "setFG", "setText"})do
+    for k,v in pairs({"setBG", "setFG", "setText"}) do
         object[v] = function(self, x, y, str)
-            local obx, oby = self:getPosition()
-            local w, h  = self:getSize()
+            local obx, oby = getPosition()
+            local w, h = self:getSize()
+            local xPos = x + obx - 1
+            local yPos = oby + y - 1
             if (y >= 1) and (y <= h) then
-                basaltDraw[v](max(x + (obx - 1), obx), oby + y - 1, sub(str, max(1 - x + 1, 1), max(w - x + 1,1)))
+                local xMin = x < 1 and 1 - x + 1 or 1
+                local xMax = x > w and w - x + 1 or w
+                basaltDraw[v](xPos, yPos, sub(str, xMin, xMax))
             end
         end
     end

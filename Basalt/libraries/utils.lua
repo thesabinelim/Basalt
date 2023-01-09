@@ -4,14 +4,14 @@ local function splitString(str, delimiter)
     local result = {}
     if str == "" or delimiter == "" then
         return result
-        end
+    end
     local start = 1
     local delim_start, delim_end = find(str, delimiter, start)
-    while delim_start do
-        insert(result, sub(str, start, delim_start - 1))
-        start = delim_end + 1
-        delim_start, delim_end = find(str, delimiter, start)
-    end
+        while delim_start do
+            insert(result, sub(str, start, delim_start - 1))
+            start = delim_end + 1
+            delim_start, delim_end = find(str, delimiter, start)
+        end
     insert(result, sub(str, start))
     return result
 end
@@ -67,11 +67,11 @@ end,
 
 splitString = splitString,
 
-createText = function(str, width)
+wrapText = function(str, width)
     local uniqueLines = splitString(str, "\n")
     local result = {}
     for k,v in pairs(uniqueLines)do
-        if(#v==0)then insert(result, "") end
+        if(#v==0)then table.insert(result, "") end
         while #v > width do
             local last_space = find(reverse(sub(v, 1, width)), " ")
             if not last_space then
@@ -80,26 +80,18 @@ createText = function(str, width)
                 last_space = width - last_space + 1
             end
             local line = sub(v, 1, last_space)
-            insert(result, line)
+            table.insert(result, line)
             v = sub(v, last_space + 1)
         end
         if #v > 0 then
-            insert(result, v)
+            table.insert(result, v)
         end
     end
     return result
 end,
 
 uuid = function()
-    local random = math.random
-    local function uuid()
-        local template ='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
-        return string.gsub(template, '[xy]', function (c)
-            local v = (c == 'x') and random(0, 0xf) or random(8, 0xb)
-            return string.format('%x', v)
-        end)
-    end
-    return uuid()
-end,
+    return string.gsub(string.format('%x-%x-%x-%x-%x', math.random(0, 0xffff), math.random(0, 0xffff), math.random(0, 0xffff), math.random(0, 0x0fff) + 0x4000, math.random(0, 0x3fff) + 0x8000), ' ', '0')
+end
 
 }

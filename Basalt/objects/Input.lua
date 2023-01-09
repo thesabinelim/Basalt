@@ -51,6 +51,26 @@ return function(name, basalt)
             return self
         end,
 
+        setOffset = function(self, x)
+            wIndex = x
+            self:updateDraw()
+            return self
+        end,
+
+        getOffset = function(self)
+            return wIndex
+        end,
+
+        setTextOffset = function(self, x)
+            textX = x
+            self:updateDraw()
+            return self
+        end,
+
+        getTextOffset = function(self)
+            return textX
+        end,
+
         setValue = function(self, val)
             base.setValue(self, tostring(val))
             if not (internalValueChange) then
@@ -150,11 +170,7 @@ return function(name, basalt)
                     end
                 local obx, oby = self:getPosition()
                 local val = tostring(base.getValue())
-                local cursorX = (textX <= val:len() and textX - 1 or val:len()) - (wIndex - 1)
-                
-                if (cursorX > obx + w - 1) then
-                    cursorX = obx + w - 1
-                end
+
                 self:updateDraw()
                 internalValueChange = false
                 return true
@@ -190,11 +206,7 @@ return function(name, basalt)
                 end
                 local obx, oby = self:getPosition()
                 local val = tostring(base.getValue())
-                local cursorX = (textX <= val:len() and textX - 1 or val:len()) - (wIndex - 1)
 
-                if (cursorX > obx + w - 1) then
-                    cursorX = obx + w - 1
-                end
                 internalValueChange = false
                 self:updateDraw()
                 return true
