@@ -19,11 +19,6 @@ return function(name, basalt)
 
     local xCursor, yCursor, cursorBlink, cursorColor = 1, 1, false, colors.white
 
-    local function getPosition()
-        local x, y = base:getPosition()
-        return x + xOffset, y + yOffset
-    end
-
     local object = {   
         init = function(self)
             if(base.init(self))then
@@ -130,7 +125,9 @@ return function(name, basalt)
         end,
 
         blit = function (self, x, y, t, f, b)
-            local obx, oby = getPosition()
+            local obx, oby = self:getPosition()
+            x = x + xOffset
+            y = y + yOffset
             local w, h = self:getWidth(), self:getHeight()
             local xPos = x + obx - 1
             local yPos = oby + y - 1
@@ -145,7 +142,7 @@ return function(name, basalt)
         end,
 
         setCursor = function(self, _blink, _xCursor, _yCursor, color)
-            local obx, oby = self:getAbsolutePosition(getPosition())
+            local obx, oby = self:getAbsolutePosition()
             cursorBlink = _blink or false
             if (_xCursor ~= nil) then
                 xCursor = obx + _xCursor - 1
@@ -167,8 +164,10 @@ return function(name, basalt)
 
     for k,v in pairs({"drawBackgroundBox", "drawForegroundBox", "drawTextBox"})do
         object[v] = function(self, x, y, width, height, symbol)
-            local obx, oby = getPosition()
+            local obx, oby = self:getPosition()
             local w, h  = self:getSize()
+            x = x + xOffset
+            y = y + yOffset
             height = max(0, min(h - y + 1, height))
             width = max(0, min(w - x + 1, width))
             if height > 0 and width > 0 then
@@ -179,8 +178,10 @@ return function(name, basalt)
 
     for k,v in pairs({"setBG", "setFG", "setText"}) do
         object[v] = function(self, x, y, str)
-            local obx, oby = getPosition()
+            local obx, oby = self:getPosition()
             local w, h = self:getSize()
+            x = x + xOffset
+            y = y + yOffset
             local xPos = x + obx - 1
             local yPos = oby + y - 1
             if (y >= 1) and (y <= h) then

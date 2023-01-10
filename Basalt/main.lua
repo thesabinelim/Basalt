@@ -20,8 +20,6 @@ local mainFrame, activeFrame, focusedObject, updaterActive
 
 local basalt = {}
 
-_OBJECTS = pluginSystem.addPlugins(_OBJECTS)
-
 if not  term.isColor or not term.isColor() then
     error('Basalt requires an advanced (golden) computer to run.', 0)
 end
@@ -465,6 +463,8 @@ basalt = {
 
     debug = basalt.debug,
 }
+
+_OBJECTS = pluginSystem.addPlugins(_OBJECTS, bInstance)
 
 local basaltPlugins = pluginSystem.get("basalt")
 if(basaltPlugins~=nil)then

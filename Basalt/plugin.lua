@@ -20,14 +20,14 @@ end
 
 return {
     get = get,
-    addPlugins = function(objects)
+    addPlugins = function(objects, basalt)
         for k,v in pairs(objects)do
             local plugList = get(k)
             if(plugList~=nil)then
                 objects[k] = function(...)
                     local moddedObject = v(...)
                     for a,b in pairs(plugList)do
-                        local ext = b(moddedObject, ...)
+                        local ext = b(moddedObject, basalt, ...)
                         ext.__index = ext
                         moddedObject = setmetatable(ext, moddedObject)
                     end
