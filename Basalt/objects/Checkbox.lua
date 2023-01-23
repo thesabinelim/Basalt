@@ -52,16 +52,14 @@ return function(name, basalt)
         draw = function(self)
             base.draw(self)
             self:addDraw("checkbox", function()
-                local parent = self:getParent()
                 local obx, oby = self:getPosition()
                 local w,h = self:getSize()
                 local verticalAlign = utils.getTextVerticalAlign(h, "center")
                 local bg,fg = self:getBackground(), self:getForeground()
-                if(bg~=false)then parent:drawBackgroundBox(obx, oby, w, h, bg) end
                 if (self:getValue()) then
-                    parent:blit(obx, oby + (verticalAlign - 1), utils.getTextHorizontalAlign(symbol, w, "center"), tHex[bg], tHex[fg])
+                    self:addBlit(1, verticalAlign, utils.getTextHorizontalAlign(symbol, w, "center"), tHex[bg], tHex[fg])
                 else
-                    parent:blit(obx, oby + (verticalAlign - 1), utils.getTextHorizontalAlign(inactiveSymbol, w, "center"), tHex[bg], tHex[fg])
+                    self:addBlit(1, verticalAlign, utils.getTextHorizontalAlign(inactiveSymbol, w, "center"), tHex[bg], tHex[fg])
                 end
             end)
         end,

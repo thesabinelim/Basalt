@@ -10,6 +10,7 @@ end
 
 local function loadBIMG(path)
     local f = fs.open(path, "rb")
+    if(f==nil)then error("Path - "..path.." doesn't exist!") end
     local content = textutils.unserialize(f.readAll())
     f.close()
     if(content~=nil)then
@@ -36,7 +37,7 @@ local function loadImage(path, f)
     -- ...
 end
 
-local function loadImageAsBimg(path, f)
+local function loadImageAsBimg(path)
     if(path:find(".bimg"))then
         return loadBIMG(path)
     elseif(path:find(".bbf"))then

@@ -1,4 +1,7 @@
 local utils = require("utils")
+local tHex = require("tHex")
+
+local sub, find, insert = string.sub, string.find, table.insert
 
 return function(name, basalt)   
     local base = basalt.getObject("Object")(name, basalt)
@@ -20,13 +23,31 @@ return function(name, basalt)
     local dragStartX, dragStartY, dragXOffset, dragYOffset = 0, 0, 0, 0
 
     local bgColor,fgColor = colors.black, colors.white
-    local bimg, texture, textureTimerId, textureMode, parent
-    local textureId, infinitePlay = 1, true
+    local parent
 
     local preDrawQueue = {}
     local drawQueue = {}
     local postDrawQueue = {}
-    
+
+    local renderObject = {}
+    local visualsChanged = true
+
+    local function split(str)
+        local result = {}
+        if str == "" then
+            return result
+        end
+        local start = 1
+        local delim_start, delim_end = find(str, " ", start)
+            while delim_start do
+                insert(result, {x=start, value=sub(str, start, delim_start - 1)})
+                start = delim_end + 1
+                delim_start, delim_end = find(str, " ", start)
+            end
+        insert(result, {x=start, value=sub(str, start)})
+        return result
+    end
+
 
     local object = {
         getType = function(self)
@@ -96,14 +117,11 @@ return function(name, basalt)
         end,
 
         updateDraw = function(self)
+            visualsChanged = true
             if (parent ~= nil) then
                 parent:updateDraw()
             end
             return self
-        end,
-
-        requiresRedraw = function(self)
-            return redrawRequired
         end,
 
         setPosition = function(self, xPos, yPos, rel)
@@ -404,6 +422,7 @@ return function(name, basalt)
                 local t = {name=name, f=f, pos=pos, active=active~=nil and active or true}
                 table.insert(queue, pos or #queue+1, t)
             end
+            self:updateDraw()
             return self
         end,
 
@@ -425,6 +444,8 @@ return function(name, basalt)
                     break
                 end
             end
+            self:updateDraw()
+            return self
         end,
 
         getDrawId = function(self, name, typ)
@@ -436,22 +457,118 @@ return function(name, basalt)
             end
         end,
 
-        redraw = function(self)
+        addText = function(self, x, y, text)
+            table.insert(renderObject, {x=x,y=y,text=text})
+        end,
+
+        addBG = function(self, x, y, bg, noText)
+            local t = split(bg)
+            for k,v in pairs(t)do
+                if(v.value~="")or(v.value~=" ")then
+                    if(noText~=true)then
+                        table.insert(renderObject, {x=x+v.x-1,y=y,text=(" "):rep(v.value), bg=v.value})
+                    else
+                        table.insert(renderObject, {x=x+v.x-1,y=y,bg=v.value})
+                    end
+                end
+            end
+        end,
+
+        addFG = function(self, x, y, fg)
+            local t = split(fg)
+            for k,v in pairs(t)do
+                if(v.value~="")or(v.value~=" ")then
+                    table.insert(renderObject, {x=x+v.x-1,y=y,fg=v.value})
+                end
+            end
+        end,
+
+        addBlit = function(self, x, y, t, fg, bg)
+            local _fg = split(fg)
+            local _bg = split(bg)
+            table.insert(renderObject, {x=x,y=y,text=t})
+            for k,v in pairs(_bg)do
+                if(v.value~="")or(v.value~=" ")then
+                    table.insert(renderObject, {x=x+v.x-1,y=y,bg=v.value})
+                end
+            end
+            for k,v in pairs(_fg)do
+                if(v.value~="")or(v.value~=" ")then
+                    table.insert(renderObject, {x=x+v.x-1,y=y,fg=v.value})
+                end
+            end
+        end,
+
+        addCall = function(self, f)
+            table.insert(renderObject, {f=f})
+        end,
+
+        addTextBox = function(self, x, y, w, h, text)
+            text = text:sub(1,1):rep(w)
+            for n=0,h-1 do
+                table.insert(renderObject, {x=x,y=y+n,text=text})
+            end
+        end,
+
+        addForegroundBox = function(self, x, y, w, h, col)
+            local colStr = tHex[col]:rep(w)
+            for n=0,h-1 do
+                table.insert(renderObject, {x=x,y=y+n,fg=colStr})
+            end
+        end,
+
+        addBackgroundBox = function(self, x, y, w, h, col)
+            local colStr = tHex[col]:rep(w)
+            for n=0,h-1 do
+                table.insert(renderObject, {x=x,y=y+n,bg=colStr})
+            end
+        end,
+
+        clearRender = function()
+            renderObject = {}
+            return self
+        end,
+
+        render = function(self)
             if (isVisible)then
-                for k,v in pairs(preDrawQueue)do
-                    if (v.active)then
-                        v.f(self)
+                if(visualsChanged)then
+                    self:redraw()
+                    visualsChanged = false
+                end
+                local obj = self:getParent() or self
+                local x, y = self:getPosition()
+                for k,v in pairs(renderObject)do
+                    if(v.text~=nil)then
+                        obj:setText(v.x+x-1, v.y+y-1, v.text)
+                    end
+                    if(v.bg~=nil)then
+                        obj:setBG(v.x+x-1, v.y+y-1, v.bg)
+                    end
+                    if(v.fg~=nil)then
+                        obj:setFG(v.x+x-1, v.y+y-1, v.fg)
+                    end
+                    if(v.f~=nil)then
+                        v.f()
                     end
                 end
-                for k,v in pairs(drawQueue)do
-                    if (v.active)then
-                        v.f(self)
-                    end
+            end
+        end,
+
+        redraw = function(self)
+            renderObject = {}
+            for k,v in pairs(preDrawQueue)do
+                if (v.active)then
+                    v.f(self)
                 end
-                for k,v in pairs(postDrawQueue)do
-                    if (v.active)then
-                        v.f(self)
-                    end
+            end
+            for k,v in pairs(drawQueue)do
+                if (v.active)then
+                    v.f(self)
+                end
+            end
+            for k,v in pairs(postDrawQueue)do
+                if (v.active)then
+                    v.f(self)
                 end
             end
             return true
@@ -459,17 +576,13 @@ return function(name, basalt)
 
         draw = function(self)
             self:addDraw("base", function()
-                local obj = self:getParent() or self
-                local x, y = self:getPosition()
                 local w,h = self:getSize()
-                local wP,hP = obj:getSize()
-                if(x+w<1)or(x>wP)or(y+h<1)or(y>hP)then return false end
                 if(bgColor~=false)then
                     if(fgColor~=false)then
-                        obj:drawForegroundBox(x, y, w, h, fgColor)
+                        self:addForegroundBox(1, 1, w, h, fgColor)
                     end
-                    obj:drawTextBox(x, y, w, h, " ")
-                    obj:drawBackgroundBox(x, y, w, h, bgColor)
+                    --self:addTextBox(1, 1, w, h, " ")
+                    self:addBackgroundBox(1, 1, w, h, bgColor)
                 end
             end, 1)
         end,

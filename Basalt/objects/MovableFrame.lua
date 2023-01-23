@@ -27,7 +27,7 @@ return function(name, basalt)
         end,
 
         isType = function(self, t)
-            return objectType==t or base.isType~=nil and base.isType(t) or false
+            return objectType==t or (base.isType~=nil and base.isType(t)) or false
         end,
 
         getBase = function(self)
@@ -43,7 +43,6 @@ return function(name, basalt)
 
         dragHandler = function(self, btn, x, y)
             if(base.dragHandler(self, btn, x, y))then
-                basalt.log("dragg")
                 if (isDragging) then
                     local xO, yO = parent:getOffset()
                     xO = xO < 0 and math.abs(xO) or -xO
@@ -62,9 +61,10 @@ return function(name, basalt)
             if(base.mouseHandler(self, btn, x, y, ...))then
                 parent:setImportant(self)
                 local fx, fy = self:getAbsolutePosition()
+                local w, h = self:getSize()
                 for k,v in pairs(dragMap)do
-                    local x1, x2 = v.x1=="width" and self:getWidth() or v.x1, v.x2=="width" and self:getWidth() or v.x2
-                    local y1, y2= v.y1=="height" and self:getHeight() or v.y1, v.y2=="height" and self:getHeight() or v.y2
+                    local x1, x2 = v.x1=="width" and w or v.x1, v.x2=="width" and w or v.x2
+                    local y1, y2= v.y1=="height" and h or v.y1, v.y2=="height" and h or v.y2
                     if(x>=fx+x1-1)and(x<=fx+x2-1)and(y>=fy+y1-1)and(y<=fy+y2-1)then
                         isDragging = true
                         dragXOffset = fx - x

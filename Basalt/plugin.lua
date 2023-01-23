@@ -2,13 +2,16 @@ local args = {...}
 local plugins = {} 
 
 local dir = fs.getDir(args[2] or "Basalt")
-for _,v in pairs(fs.list(fs.combine(dir, "plugins")))do
-    local newPlugin = require(v:gsub(".lua", ""))
-    if(type(newPlugin)=="table")then
-        for a,b in pairs(newPlugin)do
-            if(type(a)=="string")then
-                if(plugins[a]==nil)then plugins[a] = {} end
-                table.insert(plugins[a], b)
+local pluginDir = fs.combine(dir, "plugins")
+if(fs.exists(pluginDir))then
+    for _,v in pairs(fs.list(pluginDir))do
+        local newPlugin = require(v:gsub(".lua", ""))
+        if(type(newPlugin)=="table")then
+            for a,b in pairs(newPlugin)do
+                if(type(a)=="string")then
+                    if(plugins[a]==nil)then plugins[a] = {} end
+                    table.insert(plugins[a], b)
+                end
             end
         end
     end

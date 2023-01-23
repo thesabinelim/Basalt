@@ -114,14 +114,6 @@ local getVariable = function(name)
     return variables[name]
 end
 
-local setTheme = function(_theme)
-    theme = _theme
-end
-
-local getTheme = function(name)
-    return theme[name]
-end
-
 local bInstance = {
     getDynamicValueEventSetting = function()
         return basalt.dynamicValueEvents
@@ -133,7 +125,6 @@ local bInstance = {
 
     setVariable = setVariable,
     getVariable = getVariable,
-    getTheme = getTheme,
 
     setMainFrame = function(mFrame)
         mainFrame = mFrame
@@ -219,15 +210,15 @@ end
 local function drawFrames()
     if(updaterActive==false)then return end
     if(mainFrame~=nil)then
-        mainFrame:redraw()
+        mainFrame:render()
         mainFrame:updateTerm()
     end
     for _,v in pairs(monFrames)do
-        v:redraw()
+        v:render()
         v:updateTerm()
     end
     for _,v in pairs(monGroups)do
-        v[1]:redraw()
+        v[1]:render()
         v[1]:updateTerm()
     end
 end
@@ -281,6 +272,7 @@ local function basaltUpdateEvent(event, ...)
         local mouseEvent = mouseEvents[event]
         if(mouseEvent~=nil)then
             mouseEvent(mainFrame, ...)
+            handleSchedules(event, ...)
             drawFrames()
             return
         end
@@ -296,6 +288,7 @@ local function basaltUpdateEvent(event, ...)
                 v[1]:mouseHandler(1, a[2], a[3], true, a[1])
             end
         end
+        handleSchedules(event, ...)
         drawFrames()
         return
     end
@@ -314,6 +307,7 @@ local function basaltUpdateEvent(event, ...)
                 activeKey[a[1]] = false
             end
             keyEvent(activeFrame, ...)
+            handleSchedules(event, ...)
             drawFrames()
             return
         end
@@ -327,8 +321,8 @@ local function basaltUpdateEvent(event, ...)
         for k, v in pairs(frames) do
             v:eventHandler(event, ...)
         end
+        handleSchedules(event, ...)
     end
-    handleSchedules(event, ...)
     drawFrames()
 end
 
@@ -341,6 +335,10 @@ basalt = {
     log = log,
     getVersion = function()
         return version
+    end,
+
+    memory = function()
+        return math.floor(collectgarbage("count")+0.5).."KB"
     end,
 
     setVariable = setVariable,

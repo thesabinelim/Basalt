@@ -215,8 +215,6 @@ local lerp = {
     easeInOutBounce=easeInOutBounce,
 }
 
-local tableCount = require("utils").tableCount
-
 return {
     VisualObject = function(base)
         local activeAnimations = {}
@@ -246,7 +244,7 @@ return {
             activeAnimations[typ].progress=0
             activeAnimations[typ].duration=duration
             activeAnimations[typ].mode=mode
-            self:getParent():addEvent("other_event", self)
+            self:listenEvent("other_event")
         end
 
         local object = {
@@ -277,9 +275,6 @@ return {
                         activeAnimations[k] = nil
                         self:sendEvent("animation_done", self, "animation_done", k)
                     end
-                end
-                if(tableCount(activeAnimations)<=0)then
-                    self:getParent():removeEvent("other_event", self)
                 end
             end,
 

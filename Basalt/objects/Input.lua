@@ -279,7 +279,7 @@ return function(name, basalt)
                     text = string.rep("*", text:len())
                 end
                 text = text .. string.rep(" ", space)
-                parent:blit(obx, oby + (verticalAlign - 1), text, tHex[fCol]:rep(text:len()), tHex[bCol]:rep(text:len()))
+                self:addBlit(obx, oby + (verticalAlign - 1), text, tHex[fCol]:rep(text:len()), tHex[bCol]:rep(text:len()))
 
                 if(self:isFocused())then
                     parent:setCursor(true, obx + textX - wIndex, oby+math.floor(self:getHeight()/2), self:getForeground())

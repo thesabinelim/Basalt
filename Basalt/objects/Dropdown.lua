@@ -227,18 +227,6 @@ return function(name)
                 end
             end
         end,
-
-        init = function(self)
-            self.parent:addEvent("mouse_click", self)
-            self.parent:addEvent("mouse_up", self)
-            self.parent:addEvent("mouse_scroll", self)
-            if(base.init(self))then
-                self.bgColor = self.parent:getTheme("DropdownBG")
-                self.fgColor = self.parent:getTheme("DropdownText")
-                itemSelectedBG = self.parent:getTheme("SelectionBG")
-                itemSelectedFG = self.parent:getTheme("SelectionText")
-            end
-        end,
     }
 
     return setmetatable(object, base)

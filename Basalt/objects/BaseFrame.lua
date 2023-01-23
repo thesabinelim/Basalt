@@ -1,6 +1,7 @@
-local Container = require("Container")
 local drawSystem = require("basaltDraw")
-local rpairs = require("utils").rpairs
+local utils = require("utils")
+local rpairs = utils.rpairs
+local orderedTable = utils.orderedTable
 
 local max,min,sub,rep = math.max,math.min,string.sub,string.rep
 
@@ -11,8 +12,6 @@ return function(name, basalt)
     local xOffset, yOffset = 0, 0
 
     local colorTheme = {}
-
-    local redrawRequired = true
     
     local termObject = basalt.getTerm()
     local basaltDraw = drawSystem(termObject)
@@ -20,13 +19,6 @@ return function(name, basalt)
     local xCursor, yCursor, cursorBlink, cursorColor = 1, 1, false, colors.white
 
     local object = {   
-        init = function(self)
-            if(base.init(self))then
-                self:setBackground(basalt.getTheme("BaseFrameBG"))
-                self:setForeground(basalt.getTheme("BaseFrameText"))
-            end
-        end,
-
         getType = function()
             return objectType
         end,
@@ -45,11 +37,6 @@ return function(name, basalt)
         setOffset = function(self, xOff, yOff)
             xOffset = xOff or xOffset
             yOffset = yOff or yOffset
-            return self
-        end,
-
-        updateDraw = function(self)
-            redrawRequired = true
             return self
         end,
 
@@ -91,30 +78,18 @@ return function(name, basalt)
             return self
         end,
 
-        redraw = function(self)
-            base.redraw(self)
-            redrawRequired = false
-            return self
-        end,
-
         draw = function(self)
             base.draw(self)
             self:addDraw("baseframe-objects", function()
-                local objects,objZIndex = self:getObjects()
-                for _, index in rpairs(objZIndex) do
-                    if (objects[index] ~= nil) then
-                        for _, value in pairs(objects[index]) do
-                            if (value.redraw ~= nil) then
-                                value:redraw()
-                            end
+                self:addCall(function()
+                    local objects = self:getObjects()
+                    for _, obj in rpairs(orderedTable(objects)) do
+                        if (obj.element.render ~= nil) then
+                            obj.element:render()
                         end
                     end
-                end
+                end)
             end)
-        end,
-
-        updateTerm = function(self)
-            basaltDraw.update()
         end,
 
         eventHandler = function(self, event, ...)
@@ -122,6 +97,10 @@ return function(name, basalt)
             if(event=="term_resize")then
                 self:setSize(termObject.getSize())
             end
+        end,
+
+        updateTerm = function(self)
+            basaltDraw.update()
         end,
 
         blit = function (self, x, y, t, f, b)

@@ -1,5 +1,6 @@
-local drawSystem = require("basaltDraw")
-local rpairs = require("utils").rpairs
+local utils = require("utils")
+local rpairs = utils.rpairs
+local orderedTable = utils.orderedTable
 
 local max,min,sub,rep = math.max,math.min,string.sub,string.rep
 
@@ -44,16 +45,14 @@ return function(name, basalt)
         draw = function(self)
             base.draw(self)
             self:addDraw("frame-objects", function()
-                local objects,objZIndex = self:getObjects()
-                for _, index in rpairs(objZIndex) do
-                    if (objects[index] ~= nil) then
-                        for _, value in pairs(objects[index]) do
-                            if (value.redraw ~= nil) then
-                                value:redraw()
-                            end
+                self:addCall(function()
+                    local objects = self:getObjects()
+                    for _, obj in rpairs(orderedTable(objects)) do
+                        if (obj.element.render ~= nil) then
+                            obj.element:render()
                         end
                     end
-                end
+                end)
             end)
         end,
 

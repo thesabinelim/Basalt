@@ -46,6 +46,14 @@ getTextVerticalAlign = function(h, textAlign)
     return offset
 end,
 
+orderedTable = function(t)
+    local newTable = {}
+    for _, v in pairs(t) do
+        newTable[#newTable+1] = v
+    end
+    return newTable
+end,
+
 rpairs = function(t)
     return function(t, i)
         i = i - 1

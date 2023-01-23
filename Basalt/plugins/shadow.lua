@@ -13,14 +13,13 @@ return {
                 base.draw(self)
                 self:addDraw("shadow", function()
                     if(shadow~=false)then
-                        local x, y = self:getPosition()
                         local w,h = self:getSize()
-                        local parent = self:getParent()
-                        if(shadow)then                        
-                            parent:drawBackgroundBox(x+1, y+h, w, 1, shadow)
-                            parent:drawBackgroundBox(x+w, y+1, 1, h, shadow)
-                            parent:drawForegroundBox(x+1, y+h, w, 1, shadow)
-                            parent:drawForegroundBox(x+w, y+1, 1, h, shadow)
+                        if(shadow)then      
+                            local obj = self:getParent() or self                  
+                            obj:addBackgroundBox(1, h, w, 1, shadow)
+                            obj:addBackgroundBox(w, 1, 1, h, shadow)
+                            obj:addForegroundBox(1, h, w, 1, shadow)
+                            obj:addForegroundBox(w, 1, 1, h, shadow)
                         end
                     end
                 end)

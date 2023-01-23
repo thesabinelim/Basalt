@@ -258,9 +258,9 @@ return function(name, basalt)
             end;
 
             basalt_update = function()
-                local parent = base:getParent()
+                object:clearRender()
                 for n = 1, height do
-                    parent:blit(x, y + (n - 1), cacheT[n], cacheFG[n], cacheBG[n])
+                    object:addBlit(1, n, cacheT[n], cacheFG[n], cacheBG[n])
                 end
             end,
 
@@ -469,15 +469,14 @@ return function(name, basalt)
 
             resumeProcess(self)
             paused = false
-            local parent = self:getParent()
-            parent:addEvent("mouse_click", self)
-            parent:addEvent("mouse_up", self)
-            parent:addEvent("mouse_drag", self)
-            parent:addEvent("mouse_scroll", self)
-            parent:addEvent("key", self)
-            parent:addEvent("key_up", self)
-            parent:addEvent("char", self)
-            parent:addEvent("other_event", self)
+            self:listenEvent("mouse_click", self)
+            self:listenEvent("mouse_up", self)
+            self:listenEvent("mouse_drag", self)
+            self:listenEvent("mouse_scroll", self)
+            self:listenEvent("key", self)
+            self:listenEvent("key_up", self)
+            self:listenEvent("char", self)
+            self:listenEvent("other_event", self)
             return self
         end;
 

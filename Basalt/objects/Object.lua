@@ -55,6 +55,13 @@ return function(name, basalt)
             return self
         end,
 
+        listenEvent = function(self, event)
+            if(parent~=nil)then
+                parent:addEvent(event, self)
+            end
+            return self
+        end,
+
         getZIndex = function(self)
             return 1
         end,

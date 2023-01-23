@@ -196,7 +196,7 @@ return function(name, basalt)
                                 fg, bg = list[n + yOffset].fgCol, list[n + yOffset].bgCol
                             end
                         end
-                        parent:blit(obx, oby + n - 1, t, tHex[fg]:rep(#t), tHex[bg]:rep(#t))
+                        self:addBlit(1, n, t, tHex[fg]:rep(#t), tHex[bg]:rep(#t))
                     end
                 end
             end)

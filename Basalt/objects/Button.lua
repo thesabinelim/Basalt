@@ -46,17 +46,11 @@ return function(name, basalt)
         draw = function(self)
             base.draw(self)
             self:addDraw("button", function()
-                local parent = self:getParent()
-                local obx, oby = self:getPosition()
                 local w,h = self:getSize()
                 local verticalAlign = utils.getTextVerticalAlign(h, textVerticalAlign)
+                self:addText(1, verticalAlign, utils.getTextHorizontalAlign(text, w, textHorizontalAlign))
+                self:addFG(1, verticalAlign, utils.getTextHorizontalAlign(tHex[self:getForeground() or colors.black]:rep(text:len()), w, textHorizontalAlign))
 
-                for n = 1, h do
-                    if (n == verticalAlign) then
-                        parent:setText(obx, oby + (n - 1), utils.getTextHorizontalAlign(text, w, textHorizontalAlign))
-                        parent:setFG(obx, oby + (n - 1), utils.getTextHorizontalAlign(tHex[self:getForeground()]:rep(text:len()), w, textHorizontalAlign))
-                    end
-                end
             end)
         end,
     }

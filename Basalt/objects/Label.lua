@@ -65,7 +65,7 @@ return function(name, basalt)
                     local text = wrapText(text, w)
                     for k,v in pairs(text)do
                         if(k<=h)then
-                            parent:setText(obx, oby+k-1, v)
+                            self:addText(1, k, v)
                         end
                     end
                 else
@@ -73,11 +73,11 @@ return function(name, basalt)
                         local text = wrapText(text, w)
                         for k,v in pairs(text)do
                             if(k<=h)then
-                                parent:setText(obx, oby+k-1, v)
+                                self:addText(1, k, v)
                             end
                         end
                     else
-                        parent:setText(obx, oby, text:sub(1,w))
+                        self:addText(1, 1, text:sub(1,w))
                     end
                 end
             end)

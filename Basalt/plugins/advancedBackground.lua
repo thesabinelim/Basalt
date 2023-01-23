@@ -22,12 +22,11 @@ return {
                 base.draw(self)
                 self:addDraw("advanced-bg", function()
                     local obj = self:getParent() or self
-                    local x, y = self:getPosition()
                     local w,h = self:getSize()
                     if(bgSymbol~=false)then
-                        obj:drawTextBox(x, y, w, h, bgSymbol:sub(1,1))
+                        obj:addTextBox(1, 1, w, h, bgSymbol:sub(1,1))
                         if(bgSymbol~=" ")then
-                            obj:drawForegroundBox(x, y, w, h, bgSymbolColor)
+                            obj:addForegroundBox(1, 1, w, h, bgSymbolColor)
                         end
                     end
             end, 2)

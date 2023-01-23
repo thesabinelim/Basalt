@@ -50,18 +50,20 @@ return {
         end
 
         local function updatePositions(self)
-            for k,v in pairs(dynObjects)do
-                v()
-            end
-            local properties = {x="getX", y="getY", w="getWidth", h="getHeight"}
-            for k,v in pairs(properties)do
-                if(dynObjects[k]~=nil)then
-                    if(curProperties[k]~=self[v](self))then
-                        if(k=="x")or(k=="y")then
-                            base.setPosition(self, curProperties["x"] or self:getX(), curProperties["y"] or self:getY())
-                        end
-                        if(k=="w")or(k=="h")then
-                            base.setSize(self, curProperties["w"] or self:getWidth(), curProperties["h"] or self:getHeight())
+            if(#dynObjects>0)then
+                for k,v in pairs(dynObjects)do
+                    v()
+                end
+                local properties = {x="getX", y="getY", w="getWidth", h="getHeight"}
+                for k,v in pairs(properties)do
+                    if(dynObjects[k]~=nil)then
+                        if(curProperties[k]~=self[v](self))then
+                            if(k=="x")or(k=="y")then
+                                base.setPosition(self, curProperties["x"] or self:getX(), curProperties["y"] or self:getY())
+                            end
+                            if(k=="w")or(k=="h")then
+                                base.setSize(self, curProperties["w"] or self:getWidth(), curProperties["h"] or self:getHeight())
+                            end
                         end
                     end
                 end
@@ -73,28 +75,28 @@ return {
             createDynamicValue = createDynamicValue,
 
             setPosition = function(self, xPos, yPos, rel)
-                curProperties["x"] = xPos
-                curProperties["y"] = yPos
+                curProperties.x = xPos
+                curProperties.y = yPos
                 if(type(xPos)=="string")then
                     createDynamicValue(self, "x", xPos)
                 end
                 if(type(yPos)=="string")then
                     createDynamicValue(self, "y", yPos)
                 end
-                base.setPosition(self, curProperties["x"], curProperties["y"], rel)
+                base.setPosition(self, curProperties.x, curProperties.y, rel)
                 return self
             end,
 
             setSize = function(self, w, h, rel)
-                curProperties["w"] = w
-                curProperties["h"] = h
+                curProperties.w = w
+                curProperties.h = h
                 if(type(w)=="string")then
                     createDynamicValue(self, "w", w)
                 end
                 if(type(h)=="string")then
                     createDynamicValue(self, "h", h)
                 end
-                base.setSize(self, curProperties["w"], curProperties["h"], rel)
+                base.setSize(self, curProperties.w, curProperties.h, rel)
                 return self
             end,
 

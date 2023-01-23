@@ -186,9 +186,9 @@ return {
                         oby = oby or math.floor((oY - cY) / 2) + 1
                     
                         for i = 1, cY do
-                            parent:setFG(obx, oby + i - 1, bigfont[2][i])
-                            parent:setBG(obx, oby + i - 1, bigfont[3][i])
-                            parent:setText(obx, oby + i - 1, bigfont[1][i])
+                            self:addFG(1, i, bigfont[2][i])
+                            self:addBG(1, i, bigfont[3][i])
+                            self:addText(1, i, bigfont[1][i])
                         end
                     end
                 end)
