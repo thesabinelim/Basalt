@@ -96,10 +96,10 @@ return {
                     for k = 1, textureHeight do
                         if(texture[k+textureY]~=nil)then
                         local t, f, b = table.unpack(texture[k+textureY])
-                            self:addBlit(1, k, t:sub(textureX, textureX + textureWidth), f:sub(textureX, textureX + textureWidth), b:sub(textureX, textureX + textureWidth ))
+                            self:addBlit(1, k, t:sub(textureX, textureX + textureWidth), f:sub(textureX, textureX + textureWidth), b:sub(textureX, textureX + textureWidth))
                         end
                     end
-                end, 2)
+                end, 1)
                 self:setDrawState("texture-base", false)
             end,
         }

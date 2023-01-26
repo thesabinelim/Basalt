@@ -11,7 +11,7 @@ return function(name, basalt)
 
     local autoSize = true
     local fgColChanged,bgColChanged = false,false
-    local text = "Label"
+    local text, textAlign = "Label", "left"
 
     local object = {
         getType = function(self)
@@ -53,6 +53,11 @@ return function(name, basalt)
             return self
         end,
 
+        setTextAlign = function(self, align)
+            textAlign = align or textAlign
+            return self;
+        end,
+
         draw = function(self)
             base.draw(self)
             self:addDraw("label", function()
@@ -65,20 +70,12 @@ return function(name, basalt)
                     local text = wrapText(text, w)
                     for k,v in pairs(text)do
                         if(k<=h)then
-                            self:addText(1, k, v)
+                            local align = textAlign=="center" and math.floor(w/2-v:len()/2+0.5) or textAlign=="right" and w-(v:len()-1) or 1
+                            self:addText(align, k, v)
                         end
                     end
                 else
-                    if(#text+obx>parent:getWidth())then
-                        local text = wrapText(text, w)
-                        for k,v in pairs(text)do
-                            if(k<=h)then
-                                self:addText(1, k, v)
-                            end
-                        end
-                    else
-                        self:addText(1, 1, text:sub(1,w))
-                    end
+                    self:addText(1, 1, text:sub(1,w))
                 end
             end)
         end,

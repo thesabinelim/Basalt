@@ -103,6 +103,16 @@ return function(name, basalt)
             basaltDraw.update()
         end,
 
+        setTerm = function(self, newTerm)
+            termObject = newTerm
+            basaltDraw = drawSystem(termObject)
+            return self
+        end,
+
+        getTerm = function()
+            return termObject
+        end,
+
         blit = function (self, x, y, t, f, b)
             local obx, oby = self:getPosition()
             x = x + xOffset

@@ -9,7 +9,7 @@ return function(name, basalt)
     local itemSelectedBG = colors.black
     local itemSelectedFG = colors.lightGray
     local selectionColorActive = true
-    local align = "left"
+    local textAlign = "left"
     local yOffset = 0
     local scrollable = true
 
@@ -23,6 +23,11 @@ return function(name, basalt)
             parent:addEvent("mouse_drag", self)
             parent:addEvent("mouse_scroll", self)
             return base.init(self)
+        end,
+
+        setTextAlign = function(self, align)
+            textAlign = align
+            return self
         end,
 
         getBase = function(self)
@@ -188,7 +193,7 @@ return function(name, basalt)
                 local w, h = self:getSize()
                 for n = 1, h do
                     if list[n + yOffset] then
-                        local t = utils.getTextHorizontalAlign(list[n + yOffset].text, w, align)
+                        local t = utils.getTextHorizontalAlign(list[n + yOffset].text, w, textAlign)
                         local fg, bg = list[n + yOffset].fgCol, list[n + yOffset].bgCol
                         if list[n + yOffset] == self:getValue() then
                             fg, bg = itemSelectedFG, itemSelectedBG

@@ -32,17 +32,18 @@ return function(name, basalt)
     local renderObject = {}
     local visualsChanged = true
 
-    local function split(str)
+    local function split(str, d)
         local result = {}
         if str == "" then
             return result
         end
+        d = d or " "
         local start = 1
-        local delim_start, delim_end = find(str, " ", start)
+        local delim_start, delim_end = find(str, d, start)
             while delim_start do
                 insert(result, {x=start, value=sub(str, start, delim_start - 1)})
                 start = delim_end + 1
-                delim_start, delim_end = find(str, " ", start)
+                delim_start, delim_end = find(str, d, start)
             end
         insert(result, {x=start, value=sub(str, start)})
         return result
@@ -458,7 +459,12 @@ return function(name, basalt)
         end,
 
         addText = function(self, x, y, text)
-            table.insert(renderObject, {x=x,y=y,text=text})
+            local t = split(text, "\0")
+            for k,v in pairs(t)do
+                if(v.value~="")or(v.value~="\0")then
+                    table.insert(renderObject, {x=x+v.x-1,y=y,text=v.value})
+                end
+            end
         end,
 
         addBG = function(self, x, y, bg, noText)
@@ -484,9 +490,15 @@ return function(name, basalt)
         end,
 
         addBlit = function(self, x, y, t, fg, bg)
+            local _text = split(t, "\0")
             local _fg = split(fg)
             local _bg = split(bg)
-            table.insert(renderObject, {x=x,y=y,text=t})
+            --table.insert(renderObject, {x=x,y=y,text=t})
+            for k,v in pairs(_text)do
+                if(v.value~="")or(v.value~="\0")then
+                    table.insert(renderObject, {x=x+v.x-1,y=y,text=v.value})
+                end
+            end
             for k,v in pairs(_bg)do
                 if(v.value~="")or(v.value~=" ")then
                     table.insert(renderObject, {x=x+v.x-1,y=y,bg=v.value})
@@ -578,11 +590,11 @@ return function(name, basalt)
             self:addDraw("base", function()
                 local w,h = self:getSize()
                 if(bgColor~=false)then
-                    if(fgColor~=false)then
-                        self:addForegroundBox(1, 1, w, h, fgColor)
-                    end
-                    --self:addTextBox(1, 1, w, h, " ")
+                    self:addTextBox(1, 1, w, h, " ")
                     self:addBackgroundBox(1, 1, w, h, bgColor)
+                end
+                if(fgColor~=false)then
+                    self:addForegroundBox(1, 1, w, h, fgColor)
                 end
             end, 1)
         end,

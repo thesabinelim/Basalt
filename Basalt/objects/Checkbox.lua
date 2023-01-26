@@ -10,7 +10,7 @@ return function(name, basalt)
     base:setValue(false)
     base:setSize(1, 1)
 
-    local symbol,inactiveSymbol = "\42"," "
+    local symbol,inactiveSymbol,text,textPos = "\42"," ","","right"
 
     local object = {
         init = function(self)
@@ -31,6 +31,16 @@ return function(name, basalt)
             symbol = sym or symbol
             inactiveSymbol = inactive or inactiveSymbol
             self:updateDraw()
+            return self
+        end,
+
+        setText = function(self, _text)
+            text = _text
+            return self
+        end,
+
+        setTextPosition = function(self, pos)
+            textPos = pos or textPos
             return self
         end,
 
@@ -60,6 +70,10 @@ return function(name, basalt)
                     self:addBlit(1, verticalAlign, utils.getTextHorizontalAlign(symbol, w, "center"), tHex[bg], tHex[fg])
                 else
                     self:addBlit(1, verticalAlign, utils.getTextHorizontalAlign(inactiveSymbol, w, "center"), tHex[bg], tHex[fg])
+                end
+                if(text~="")then
+                    local align = textPos=="left" and -text:len() or 3
+                    self:addText(align, verticalAlign, text)
                 end
             end)
         end,

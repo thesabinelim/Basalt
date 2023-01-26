@@ -10,7 +10,7 @@ return function(name, basalt)
     base:setZIndex(5)
 
     local itemOffset = 0
-    local space = 1
+    local space, outerSpace = 1, 1
     local scrollable = true
 
     local function maxScroll()
@@ -67,7 +67,6 @@ return function(name, basalt)
                 self:updateDraw()
                 return true
             end
-            return false
         end,
 
         scrollHandler = function(self, dir, x, y)
@@ -112,9 +111,7 @@ return function(name, basalt)
                     end
                 end
 
-                parent:setText(obx, oby, text:sub(itemOffset+1, w+itemOffset))
-                parent:setBG(obx, oby, textBGCol:sub(itemOffset+1, w+itemOffset))
-                parent:setFG(obx, oby, textFGCol:sub(itemOffset+1, w+itemOffset))
+                self:addBlit(1, 1, text:sub(itemOffset+1, w+itemOffset), textFGCol:sub(itemOffset+1, w+itemOffset), textBGCol:sub(itemOffset+1, w+itemOffset))
             end)
         end,
     }

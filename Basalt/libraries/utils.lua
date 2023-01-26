@@ -85,7 +85,7 @@ wrapText = function(str, width)
             if not last_space then
                 last_space = width
             else
-                last_space = width - last_space + 1
+                last_space = width - last_space --+ 1
             end
             local line = sub(v, 1, last_space)
             table.insert(result, line)
