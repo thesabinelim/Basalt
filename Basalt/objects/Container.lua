@@ -45,9 +45,9 @@ return function(name, basalt)
         elements[#elements + 1] = {element = element, zIndex = zIndex, timestamp = timestamp}
         table.sort(elements, function(a, b)
             if a.zIndex == b.zIndex then
-                return a.timestamp > b.timestamp
+                return a.timestamp < b.timestamp
             else
-                return a.zIndex < b.zIndex
+                return a.zIndex > b.zIndex
             end
         end)
         element:setParent(self, true)
@@ -106,9 +106,9 @@ return function(name, basalt)
         events[event][#events[event] + 1] = {element = element, zIndex = zIndex, timestamp = timestamp}
         table.sort(events[event], function(a, b)
             if a.zIndex == b.zIndex then
-                return a.timestamp > b.timestamp
+                return a.timestamp < b.timestamp
             else
-                return a.zIndex < b.zIndex
+                return a.zIndex > b.zIndex
             end
         end)
         return element
@@ -169,9 +169,9 @@ return function(name, basalt)
                 end
                 table.sort(events[a], function(a, b)
                     if a.zIndex == b.zIndex then
-                        return a.timestamp > b.timestamp
+                        return a.timestamp < b.timestamp
                     else
-                        return a.zIndex < b.zIndex
+                        return a.zIndex > b.zIndex
                     end
                 end)
             end
@@ -184,9 +184,9 @@ return function(name, basalt)
             end
             table.sort(elements, function(a, b)
                 if a.zIndex == b.zIndex then
-                    return a.timestamp > b.timestamp
+                    return a.timestamp < b.timestamp
                 else
-                    return a.zIndex < b.zIndex
+                    return a.zIndex > b.zIndex
                 end
             end)
         end,

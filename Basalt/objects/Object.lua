@@ -55,9 +55,13 @@ return function(name, basalt)
             return self
         end,
 
-        listenEvent = function(self, event)
+        listenEvent = function(self, event, active)
             if(parent~=nil)then
-                parent:addEvent(event, self)
+                if(active)or(active==nil)then
+                    parent:addEvent(event, self)
+                elseif(active==false)then
+                    parent:removeEvent(event, self)
+                end
             end
             return self
         end,

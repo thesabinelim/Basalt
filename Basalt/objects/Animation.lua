@@ -444,7 +444,7 @@ return function(name, basalt)
 
         animationDoneHandler = function(self)
             self:sendEvent("animation_done", self)
-            self:getParent():removeEvent("other_event", self)
+            self:listenEvent("other_event", false)
             if(autoDestroy)then
                 self:getParent():removeObject(self)
                 self = nil
@@ -480,7 +480,7 @@ return function(name, basalt)
             else
                 self:animationDoneHandler()
             end
-            self:getParent():addEvent("other_event", self)
+            self:listenEvent("other_event")
             return self
         end;
 
@@ -490,7 +490,7 @@ return function(name, basalt)
                 infinitePlay = false
             end
             animationActive = false
-            self:getParent():removeEvent("other_event", self)
+            self:listenEvent("other_event", false)
             return self
         end;
 

@@ -5,6 +5,7 @@ return function(name, basalt)
     local objectType = "MovableFrame"
     local parent
 
+    base:setZIndex(10)
 
     local dragXOffset, dragYOffset = 0, 0
 

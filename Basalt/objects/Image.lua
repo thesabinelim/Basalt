@@ -1,11 +1,8 @@
-local Object = require("Object")
-local xmlValue = require("utils").getValueFromXML
 local images = require("images")
-
 local unpack,sub = table.unpack,string.sub
-return function(name)
+return function(name, basalt)
     -- Image
-    local base = Object(name)
+    local base = basalt.getObject("VisualObject")(name, basalt)
     local objectType = "Image"
     base:setZIndex(2)
     local originalImage
@@ -15,8 +12,7 @@ return function(name)
     local animTimer
     local usePalette = false
 
-    base.width = 24
-    base.height = 8
+    base:setSize(24, 8)
 
     local function getPalette(id)
         if(originalImage~=nil)then
@@ -41,11 +37,6 @@ return function(name)
     end
 
     local object = {
-        init = function(self)
-            if(base.init(self))then
-                self.bgColor = self.parent:getTheme("ImageBG")
-            end
-        end,
         getType = function(self)
             return objectType
         end;
@@ -81,7 +72,7 @@ return function(name)
         play = function(self, inf)
             if(originalImage.animated)then
                 local t = originalImage[curFrame].duration or originalImage.secondsPerFrame or 0.2
-                self.parent:addEvent("other_event", self)
+                self:listenEvent("other_event")
                 animTimer = os.startTimer(t)
                 infinitePlay = inf or false
             end
@@ -139,23 +130,23 @@ return function(name)
         end,
 
         draw = function(self)
-            if (base.draw(self)) then
+            base.draw(self)
+            self:addDraw("image", function()
                 if (image ~= nil) then
                     if(usePalette)then
                         self:getBaseFrame():setThemeColor(getPalette(curFrame))
                     end
-                    local obx, oby = self:getAnchorPosition()
                     local w,h = self:getSize()
                     for y,v in ipairs(image[curFrame])do
                         local t, f, b  = unpack(v)
                         t = sub(t, 1,w)
                         f = sub(f, 1,w)
                         b = sub(b, 1,w)
-                        self.parent:blit(obx, oby+y-1, t, f, b)
-                        if(y==h)then break end
+                        self:addBlit(1, y, t, f, b)
+                        if(y>=h)then break end
                     end
                 end
-            end
+            end)
         end,
     }
 

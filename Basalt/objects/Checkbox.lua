@@ -13,11 +13,9 @@ return function(name, basalt)
     local symbol,inactiveSymbol,text,textPos = "\42"," ","","right"
 
     local object = {
-        init = function(self)
-            local parent = self:getParent()
-            parent:addEvent("mouse_click", self)
-            parent:addEvent("mouse_up", self)
-            return base.init(self)
+        load = function(self)
+            self:listenEvent("mouse_click", self)
+            self:listenEvent("mouse_up", self)
         end,
 
         getType = function(self)

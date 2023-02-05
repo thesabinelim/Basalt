@@ -50,6 +50,7 @@ return function(name, basalt)
             return objectType==t or base.isType~=nil and base.isType(t) or false
         end,
 
+
         getBase = function(self)
             return base
         end, 

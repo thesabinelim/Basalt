@@ -23,12 +23,11 @@ return function(name, basalt)
 
     local object = {
         load = function(self)
-            local parent = self:getParent()
-            parent:addEvent("mouse_click", self)
-            parent:addEvent("key", self)
-            parent:addEvent("char", self)
-            parent:addEvent("other_event", self)
-            parent:addEvent("mouse_drag", self)
+            self:listenEvent("mouse_click")
+            self:listenEvent("key")
+            self:listenEvent("char")
+            self:listenEvent("other_event")
+            self:listenEvent("mouse_drag")
         end,
 
         getType = function(self)
@@ -279,7 +278,7 @@ return function(name, basalt)
                     text = string.rep("*", text:len())
                 end
                 text = text .. string.rep(" ", space)
-                self:addBlit(obx, oby + (verticalAlign - 1), text, tHex[fCol]:rep(text:len()), tHex[bCol]:rep(text:len()))
+                self:addBlit(1, verticalAlign, text, tHex[fCol]:rep(text:len()), tHex[bCol]:rep(text:len()))
 
                 if(self:isFocused())then
                     parent:setCursor(true, obx + textX - wIndex, oby+math.floor(self:getHeight()/2), self:getForeground())

@@ -46,10 +46,10 @@ return function(name, basalt)
         load = function(self)
             base.load(self)
             local parent = self:getParent()
-            parent:addEvent("mouse_click", self)
-            parent:addEvent("mouse_up", self)
-            parent:addEvent("mouse_scroll", self)
-            parent:addEvent("mouse_drag", self)
+            self:listenEvent("mouse_click")
+            self:listenEvent("mouse_up")
+            self:listenEvent("mouse_scroll")
+            self:listenEvent("mouse_drag")
         end,
 
         setSymbol = function(self, _symbol, bg, fg)
@@ -160,18 +160,17 @@ return function(name, basalt)
             base.draw(self)
             self:addDraw("scrollbar", function()
                 local parent = self:getParent()
-                local obx, oby = self:getPosition()
                 local w,h = self:getSize()
                 local bgCol,fgCol = self:getBackground(), self:getForeground()
                 if (barType == "horizontal") then
                     for n = 0, h - 1 do
-                        parent:blit(obx + index - 1, oby + n, symbol:rep(symbolSize), tHex[symbolFG]:rep(#symbol*symbolSize), tHex[symbolBG]:rep(#symbol*symbolSize))
+                        self:addBlit(index, 1 + n, symbol:rep(symbolSize), tHex[symbolFG]:rep(#symbol*symbolSize), tHex[symbolBG]:rep(#symbol*symbolSize))
                     end
                 elseif (barType == "vertical") then
                     for n = 0, h - 1 do
                         if (index == n + 1) then
                             for curIndexOffset = 0, math.min(symbolSize - 1, h) do
-                                parent:blit(obx, oby + index - 1 + curIndexOffset, symbol:rep(math.max(#symbol, w)), tHex[symbolFG]:rep(math.max(#symbol, w)), tHex[symbolBG]:rep(math.max(#symbol, w)))
+                                self:blit(1, index + curIndexOffset, symbol:rep(math.max(#symbol, w)), tHex[symbolFG]:rep(math.max(#symbol, w)), tHex[symbolBG]:rep(math.max(#symbol, w)))
                             end
                         end
                     end

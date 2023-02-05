@@ -697,10 +697,10 @@ return function(name, basalt)
                     bg = rep(bgColor, w)
                     fg = rep(fgColor, w)
         
-                    parent:setText(obx, oby + n - 1, text)
-                    parent:setBG(obx, oby + n - 1, bg)
-                    parent:setFG(obx, oby + n - 1, fg)
-                    parent:blit(obx, oby + n - 1, text, fg, bg)
+                    self:addText(1, n, text)
+                    self:addBG(1, n, bg)
+                    self:addFG(1, n, fg)
+                    self:addBlit(1, n, text, fg, bg)
                 end
         
                 if startSelX and endSelX and startSelY and endSelY then
@@ -717,22 +717,21 @@ return function(name, basalt)
                             line = line - (sx - 1)
                             xOffset = sx - 1
                         end
-                        parent:setBG(obx + xOffset, oby + n - 1, rep(tHex[selectionBG], line))
-                        parent:setFG(obx + xOffset, oby + n - 1, rep(tHex[selectionFG], line))
+                        self:addBG(1 + xOffset, n, rep(tHex[selectionBG], line))
+                        self:addFG(1 + xOffset, n, rep(tHex[selectionFG], line))
                     end
                 end
             end)
         end,
 
         load = function(self)
-            local parent = self:getParent()
-            parent:addEvent("mouse_click", self)
-            parent:addEvent("mouse_up", self)
-            parent:addEvent("mouse_scroll", self)
-            parent:addEvent("mouse_drag", self)
-            parent:addEvent("key", self)
-            parent:addEvent("char", self)
-            parent:addEvent("other_event", self)
+            self:listenEvent("mouse_click")
+            self:listenEvent("mouse_up")
+            self:listenEvent("mouse_scroll")
+            self:listenEvent("mouse_drag")
+            self:listenEvent("key")
+            self:listenEvent("char")
+            self:listenEvent("other_event")
         end,
     }
 

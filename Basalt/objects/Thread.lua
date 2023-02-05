@@ -14,7 +14,6 @@ return function(name, basalt)
         end,
 
         start = function(self, f)
-            local parent = self:getParent()
             if (f == nil) then
                 error("Function provided to thread is nil")
             end
@@ -29,14 +28,14 @@ return function(name, basalt)
                     error("Thread Error Occurred - " .. result)
                 end
             end
-            parent:addEvent("mouse_click", self)
-            parent:addEvent("mouse_up", self)
-            parent:addEvent("mouse_scroll", self)
-            parent:addEvent("mouse_drag", self)
-            parent:addEvent("key", self)
-            parent:addEvent("key_up", self)
-            parent:addEvent("char", self)
-            parent:addEvent("other_event", self)
+            self:listenEvent("mouse_click")
+            self:listenEvent("mouse_up")
+            self:listenEvent("mouse_scroll")
+            self:listenEvent("mouse_drag")
+            self:listenEvent("key")
+            self:listenEvent("key_up")
+            self:listenEvent("char")
+            self:listenEvent("other_event")
             return self
         end;
 
@@ -48,16 +47,15 @@ return function(name, basalt)
         end;
 
         stop = function(self, f)
-            local parent = self:getParent()
             isActive = false
-            parent:removeEvent("mouse_click", self)
-            parent:removeEvent("mouse_up", self)
-            parent:removeEvent("mouse_scroll", self)
-            parent:removeEvent("mouse_drag", self)
-            parent:removeEvent("key", self)
-            parent:removeEvent("key_up", self)
-            parent:removeEvent("char", self)
-            parent:removeEvent("other_event", self)
+            self:listenEvent("mouse_click", false)
+            self:listenEvent("mouse_up", false)
+            self:listenEvent("mouse_scroll", false)
+            self:listenEvent("mouse_drag", false)
+            self:listenEvent("key", false)
+            self:listenEvent("key_up", false)
+            self:listenEvent("char", false)
+            self:listenEvent("other_event", false)
             return self
         end;
 

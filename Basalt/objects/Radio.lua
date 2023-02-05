@@ -1,19 +1,18 @@
 local utils = require("utils")
+local tHex = require("tHex")
 
-return function(name)
-    local base = basalt.getObject("ChangeableObject")(name, basalt)
+return function(name, basalt)
+    local base = basalt.getObject("List")(name, basalt)
     local objectType = "Radio"
 
-    base:setSize(8, 1)
+    base:setSize(1, 1)
     base:setZIndex(5)
 
     local list = {}
-    local itemSelectedBG
-    local itemSelectedFG
-    local boxSelectedBG
-    local boxSelectedFG
-    local boxNotSelectedBG
-    local boxNotSelectedFG
+    local boxSelectedBG = colors.black
+    local boxSelectedFG = colors.green
+    local boxNotSelectedBG = colors.black
+    local boxNotSelectedFG = colors.red
     local selectionColorActive = true
     local symbol = "\7"
     local align = "left"
@@ -24,114 +23,76 @@ return function(name)
         end,
 
         addItem = function(self, text, x, y, bgCol, fgCol, ...)
-            table.insert(list, { x = x or 1, y = y or 1, text = text, bgCol = bgCol or self.bgColor, fgCol = fgCol or self.fgColor, args = { ... } })
-            if (#list == 1) then
-                self:setValue(list[1])
-            end
-            self:updateDraw()
+            base.addItem(self, text, bgCol, fgCol, ...)
+            table.insert(list, { x = x or 1, y = y or #list * 2 })
             return self
-        end,
-
-        getAll = function(self)
-            return list
         end,
 
         removeItem = function(self, index)
+            base.removeItem(self, index)
             table.remove(list, index)
-            self:updateDraw()
             return self
-        end,
-
-        getItem = function(self, index)
-            return list[index]
-        end,
-
-        getItemIndex = function(self)
-            local selected = self:getValue()
-            for key, value in pairs(list) do
-                if (value == selected) then
-                    return key
-                end
-            end
         end,
 
         clear = function(self)
+            base.clear(self)
             list = {}
-            self:setValue({}, false)
-            self:updateDraw()
             return self
-        end,
-
-        getItemCount = function(self)
-            return #list
         end,
 
         editItem = function(self, index, text, x, y, bgCol, fgCol, ...)
+            base.editItem(self, index, text, bgCol, fgCol, ...)
             table.remove(list, index)
-            table.insert(list, index, { x = x or 1, y = y or 1, text = text, bgCol = bgCol or self.bgColor, fgCol = fgCol or self.fgColor, args = { ... } })
-            self:updateDraw()
+            table.insert(list, index, { x = x or 1, y = y or 1 })
             return self
         end,
 
-        selectItem = function(self, index)
-            self:setValue(list[index] or {}, false)
-            self:updateDraw()
+        setBoxSelectionColor = function(self, bg, fg)
+            boxSelectedBG = bg
+            boxSelectedFG = fg
             return self
         end,
 
-        setActiveSymbol = function(self, sym)
-            symbol = sym:sub(1,1)
-            self:updateDraw()
+        setBoxDefaultColor = function(self, bg, fg)
+            boxNotSelectedBG = bg
+            boxNotSelectedFG = fg
             return self
         end,
 
-        setSelectedItem = function(self, bgCol, fgCol, boxBG, boxFG, active)
-            itemSelectedBG = bgCol or itemSelectedBG
-            itemSelectedFG = fgCol or itemSelectedFG
-            boxSelectedBG = boxBG or boxSelectedBG
-            boxSelectedFG = boxFG or boxSelectedFG
-            selectionColorActive = active~=nil and active or true
-            self:updateDraw()
-            return self
-        end;
-
-        mouseHandler = function(self, button, x, y)
+        mouseHandler = function(self, button, x, y, ...)
             if (#list > 0) then
-                local obx, oby = self:getAbsolutePosition(self:getAnchorPosition())
-                for _, value in pairs(list) do
-                    if (obx + value.x - 1 <= x) and (obx + value.x - 1 + value.text:len() + 1 >= x) and (oby + value.y - 1 == y) then
+                local obx, oby = self:getAbsolutePosition()
+                local baseList = self:getAll()
+                for k, value in pairs(baseList) do
+                    if (obx + list[k].x - 1 <= x) and (obx + list[k].x - 1 + value.text:len() + 1 >= x) and (oby + list[k].y - 1 == y) then
                         self:setValue(value)
-                        local val = self:getEventSystem():sendEvent("mouse_click", self, "mouse_click", button, x, y)
-                        if(val==false)then return val end
-                        if(self.parent~=nil)then
-                            self.parent:setFocusedObject(self)
-                        end
+                        local val = self:sendEvent("mouse_click", self, "mouse_click", button, x, y, ...)
                         self:updateDraw()
+                        if(val==false)then return val end
                         return true
                     end
                 end
             end
-            return false
-        end;
+        end,
 
         draw = function(self)
-            if (self.parent ~= nil) then
-                local obx, oby = self:getAnchorPosition()
-                for _, value in pairs(list) do
+            self:addDraw("radio", function()
+                local itemSelectedBG, itemSelectedFG = self:getSelectionColor()
+                local baseList = self:getAll()
+                for k, value in pairs(baseList) do
                     if (value == self:getValue()) then
-                        if (align == "left") then
-                            self.parent:writeText(value.x + obx - 1, value.y + oby - 1, symbol, boxSelectedBG, boxSelectedFG)
-                            self.parent:writeText(value.x + 2 + obx - 1, value.y + oby - 1, value.text, itemSelectedBG, itemSelectedFG)
-                        end
+                        self:addBlit(list[k].x, list[k].y, symbol, tHex[boxSelectedFG], tHex[boxSelectedBG])
+                        self:addBlit(list[k].x + 2, list[k].y, value.text, tHex[itemSelectedFG]:rep(#value.text), tHex[itemSelectedBG]:rep(#value.text))
                     else
-                        self.parent:drawBackgroundBox(value.x + obx - 1, value.y + oby - 1, 1, 1, boxNotSelectedBG or self.bgColor)
-                        self.parent:writeText(value.x + 2 + obx - 1, value.y + oby - 1, value.text, value.bgCol, value.fgCol)
+                        self:addBackgroundBox(list[k].x, list[k].y, 1, 1, boxNotSelectedBG or colors.black)
+                        self:addBlit(list[k].x + 2, list[k].y, value.text, tHex[value.fgCol]:rep(#value.text), tHex[value.bgCol]:rep(#value.text))
                     end
                 end
                 return true
-            end
+            end)
         end,
     }
 
+    object.__index = object
     return setmetatable(object, base)
 end

@@ -547,6 +547,7 @@ return function(name, basalt)
                     self:redraw()
                     visualsChanged = false
                 end
+                --basalt.log("Render: "..self:getName().." - "..self:getType().." - "..self:getZIndex())
                 local obj = self:getParent() or self
                 local x, y = self:getPosition()
                 for k,v in pairs(renderObject)do

@@ -67,29 +67,28 @@ return function(name, basalt)
         draw = function(self)
             base.draw(self)
             self:addDraw("progressbar", function()
-                local parent = self:getParent()
                 local obx, oby = self:getPosition()
                 local w,h = self:getSize()
                 local bgCol,fgCol = self:getBackground(), self:getForeground()
-                if(bgCol~=false)then parent:drawBackgroundBox(obx, oby, w, h, bgCol) end
-                if(bgBarSymbol~="")then parent:drawTextBox(obx, oby, w, h, bgBarSymbol) end
-                if(fgCol~=false)then parent:drawForegroundBox(obx, oby, w, h, fgCol) end
+                if(bgCol~=false)then self:addBackgroundBox(obx, oby, w, h, bgCol) end
+                if(bgBarSymbol~="")then self:addTextBox(obx, oby, w, h, bgBarSymbol) end
+                if(fgCol~=false)then self:addForegroundBox(obx, oby, w, h, fgCol) end
                 if (direction == 1) then
-                    parent:drawBackgroundBox(obx, oby, w, h / 100 * progress, activeBarColor)
-                    parent:drawForegroundBox(obx, oby, w, h / 100 * progress, activeBarSymbolCol)
-                    parent:drawTextBox(obx, oby, w, h / 100 * progress, activeBarSymbol)
+                    self:addBackgroundBox(obx, oby, w, h / 100 * progress, activeBarColor)
+                    self:addForegroundBox(obx, oby, w, h / 100 * progress, activeBarSymbolCol)
+                    self:addTextBox(obx, oby, w, h / 100 * progress, activeBarSymbol)
                 elseif (direction == 2) then
-                    parent:drawBackgroundBox(obx, oby + math.ceil(h - h / 100 * progress), w, h / 100 * progress, activeBarColor)
-                    parent:drawForegroundBox(obx, oby + math.ceil(h - h / 100 * progress), w, h / 100 * progress, activeBarSymbolCol)
-                    parent:drawTextBox(obx, oby + math.ceil(h - h / 100 * progress), w, h / 100 * progress, activeBarSymbol)
+                    self:addBackgroundBox(obx, oby + math.ceil(h - h / 100 * progress), w, h / 100 * progress, activeBarColor)
+                    self:addForegroundBox(obx, oby + math.ceil(h - h / 100 * progress), w, h / 100 * progress, activeBarSymbolCol)
+                    self:addTextBox(obx, oby + math.ceil(h - h / 100 * progress), w, h / 100 * progress, activeBarSymbol)
                 elseif (direction == 3) then
-                    parent:drawBackgroundBox(obx + math.ceil(w - w / 100 * progress), oby, w / 100 * progress, h, activeBarColor)
-                    parent:drawForegroundBox(obx + math.ceil(w - w / 100 * progress), oby, w / 100 * progress, h, activeBarSymbolCol)
-                    parent:drawTextBox(obx + math.ceil(w - w / 100 * progress), oby, w / 100 * progress, h, activeBarSymbol)
+                    self:addBackgroundBox(obx + math.ceil(w - w / 100 * progress), oby, w / 100 * progress, h, activeBarColor)
+                    self:addForegroundBox(obx + math.ceil(w - w / 100 * progress), oby, w / 100 * progress, h, activeBarSymbolCol)
+                    self:addTextBox(obx + math.ceil(w - w / 100 * progress), oby, w / 100 * progress, h, activeBarSymbol)
                 else
-                    parent:drawBackgroundBox(obx, oby, w / 100 * progress, h, activeBarColor)
-                    parent:drawForegroundBox(obx, oby, w / 100 * progress, h, activeBarSymbolCol)
-                    parent:drawTextBox(obx, oby, w / 100 * progress, h, activeBarSymbol)
+                    self:addBackgroundBox(obx, oby, w / 100 * progress, h, activeBarColor)
+                    self:addForegroundBox(obx, oby, w / 100 * progress, h, activeBarSymbolCol)
+                    self:addTextBox(obx, oby, w / 100 * progress, h, activeBarSymbol)
                 end
             end)
         end,

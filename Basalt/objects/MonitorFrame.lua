@@ -25,7 +25,7 @@ return function(name, basalt)
                 self:setTerm(mon)
             end
             return self
-        end
+        end,
         
         show = function(self)
             if(basalt.getTerm()~=self:getTerm())then

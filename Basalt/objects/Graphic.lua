@@ -4,15 +4,16 @@ local images = require("images")
 
 local sub,len,max,min = string.sub,string.len,math.max,math.min
 
-return function(name)
+return function(name, basalt)
     -- Graphic
-    local base = Object(name)
+    local base = basalt.getObject("VisualObject")(name, basalt)
     local objectType = "Graphic"
     local imgData = bimgLib()
     local bimgFrame = imgData.getFrameObject(1)
     local bimg
     local selectedFrame = 1
     base:setZIndex(5)
+    base:setSize(24, 8)
 
     local xOffset, yOffset = 0, 0
    
@@ -186,25 +187,17 @@ return function(name)
         end,
 
         draw = function(self)
-            if (base.draw(self)) then
-                if (self.parent ~= nil) then
-                    local obx, oby = self:getAnchorPosition()
-                    local w,h = self:getSize()
-                    if(bimg~=nil)then
-                        for k,v in pairs(bimg)do
-                            if(k<=h-yOffset)and(k+yOffset>=1)then
-                                self.parent:blit(obx+xOffset, oby+k-1+yOffset, v[1], v[2], v[3])
-                            end
+            base.draw(self)
+            self:addDraw("graphic", function()
+                local w,h = self:getSize()
+                if(bimg~=nil)then
+                    for k,v in pairs(bimg)do
+                        if(k<=h-yOffset)and(k+yOffset>=1)then
+                            self:addBlit(xOffset, k+yOffset, v[1], v[2], v[3])
                         end
                     end
                 end
-            end
-        end,
-
-        init = function(self)
-            if(base.init(self))then
-                self.bgColor = self.parent:getTheme("GraphicBG")
-            end
+            end)
         end,
     }
 

@@ -26,9 +26,9 @@ return function(name, basalt)
     object = {
         init = function(self)
             local parent = self:getParent()
-            parent:addEvent("mouse_click", self)
-            parent:addEvent("mouse_drag", self)
-            parent:addEvent("mouse_scroll", self)
+            self:listenEvent("mouse_click")
+            self:listenEvent("mouse_drag")
+            self:listenEvent("mouse_scroll")
             return base.init(self)
         end,
 

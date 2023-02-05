@@ -673,7 +673,7 @@ return function(name, basalt)
                 end
             end
             local parent = self:getParent()
-            parent:addEvent("other_event", self)
+            self:listenEvent("other_event")
             return self
         end,
 
@@ -684,7 +684,7 @@ return function(name, basalt)
                 end
             end
             local parent = self:getParent()
-            parent:addEvent("other_event", self)
+            self:listenEvent("other_event")
             return self
         end,
 

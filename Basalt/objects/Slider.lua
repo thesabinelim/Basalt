@@ -35,10 +35,9 @@ return function(name, basalt)
         end,
 
         load = function(self)
-            local parent = self:getParent()
-            parent:addEvent("mouse_click", self)
-            parent:addEvent("mouse_drag", self)
-            parent:addEvent("mouse_scroll", self)
+            self:listenEvent("mouse_click")
+            self:listenEvent("mouse_drag")
+            self:listenEvent("mouse_scroll")
         end,
 
         setSymbol = function(self, _symbol)
@@ -114,25 +113,23 @@ return function(name, basalt)
         draw = function(self)
             base.draw(self)
             self:addDraw("slider", function()
-                local parent = self:getParent()
-                local obx, oby = self:getPosition()
                 local w,h = self:getSize()
                 local bgCol,fgCol = self:getBackground(), self:getForeground()
                 if (barType == "horizontal") then
-                    parent:setText(obx + index - 1, oby, symbol:rep(symbolSize))
-                    if(symbolBG~=false)then parent:setBG(obx + index - 1, oby, tHex[symbolBG]:rep(#symbol*symbolSize)) end
-                    if(symbolFG~=false)then parent:setFG(obx + index - 1, oby, tHex[symbolFG]:rep(#symbol*symbolSize)) end
+                    self:addText(index, oby, symbol:rep(symbolSize))
+                    if(symbolBG~=false)then self:addBG(index, 1, tHex[symbolBG]:rep(#symbol*symbolSize)) end
+                    if(symbolFG~=false)then self:addFG(index, 1, tHex[symbolFG]:rep(#symbol*symbolSize)) end
                 end
 
                 if (barType == "vertical") then
                     for n = 0, h - 1 do
                         if (index == n + 1) then
                             for curIndexOffset = 0, math.min(symbolSize - 1, h) do
-                                parent:writeText(obx, oby + n + curIndexOffset, symbol, symbolColor, symbolColor)
+                                self:addBlit(1, 1+n+curIndexOffset, symbol, tHex[symbolColor], tHex[symbolColor])
                             end
                         else
                             if (n + 1 < index) or (n + 1 > index - 1 + symbolSize) then
-                                parent:writeText(obx, oby + n, bgSymbol, bgCol, fgCol)
+                                self:addBlit(1, 1+n, bgSymbol, tHex[fgCol], tHex[bgCol])
                             end
                         end
                     end

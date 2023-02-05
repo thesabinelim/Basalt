@@ -32,8 +32,7 @@ return function(name, basalt)
 
 
         load = function(self)
-            local parent = self:getParent()
-            parent:addEvent("mouse_click", self)
+            self:listenEvent("mouse_click")
         end,
 
         mouseHandler = function(self, ...)
@@ -48,15 +47,14 @@ return function(name, basalt)
             base.draw(self)
             self:addDraw("switch", function()
                 local parent = self:getParent()
-                local obx, oby = self:getPosition()
                 local bgCol,fgCol = self:getBackground(), self:getForeground()
                 local w,h = self:getSize()
                 if(self:getValue())then
-                    parent:drawBackgroundBox(obx, oby, w, h, activeBG)
-                    parent:drawBackgroundBox(obx+w-1, oby, 1, h, bgSymbol)
+                    self:addBackgroundBox(1, 1, w, h, activeBG)
+                    self:addBackgroundBox(w, 1, 1, h, bgSymbol)
                 else
-                    parent:drawBackgroundBox(obx, oby, w, h, inactiveBG)
-                    parent:drawBackgroundBox(obx, oby, 1, h, bgSymbol)
+                    self:addBackgroundBox(1, 1, w, h, inactiveBG)
+                    self:addBackgroundBox(1, 1, 1, h, bgSymbol)
                 end
             end)
         end,
