@@ -436,7 +436,7 @@ basalt = {
     
     createFrame = function(name)
         for _, v in pairs(frames) do
-            if (v.name == name) then
+            if (v:getName() == name) then
                 return nil
             end
         end

@@ -36,13 +36,13 @@ return function(name, basalt)
         end
     end
 
-    local function addObject(self, element)
+    local function addObject(self, element, el2)
         if (getObject(element:getName()) ~= nil) then
             return
         end
         local zIndex = element:getZIndex()
         local timestamp = os.time()
-        elements[#elements + 1] = {element = element, zIndex = zIndex, timestamp = timestamp}
+        table.insert(elements, {element = element, zIndex = zIndex, timestamp = timestamp})
         table.sort(elements, function(a, b)
             if a.zIndex == b.zIndex then
                 return a.timestamp < b.timestamp
@@ -55,6 +55,39 @@ return function(name, basalt)
         if(element.load~=nil)then element:load() end
         if(element.draw~=nil)then element:draw() end
         return element
+    end
+
+    local function changeZIndex(self, element, newZ)
+        local timestamp = os.time()
+        for k,v in pairs(elements)do
+            if(v.element==element)then
+                v.zIndex = newZ
+                v.timestamp = timestamp
+                break
+            end
+        end
+        table.sort(elements, function(a, b)
+            if a.zIndex == b.zIndex then
+                return a.timestamp < b.timestamp
+            else
+                return a.zIndex > b.zIndex
+            end
+        end)
+        for k,v in pairs(events)do
+            for a,b in pairs(v)do
+                if(b.element==element)then
+                    b.zIndex = newZ
+                    b.timestamp = timestamp
+                end
+            end
+            table.sort(events[k], function(a, b)
+                if a.zIndex == b.zIndex then
+                    return a.timestamp < b.timestamp
+                else
+                    return a.zIndex > b.zIndex
+                end
+            end)
+        end
     end
 
     local function removeObject(self, element)
@@ -111,20 +144,20 @@ return function(name, basalt)
                 return a.zIndex > b.zIndex
             end
         end)
+        self:listenEvent(event)
         return element
     end
 
     local function removeEvent(self, event, element)
         local parent = self:getParent()
-        for a, b in pairs(events[event]) do
-            if(a.element == element)then
-                table.remove(events[event], a)
+        if(events[event]~=nil)then
+            for a, b in pairs(events[event]) do
+                if(b.element == element)then
+                    table.remove(events[event], a)
+                end
             end
-        end
-        if(tableCount(events[event])<=0)then
-            activeEvents[event] = false
-            if(parent~=nil)then
-                parent:removeEvent(event, self)
+            if(tableCount(events[event])<=0)then
+                self:listenEvent(event, false)
             end
         end
     end
@@ -230,19 +263,20 @@ return function(name, basalt)
         getEvent = getEvent,
         addEvent = addEvent,
         removeEvent = removeEvent,
+        changeZIndex = changeZIndex,
 
-        listenEvent = function(self, event)
-            base.listenEvent(self, event)
-            activeEvents[event] = true
+        listenEvent = function(self, event, active)
+            base.listenEvent(self, event, active)
+            activeEvents[event] = active~=nil and active or true
             if(events[event]==nil)then events[event] = {} end
             return self
         end,
 
         customEventHandler = function(self, ...)
             base.customEventHandler(self, ...)
-            for _, obj in pairs(elements) do
-                if (obj.customEventHandler ~= nil) then
-                    obj:customEventHandler(...)
+            for _, o in pairs(elements) do
+                if (o.element.customEventHandler ~= nil) then
+                    o.element:customEventHandler(...)
                 end
             end
         end,
@@ -294,14 +328,14 @@ return function(name, basalt)
 
     for k,v in pairs({key="keyHandler",key_up="keyUpHandler",char="charHandler"})do
         container[v] = function(self, ...)
-            if (self:isFocused())then
-                local val = self:getEventSystem():sendEvent(k, self, k, ...)
-                if(val==false)then return false end
-                if(events[k]~=nil)then                    
-                    for _, obj in ipairs(orderedTable(events[k])) do
-                        if (obj.element[v] ~= nil) then
-                            if (obj.element[v](obj.element, ...)) then
-                                return true
+            if(base[v]~=nil)then
+                if(base[v](self, ...))then
+                    if(events[k]~=nil)then                    
+                        for _, obj in ipairs(orderedTable(events[k])) do
+                            if (obj.element[v] ~= nil) then
+                                if (obj.element[v](obj.element, ...)) then
+                                    return true
+                                end
                             end
                         end
                     end

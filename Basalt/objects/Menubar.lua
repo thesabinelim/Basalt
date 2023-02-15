@@ -36,11 +36,15 @@ return function(name, basalt)
             return objectType
         end,
 
+        getBase = function(self)
+            return base
+        end,
+
         setSpace = function(self, _space)
             space = _space or space
             self:updateDraw()
             return self
-        end;
+        end,
 
         setScrollable = function(self, scroll)
             scrollable = scroll
@@ -50,7 +54,7 @@ return function(name, basalt)
 
 
         mouseHandler = function(self, button, x, y)
-            if(base.mouseHandler(self, button, x, y))then
+            if(base:getBase().mouseHandler(self, button, x, y))then
                 local objX, objY = self:getAbsolutePosition()
                 local w,h = self:getSize()
                     local xPos = 0
@@ -70,7 +74,7 @@ return function(name, basalt)
         end,
 
         scrollHandler = function(self, dir, x, y)
-            if(base.scrollHandler(self, dir, x, y))then
+            if(base:getBase().scrollHandler(self, dir, x, y))then
                 if(scrollable)then
                     itemOffset = itemOffset + dir
                     if (itemOffset < 0) then

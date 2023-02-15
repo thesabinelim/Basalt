@@ -174,7 +174,6 @@ return function(name, basalt)
                 internalValueChange = false
                 return true
             end
-            return false
         end,
 
         charHandler = function(self, char)
@@ -210,7 +209,6 @@ return function(name, basalt)
                 self:updateDraw()
                 return true
             end
-            return false
         end,
 
         mouseHandler = function(self, button, x, y)

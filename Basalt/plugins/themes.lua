@@ -81,7 +81,7 @@ local plugin = {
     
 }
 
-for k,v in pairs({"BaseFrame", "Frame", "ScrollableFrame", "MovableFrame", "Checkbox", "Dropdown", "Graph", "Graphic", "Input", "Label", "List", "Menubar", "Pane", "Program", "Progressbar", "Radio", "Scrollbar", "Slider", "Switch", "Textfield"})do
+for k,v in pairs({"BaseFrame", "Frame", "ScrollableFrame", "MovableFrame", "Button", "Checkbox", "Dropdown", "Graph", "Graphic", "Input", "Label", "List", "Menubar", "Pane", "Program", "Progressbar", "Radio", "Scrollbar", "Slider", "Switch", "Textfield"})do
 plugin[v] = function(base, name, basalt)
         local object = {
             init = function(self)

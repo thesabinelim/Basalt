@@ -1,19 +1,22 @@
+local count = require("utils").tableCount
+
 return {
-    VisualObject = function(base)
+    VisualObject = function(base, basalt)
         local dynObjects = {}
         local curProperties = {}
+        local properties = {x="getX", y="getY", w="getWidth", h="getHeight"}
 
         local function stringToNumber(str)
             local ok, result = pcall(load("return " .. str, "", nil, {math=math}))
-            if not(ok)then error(str.." is not a valid dynamic value string") end
+            if not(ok)then error(str.." - is not a valid dynamic value string") end
             return result
         end
 
         local function createDynamicValue(self, key, val)
-            local properties = {x="getX", y="getY", w="getWidth", h="getHeight"}
             local objectGroup = {}
+            local properties = properties
             for a,b in pairs(properties)do
-                for v in val:gmatch("%a+%."..a) do
+                for v in val:gmatch("%a+%."..a)do
                     local name = v:gsub("%."..a, "")
                     if(name~="self")and(name~="parent")then 
                         table.insert(objectGroup, name) 
@@ -50,7 +53,7 @@ return {
         end
 
         local function updatePositions(self)
-            if(#dynObjects>0)then
+            if(count(dynObjects)>0)then
                 for k,v in pairs(dynObjects)do
                     v()
                 end
@@ -79,9 +82,13 @@ return {
                 curProperties.y = yPos
                 if(type(xPos)=="string")then
                     createDynamicValue(self, "x", xPos)
+                else
+                    dynObjects["x"] = nil
                 end
                 if(type(yPos)=="string")then
                     createDynamicValue(self, "y", yPos)
+                else
+                    dynObjects["y"] = nil
                 end
                 base.setPosition(self, curProperties.x, curProperties.y, rel)
                 return self
@@ -92,9 +99,13 @@ return {
                 curProperties.h = h
                 if(type(w)=="string")then
                     createDynamicValue(self, "w", w)
+                else
+                    dynObjects["w"] = nil
                 end
                 if(type(h)=="string")then
                     createDynamicValue(self, "h", h)
+                else
+                    dynObjects["h"] = nil
                 end
                 base.setSize(self, curProperties.w, curProperties.h, rel)
                 return self
@@ -107,7 +118,6 @@ return {
                 end
             end,
         }
-
         return object
     end
 }

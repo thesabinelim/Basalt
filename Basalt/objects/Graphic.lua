@@ -201,5 +201,6 @@ return function(name, basalt)
         end,
     }
 
+    object.__index = object
     return setmetatable(object, base)
 end

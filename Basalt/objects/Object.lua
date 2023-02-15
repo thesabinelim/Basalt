@@ -55,11 +55,23 @@ return function(name, basalt)
             return self
         end,
 
+        updateEvents = function(self)
+            for k,v in pairs(activeEvents)do
+                parent:removeEvent(k, self)
+                if(v)then
+                    parent:addEvent(k, self)
+                end
+            end
+            return self
+        end,
+
         listenEvent = function(self, event, active)
             if(parent~=nil)then
                 if(active)or(active==nil)then
+                    activeEvents[event] = true
                     parent:addEvent(event, self)
                 elseif(active==false)then
+                    activeEvents[event] = false
                     parent:removeEvent(event, self)
                 end
             end

@@ -27,14 +27,12 @@ return function(name, basalt)
     local function getVerticalScrollAmount(self)
         local amount = 0
         local objects = self:getObjects()
-        for _, value in pairs(objects) do
-            for _, b in pairs(value) do
-                if(b.getHeight~=nil)and(b.getY~=nil)then
-                    local h, y = b:getHeight(), b:getY()
-                    local height = self:getHeight()
-                    if (h + y - height >= amount) then
-                        amount = max(h + y - height, 0)
-                    end
+        for _, b in pairs(objects) do
+            if(b.element.getHeight~=nil)and(b.element.getY~=nil)then
+                local h, y = b.element:getHeight(), b.element:getY()
+                local height = self:getHeight()
+                if (h + y - height >= amount) then
+                    amount = max(h + y - height, 0)
                 end
             end
         end

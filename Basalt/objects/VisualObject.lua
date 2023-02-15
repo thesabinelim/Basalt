@@ -22,7 +22,7 @@ return function(name, basalt)
     local x, y, width, height = 1,1,1,1
     local dragStartX, dragStartY, dragXOffset, dragYOffset = 0, 0, 0, 0
 
-    local bgColor,fgColor = colors.black, colors.white
+    local bgColor,fgColor, transparency = colors.black, colors.white, false
     local parent
 
     local preDrawQueue = {}
@@ -100,16 +100,14 @@ return function(name, basalt)
                 parent:setFocusedObject(self)
             end
             return self
-        end;
+        end,
 
         setZIndex = function(self, index)
             zIndex = index
             if (parent ~= nil) then
-                parent:removeObject(self)
-                parent:addObject(self)
-                self:updateEventHandlers()
-            end
-            
+                parent:changeZIndex(element, zIndex)
+                self:updateDraw()
+            end            
             return self
         end,
 
@@ -134,7 +132,7 @@ return function(name, basalt)
             end
             if(parent~=nil)then parent:customEventHandler("basalt_FrameReposition", self) end
             if(self:getType()=="Container")then parent:customEventHandler("basalt_FrameReposition", self) end
-            self:updateDraw()
+            --self:updateDraw()
             return self
         end,
 
@@ -459,6 +457,10 @@ return function(name, basalt)
         end,
 
         addText = function(self, x, y, text)
+            if not(transparency)then
+                table.insert(renderObject, {x=x,y=y,text=text})
+                return
+            end
             local t = split(text, "\0")
             for k,v in pairs(t)do
                 if(v.value~="")or(v.value~="\0")then
@@ -468,6 +470,10 @@ return function(name, basalt)
         end,
 
         addBG = function(self, x, y, bg, noText)
+            if not(transparency)then
+                table.insert(renderObject, {x=x,y=y,bg=bg})
+                return
+            end
             local t = split(bg)
             for k,v in pairs(t)do
                 if(v.value~="")or(v.value~=" ")then
@@ -481,6 +487,10 @@ return function(name, basalt)
         end,
 
         addFG = function(self, x, y, fg)
+            if not(transparency)then
+                table.insert(renderObject, {x=x,y=y,fg=fg})
+                return
+            end
             local t = split(fg)
             for k,v in pairs(t)do
                 if(v.value~="")or(v.value~=" ")then
@@ -490,10 +500,13 @@ return function(name, basalt)
         end,
 
         addBlit = function(self, x, y, t, fg, bg)
+            if not(transparency)then
+                table.insert(renderObject, {x=x,y=y,bg=bg, fg=fg, text=t})
+                return
+            end
             local _text = split(t, "\0")
             local _fg = split(fg)
             local _bg = split(bg)
-            --table.insert(renderObject, {x=x,y=y,text=t})
             for k,v in pairs(_text)do
                 if(v.value~="")or(v.value~="\0")then
                     table.insert(renderObject, {x=x+v.x-1,y=y,text=v.value})
@@ -547,7 +560,6 @@ return function(name, basalt)
                     self:redraw()
                     visualsChanged = false
                 end
-                --basalt.log("Render: "..self:getName().." - "..self:getType().." - "..self:getZIndex())
                 local obj = self:getParent() or self
                 local x, y = self:getPosition()
                 for k,v in pairs(renderObject)do
