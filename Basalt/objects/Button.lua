@@ -14,15 +14,11 @@ return function(name, basalt)
     base:setZIndex(5)
 
     local object = {
-        init = function(self)
-            if(base.init(self))then
-                local parent = self:getParent()
-                self:setBackground(parent:getTheme("ButtonBG"))
-                self:setForeground(parent:getTheme("ButtonText")) 
-            end    
-        end,
         getType = function(self)
             return objectType
+        end,
+        isType = function(self, t)
+            return objectType==t or base.isType~=nil and base.isType(t) or false
         end,
 
         getBase = function(self)
@@ -50,17 +46,11 @@ return function(name, basalt)
         draw = function(self)
             base.draw(self)
             self:addDraw("button", function()
-                local parent = self:getParent()
-                local obx, oby = self:getPosition()
                 local w,h = self:getSize()
                 local verticalAlign = utils.getTextVerticalAlign(h, textVerticalAlign)
-
-                for n = 1, h do
-                    if (n == verticalAlign) then
-                        parent:setText(obx, oby + (n - 1), utils.getTextHorizontalAlign(text, w, textHorizontalAlign))
-                        parent:setFG(obx, oby + (n - 1), utils.getTextHorizontalAlign(tHex[self:getForeground()]:rep(text:len()), w, textHorizontalAlign))
-                    end
-                end
+                local xOffset = textHorizontalAlign=="center" and math.ceil(w/2-(text:len()/2)+1) or textHorizontalAlign=="right" and w-(text:len()-1) or 1
+                self:addText(xOffset, verticalAlign, text)
+                self:addFG(xOffset, verticalAlign, tHex[self:getForeground() or colors.white]:rep(text:len()))
             end)
         end,
     }

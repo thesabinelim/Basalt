@@ -1,22 +1,25 @@
-local Object = require("Object")
-local xmlValue = require("utils").getValueFromXML
 local images = require("images")
-
-local unpack,sub = table.unpack,string.sub
-return function(name)
+local bimg = require("bimg")
+local unpack,sub,max,min = table.unpack,string.sub,math.max,math.min
+return function(name, basalt)
     -- Image
-    local base = Object(name)
+    local base = basalt.getObject("VisualObject")(name, basalt)
     local objectType = "Image"
-    base:setZIndex(2)
+
+    local bimgLibrary = bimg()
+    local bimgFrame = bimgLibrary.getFrameObject(1)
     local originalImage
     local image
-    local curFrame = 1
+    local activeFrame = 1
+
     local infinitePlay = false
     local animTimer
     local usePalette = false
 
-    base.width = 24
-    base.height = 8
+    local xOffset, yOffset = 0, 0
+
+    base:setSize(24, 8)
+    base:setZIndex(2)
 
     local function getPalette(id)
         if(originalImage~=nil)then
@@ -41,36 +44,92 @@ return function(name)
     end
 
     local object = {
-        init = function(self)
-            if(base.init(self))then
-                self.bgColor = self.parent:getTheme("ImageBG")
-            end
-        end,
         getType = function(self)
             return objectType
-        end;
+        end,
 
-        loadImage = function(self, path, f)
-            if not(fs.exists(path))then error("No valid path: "..path) end
-            originalImage = images.loadImageAsBimg(path, f)
-            curFrame = 1
-            image = originalImage
-            if(animTimer~=nil)then
-                os.cancelTimer(animTimer)
+        setOffset = function(self, _x, _y, rel)
+            if(rel)then
+                xOffset = xOffset + _x or 0
+                yOffset = yOffset + _y or 0
+            else
+                xOffset = _x or xOffset
+                yOffset = _y or yOffset
             end
             self:updateDraw()
             return self
-        end;
+        end,
 
-        setImage = function(self, data)
-            originalImage = data
-            image = originalImage
-            curFrame = 1
-            if(animTimer~=nil)then
-                os.cancelTimer(animTimer)
+        getOffset = function(self)
+            return xOffset, yOffset
+        end,
+
+        selectFrame = function(self, id)
+            if(imgData.getFrameObject(id)==nil)then
+                imgData.addFrame(id)
             end
+            bimgFrame = imgData.getFrameObject(id)
+            bimg = bimgFrame.getImage(id)
+            selectedFrame = id
+            self:updateDraw()
+        end,
+
+        addFrame = function(self, id)
+            imgData.addFrame(id)
+            return self
+        end,
+
+        getFrame = function(self, id)
+            return imgData.getFrame(id)
+        end,
+
+        getFrameObject = function(self, id)
+            return imgData.getFrameObject(id)
+        end,
+
+        removeFrame = function(self, id)
+            imgData.removeFrame(id)
+            return self
+        end,
+
+        moveFrame = function(self, id, dir)
+            imgData.moveFrame(id, dir)
+            return self
+        end,
+
+        getFrames = function(self)
+            return imgData.getFrames()
+        end,
+
+        getFrameCount = function(self)
+            return #imgData.getFrames()
+        end,
+
+        getActiveFrame = function(self)
+            return activeFrame
+        end,
+
+        loadImage = function(self, path)
+            if(fs.exists(path))then
+                local newBimg = images.loadBIMG(path)
+                imgData = bimg(newBimg)
+                selectedFrame = 1
+                bimgFrame = imgData.getFrameObject(1)
+                image = bimgFrame.getImage()
+                self:updateDraw()
+            end     
+            return self
+        end,
+
+        clear = function(self)
+            imgData = bimg()
+            image = nil
             self:updateDraw()
             return self
+        end,
+
+        getImage = function(self)
+            return imgData.createBimg()
         end,
 
         usePalette = function(self, use)
@@ -81,21 +140,11 @@ return function(name)
         play = function(self, inf)
             if(originalImage.animated)then
                 local t = originalImage[curFrame].duration or originalImage.secondsPerFrame or 0.2
-                self.parent:addEvent("other_event", self)
+                self:listenEvent("other_event")
                 animTimer = os.startTimer(t)
                 infinitePlay = inf or false
             end
             return self
-        end,
-
-        selectFrame = function(self, fr)
-            if(originalImage[fr]~=nil)then
-                curFrame = fr
-                if(animTimer~=nil)then
-                    os.cancelTimer(animTimer)
-                end
-                self:updateDraw()
-            end
         end,
 
         eventHandler = function(self, event, timerId, ...)
@@ -122,40 +171,84 @@ return function(name)
             return originalImage[key]
         end,
 
-        getImageSize = function(self)
-            return originalImage.width, originalImage.height
-        end,
-
-        resizeImage = function(self, w, h)
-            image = images.resizeBIMG(originalImage, w, h)
+        blit = function(self, text, fg, bg, _x, _y)
+            x = _x or x
+            y = _y or y
+            bimgFrame.blit(text, fg, bg, x, y)
+            image = bimgFrame.getImage()
             self:updateDraw()
             return self
         end,
 
-        setValuesByXMLData = function(self, data)
-            base.setValuesByXMLData(self, data)
-            if(xmlValue("path", data)~=nil)then self:loadImage(xmlValue("path", data)) end
+        setText = function(self, text, _x, _y)
+            x = _x or x
+            y = _y or y
+            bimgFrame.text(text, x, y)
+            image = bimgFrame.getImage()
+            self:updateDraw()
+            return self
+        end,
+
+        setBg = function(self, bg, _x, _y)
+            x = _x or x
+            y = _y or y
+            bimgFrame.bg(bg, x, y)
+            image = bimgFrame.getImage()
+            self:updateDraw()
+            return self
+        end,
+
+        setFg = function(self, fg, _x, _y)
+            x = _x or x
+            y = _y or y
+            bimgFrame.fg(fg, x, y)
+            image = bimgFrame.getImage()
+            self:updateDraw()
+            return self
+        end,
+
+        getImageSize = function(self)
+            return bimgLibrary.getSize()
+        end,
+
+        setImageSize = function(self, w, h)
+            bimgLibrary.setSize(w, h)
+            image = bimgFrame.getImage()
+            self:updateDraw()
+            return self
+        end,
+
+        resizeImage = function(self, w, h)
+            local newBimg = images.resizeBIMG(bimg.createBimg(), w, h)
+            bimgLibrary = bimg(newBimg)
+            selectedFrame = 1
+            bimgFrame = bimg.getFrameObject(1)
+            image = bimgFrame.getImage()
+            self:updateDraw()
             return self
         end,
 
         draw = function(self)
-            if (base.draw(self)) then
-                if (image ~= nil) then
-                    if(usePalette)then
-                        self:getBaseFrame():setThemeColor(getPalette(curFrame))
-                    end
-                    local obx, oby = self:getAnchorPosition()
-                    local w,h = self:getSize()
-                    for y,v in ipairs(image[curFrame])do
-                        local t, f, b  = unpack(v)
-                        t = sub(t, 1,w)
-                        f = sub(f, 1,w)
-                        b = sub(b, 1,w)
-                        self.parent:blit(obx, oby+y-1, t, f, b)
-                        if(y==h)then break end
+            base.draw(self)
+            self:addDraw("image", function()
+                local w,h = self:getSize()
+                if(image~=nil)then
+                    for k,v in pairs(image)do
+                        if(k+yOffset<=h)and(k+yOffset>=1)then
+                            local t,f,b = v[1],v[2],v[3]
+
+                            local startIdx = max(1 - xOffset, 1)
+                            local endIdx = min(w - xOffset, #t)
+                            
+                            t = sub(t, startIdx, endIdx)
+                            f = sub(f, startIdx, endIdx)
+                            b = sub(b, startIdx, endIdx)
+
+                            self:addBlit(max(1 + xOffset, 1), k + yOffset, t, f, b)
+                        end
                     end
                 end
-            end
+            end)
         end,
     }
 

@@ -24,11 +24,14 @@ return function(name, basalt)
             return true
         end,
 
+        load = function(self)
+        end,
+
         getType = function(self)
             return objectType
         end,
         isType = function(self, t)
-            return objectType==t or base.isType~=nil and base.isType(t) or false
+            return objectType==t
         end,
         
         getName = function(self)
@@ -48,6 +51,29 @@ return function(name, basalt)
                     self:show()
                 end
                 parent = newParent
+            end
+            return self
+        end,
+
+        updateEvents = function(self)
+            for k,v in pairs(activeEvents)do
+                parent:removeEvent(k, self)
+                if(v)then
+                    parent:addEvent(k, self)
+                end
+            end
+            return self
+        end,
+
+        listenEvent = function(self, event, active)
+            if(parent~=nil)then
+                if(active)or(active==nil)then
+                    activeEvents[event] = true
+                    parent:addEvent(event, self)
+                elseif(active==false)then
+                    activeEvents[event] = false
+                    parent:removeEvent(event, self)
+                end
             end
             return self
         end,
@@ -106,7 +132,7 @@ return function(name, basalt)
         end,
 
         removeEvent = function(self, event, index)
-            if(eventSystem:getEventCount(event)<=1)then
+            if(eventSystem:getEventCount(event)<1)then
                 if(parent~=nil)then
                     parent:removeEvent(event, self)
                 end

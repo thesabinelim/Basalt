@@ -1,18 +1,17 @@
-local VisualObject = require("VisualObject")
 local utils = require("utils")
-local createText = utils.createText
+local wrapText = utils.wrapText
 local tHex = require("tHex")
 
-return function(name)
+return function(name, basalt)
     -- Label
-    local base = VisualObject(name)
+    local base = basalt.getObject("VisualObject")(name, basalt)
     local objectType = "Label"
 
     base:setZIndex(3)
 
     local autoSize = true
     local fgColChanged,bgColChanged = false,false
-    local text = "Label"
+    local text, textAlign = "Label", "left"
 
     local object = {
         getType = function(self)
@@ -54,6 +53,11 @@ return function(name)
             return self
         end,
 
+        setTextAlign = function(self, align)
+            textAlign = align or textAlign
+            return self;
+        end,
+
         draw = function(self)
             base.draw(self)
             self:addDraw("label", function()
@@ -63,36 +67,24 @@ return function(name)
                 local bgCol,fgCol = self:getBackground(), self:getForeground()
                 local verticalAlign = utils.getTextVerticalAlign(h, textVerticalAlign)
                 if not(autoSize)then
-                    local text = createText(text, w)
+                    local text = wrapText(text, w)
                     for k,v in pairs(text)do
                         if(k<=h)then
-                            parent:setText(obx, oby+k-1, v)
+                            local align = textAlign=="center" and math.floor(w/2-v:len()/2+0.5) or textAlign=="right" and w-(v:len()-1) or 1
+                            self:addText(align, k, v)
                         end
                     end
                 else
-                    if(#text+obx>parent:getWidth())then
-                        local text = createText(text, w)
-                        for k,v in pairs(text)do
-                            if(k<=h)then
-                                parent:setText(obx, oby+k-1, v)
-                            end
-                        end
-                    else
-                        parent:setText(obx, oby, text:sub(1,w))
-                    end
+                    self:addText(1, 1, text:sub(1,w))
                 end
             end)
         end,
         
         init = function(self)
-            if(base.init(self))then
-                local parent = self:getParent()
-                self:setBackground(parent:getTheme("LabelBG"))
-                self:setForeground(parent:getTheme("LabelText"))
-                if(parent:getBackground()==colors.black)and(self:getBackground()==colors.black)then
-                    self:setForeground(colors.lightGray)
-                end
-            end
+            base.init(self)
+            local parent = self:getParent()
+            self:setForeground(parent:getForeground())
+            self:setBackground(parent:getBackground())
         end
 
     }

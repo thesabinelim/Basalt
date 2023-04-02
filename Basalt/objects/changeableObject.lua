@@ -1,7 +1,5 @@
-local VisualObject = require("VisualObject")
-
-return function(name)
-    local base = VisualObject(name)
+return function(name, basalt)
+    local base = basalt.getObject("VisualObject")(name, basalt)
     -- Base object
     local objectType = "ChangeableObject"
 
@@ -33,8 +31,8 @@ return function(name)
         end,
 
         valueChangedHandler = function(self)
-            self:sendEvent("value_changed", self, value)
-        end;
+            self:sendEvent("value_changed", value)
+        end,
     }
 
     object.__index = object
