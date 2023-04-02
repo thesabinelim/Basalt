@@ -290,7 +290,7 @@ local function basaltUpdateEvent(event, ...)
         if(mouseEvent~=nil)then
             mouseEvent(mainFrame, ...)
             handleSchedules(event, ...)
-            renderingUpdateEvent()
+            drawFrames()
             return
         end
     end
@@ -306,7 +306,7 @@ local function basaltUpdateEvent(event, ...)
             end
         end
         handleSchedules(event, ...)
-        renderingUpdateEvent()
+        drawFrames()
         return
     end
 
@@ -325,7 +325,7 @@ local function basaltUpdateEvent(event, ...)
             end
             keyEvent(activeFrame, ...)
             handleSchedules(event, ...)
-            renderingUpdateEvent()
+            drawFrames()
             return
         end
     end
@@ -341,8 +341,8 @@ local function basaltUpdateEvent(event, ...)
             v:eventHandler(event, ...)
         end
         handleSchedules(event, ...)
-        renderingUpdateEvent()
     end
+    drawFrames()
 end
 
 basalt = {
