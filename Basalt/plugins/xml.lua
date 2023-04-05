@@ -214,7 +214,6 @@ return {
                         registerFunctionEvent(self, xmlValue(v, data), self[v], scripts)
                     end
                 end
-
                 self:setPosition(x, y)
                 self:setSize(w, h)
 

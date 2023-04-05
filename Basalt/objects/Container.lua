@@ -1,7 +1,5 @@
 local utils = require("utils")
-local rpairs = utils.rpairs
 local tableCount = utils.tableCount
-local orderedTable = utils.orderedTable
 
 return function(name, basalt)
     local base = basalt.getObject("VisualObject")(name, basalt)
@@ -41,11 +39,12 @@ return function(name, basalt)
             return
         end
         local zIndex = element:getZIndex()
-        local timestamp = os.time()
+        local timestamp = os.clock()
         table.insert(elements, {element = element, zIndex = zIndex, timestamp = timestamp})
         table.sort(elements, function(a, b)
             if a.zIndex == b.zIndex then
-                return a.timestamp > b.timestamp
+                if(a.timestamp == b.timestamp)then return true end
+                return a.timestamp < b.timestamp
             else
                 return a.zIndex < b.zIndex
             end
@@ -58,7 +57,7 @@ return function(name, basalt)
     end
 
     local function updateZIndex(self, element, newZ)
-        local timestamp = os.time()
+        local timestamp = os.clock()
         for k,v in pairs(elements)do
             if(v.element==element)then
                 v.zIndex = newZ
@@ -68,7 +67,8 @@ return function(name, basalt)
         end
         table.sort(elements, function(a, b)
             if a.zIndex == b.zIndex then
-                return a.timestamp > b.timestamp
+                if(a.timestamp == b.timestamp)then return true end
+                return a.timestamp < b.timestamp
             else
                 return a.zIndex < b.zIndex
             end
@@ -82,7 +82,8 @@ return function(name, basalt)
             end
             table.sort(events[k], function(a, b)
                 if a.zIndex == b.zIndex then
-                    return a.timestamp < b.timestamp
+                    if(a.timestamp == b.timestamp)then return false end
+                    return a.timestamp > b.timestamp
                 else
                     return a.zIndex > b.zIndex
                 end
@@ -135,12 +136,13 @@ return function(name, basalt)
             return
         end
         local zIndex = element:getZIndex() 
-        local timestamp = os.time()
+        local timestamp = os.clock()
         if(events[event]==nil)then events[event] = {} end
         events[event][#events[event] + 1] = {element = element, zIndex = zIndex, timestamp = timestamp}
         table.sort(events[event], function(a, b)
             if a.zIndex == b.zIndex then
-                return a.timestamp < b.timestamp
+                if(a.timestamp == b.timestamp)then return false end
+                return a.timestamp > b.timestamp
             else
                 return a.zIndex > b.zIndex
             end
@@ -193,7 +195,7 @@ return function(name, basalt)
         end,
 
         setImportant = function(self, element)
-            local timestamp = os.time()
+            local timestamp = os.clock()
             for a, b in pairs(events) do
                 for c, d in pairs(b) do
                     if(d.element == element)then
@@ -205,6 +207,7 @@ return function(name, basalt)
                 end
                 table.sort(events[a], function(a, b)
                     if a.zIndex == b.zIndex then
+                        if(a.timestamp == b.timestamp)then return false end
                         return a.timestamp > b.timestamp
                     else
                         return a.zIndex > b.zIndex
@@ -221,6 +224,7 @@ return function(name, basalt)
             end
             table.sort(elements, function(a, b)
                 if a.zIndex == b.zIndex then
+                    if(a.timestamp == b.timestamp)then return true end
                     return a.timestamp < b.timestamp
                 else
                     return a.zIndex < b.zIndex
@@ -301,7 +305,7 @@ return function(name, basalt)
             if(base.eventHandler~=nil)then
                 base.eventHandler(self, ...)
                 if(events["other_event"]~=nil)then
-                    for _, obj in ipairs(orderedTable(events["other_event"])) do
+                    for _, obj in ipairs(events["other_event"]) do
                         if (obj.element.eventHandler ~= nil) then
                             obj.element.eventHandler(obj.element, ...)
                         end
@@ -316,7 +320,7 @@ return function(name, basalt)
             if(base[v[1]]~=nil)then
                 if(base[v[1]](self, btn, x, y, ...))then
                     if(events[k]~=nil)then
-                        for _, obj in ipairs(orderedTable(events[k])) do
+                        for _, obj in ipairs(events[k]) do
                             if (obj.element[v[1]] ~= nil) then
                                 local xO, yO = 0, 0
                                 if(self.getOffset~=nil)then
@@ -342,7 +346,7 @@ return function(name, basalt)
             if(base[v]~=nil)then
                 if(base[v](self, ...))then
                     if(events[k]~=nil)then                    
-                        for _, obj in ipairs(orderedTable(events[k])) do
+                        for _, obj in ipairs(events[k]) do
                             if (obj.element[v] ~= nil) then
                                 if (obj.element[v](obj.element, ...)) then
                                     return true

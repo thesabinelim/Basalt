@@ -1,7 +1,5 @@
 local drawSystem = require("basaltDraw")
 local utils = require("utils")
-local rpairs = utils.rpairs
-local orderedTable = utils.orderedTable
 
 local max,min,sub,rep = math.max,math.min,string.sub,string.rep
 
@@ -86,7 +84,7 @@ return function(name, basalt)
                     if(updateRender)then
                         base.render(self)
                         local objects = self:getObjects()
-                        for _, obj in ipairs(orderedTable(objects)) do
+                        for _, obj in ipairs(objects) do
                             if (obj.element.render ~= nil) then
                                 obj.element:render()
                             end
@@ -127,16 +125,14 @@ return function(name, basalt)
             local obx, oby = self:getPosition()
             x = x + xOffset
             y = y + yOffset
-            local w, h = self:getWidth(), self:getHeight()
-            local xPos = x + obx - 1
-            local yPos = oby + y - 1
+            local w, h = self:getSize()
+        
             if y >= 1 and y <= h then
-                local xMin = x < 1 and 1 - x + 1 or 1
-                local xMax = x > w and w - x + 1 or w
-                t = sub(t, xMin, xMax)
-                f = sub(f, xMin, xMax)
-                b = sub(b, xMin, xMax)
-                basaltDraw.blit(xPos, yPos, t, f, b)
+                local t_visible = sub(t, max(1 - x + 1, 1), max(w - x + 1, 1))
+                local f_visible = sub(f, max(1 - x + 1, 1), max(w - x + 1, 1))
+                local b_visible = sub(b, max(1 - x + 1, 1), max(w - x + 1, 1))
+        
+                basaltDraw.blit(max(x + (obx - 1), obx), oby + y - 1, t_visible, f_visible, b_visible)
             end
         end,
 

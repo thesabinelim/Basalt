@@ -228,19 +228,24 @@ return {
             end
         end
 
-        local function createAnimation(self, v1, v2, duration, mode, typ, get, set)
+        local function createAnimation(self, v1, v2, duration, timeOffset, mode, typ, get, set, finished)
             local v1Val, v2Val = get(self)
             if(activeAnimations[typ]~=nil)then
                 os.cancelTimer(activeAnimations[typ].timerId)
             end
             activeAnimations[typ] = {}
-                activeAnimations[typ].call = function()
-                    local progress = activeAnimations[typ].progress
-                    local _v1 = math.floor(lerp.lerp(v1Val, v1, lerp[mode](progress / duration))+0.5)
-                    local _v2 = math.floor(lerp.lerp(v2Val, v2, lerp[mode](progress / duration))+0.5)
-                    set(self, _v1, _v2)
-                end
-            activeAnimations[typ].timerId=os.startTimer(0.05)
+            activeAnimations[typ].call = function()
+                local progress = activeAnimations[typ].progress
+                local _v1 = math.floor(lerp.lerp(v1Val, v1, lerp[mode](progress / duration))+0.5)
+                local _v2 = math.floor(lerp.lerp(v2Val, v2, lerp[mode](progress / duration))+0.5)
+                set(self, _v1, _v2)
+            end
+            activeAnimations[typ].finished = function()
+                if(finished~=nil)then finished() end
+                set(self, v1, v2)
+            end
+
+            activeAnimations[typ].timerId=os.startTimer(0.05+timeOffset)
             activeAnimations[typ].progress=0
             activeAnimations[typ].duration=duration
             activeAnimations[typ].mode=mode
@@ -248,24 +253,27 @@ return {
         end
 
         local object = {
-            animatePosition = function(self, x, y, duration, mode)
+            animatePosition = function(self, x, y, duration, timeOffset, mode)
                 mode = mode or defaultMode
                 duration = duration or 1
-                createAnimation(self, x, y, duration, mode, "position", self.getPosition, self.setPosition)
+                timeOffset = timeOffset or 0
+                createAnimation(self, x, y, duration, timeOffset, mode, "position", self.getPosition, self.setPosition)
                 return self
             end,
 
-            animateSize = function(self, w, h, duration, mode)
+            animateSize = function(self, w, h, duration, timeOffset, mode)
                 mode = mode or defaultMode
                 duration = duration or 1
-                createAnimation(self, w, h, duration, mode, "size", self.getSize, self.setSize)
+                timeOffset = timeOffset or 0
+                createAnimation(self, w, h, duration, timeOffset, mode, "size", self.getSize, self.setSize)
                 return self
             end,
 
-            animateOffset = function(self, x, y, duration, mode)
+            animateOffset = function(self, x, y, duration, timeOffset, mode)
                 mode = mode or defaultMode
                 duration = duration or 1
-                createAnimation(self, x, y, duration, mode, "size", self.getOffset, self.setOffset)
+                timeOffset = timeOffset or 0
+                createAnimation(self, x, y, duration, timeOffset, mode, "size", self.getOffset, self.setOffset)
                 return self
             end,
 
@@ -278,12 +286,13 @@ return {
                 end
             end,
 
-            onDone = function(self, ...)
+            onAnimationDone = function(self, ...)
                 for _,v in pairs(table.pack(...))do
                     if(type(v)=="function")then
                         self:registerEvent("animation_done", v)
                     end
                 end
+
                 return self
             end,
 
@@ -297,6 +306,7 @@ return {
                             animation.progress = animation.progress+0.05
                             animation.timerId=os.startTimer(0.05)
                         else
+                            animation.finished()
                             self:doneHandler(timerId)
                         end
                     end

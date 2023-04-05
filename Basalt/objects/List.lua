@@ -201,13 +201,10 @@ return function(name, basalt)
                 local w, h = self:getSize()
                 for n = 1, h do
                     if list[n + yOffset] then
-                        local t = utils.getTextHorizontalAlign(list[n + yOffset].text, w, textAlign)
+                        local t = list[n + yOffset].text
                         local fg, bg = list[n + yOffset].fgCol, list[n + yOffset].bgCol
-                        if list[n + yOffset] == self:getValue() then
+                        if list[n + yOffset] == self:getValue() and selectionColorActive then
                             fg, bg = itemSelectedFG, itemSelectedBG
-                            if not selectionColorActive then
-                                fg, bg = list[n + yOffset].fgCol, list[n + yOffset].bgCol
-                            end
                         end
                         self:addBlit(1, n, t, tHex[fg]:rep(#t), tHex[bg]:rep(#t))
                     end

@@ -43,7 +43,7 @@ local function stop()
     end
 end
 
-local function basaltError(errMsg)
+function basalt.basaltError(errMsg)
     baseTerm.clear()
     baseTerm.setBackgroundColor(colors.black)
     baseTerm.setTextColor(colors.red)
@@ -71,35 +71,9 @@ return function(...)
         if(ok)then
             table.insert(schedules, co)
         else
-            basaltError(result)
+            basalt.basaltError(result)
         end
     end
-end
-
-basalt.debug = function(...)
-    local args = { ... }
-    if(mainFrame==nil)then print(...) return end
-    if (mainFrame.name ~= "basaltDebuggingFrame") then
-        if (mainFrame ~= basalt.debugFrame) then
-            basalt.debugLabel:setParent(mainFrame)
-        end
-    end
-    local str = ""
-    for key, value in pairs(args) do
-        str = str .. tostring(value) .. (#args ~= key and ", " or "")
-    end
-    basalt.debugLabel:setText("[Debug] " .. str)
-    for k,v in pairs(wrapText(str, basalt.debugList:getWidth()))do
-        basalt.debugList:addItem(v)
-    end
-    if (basalt.debugList:getItemCount() > 50) then
-        basalt.debugList:removeItem(1)
-    end
-    basalt.debugList:setValue(basalt.debugList:getItem(basalt.debugList:getItemCount()))
-    if(basalt.debugList.getItemCount() > basalt.debugList:getHeight())then
-        basalt.debugList:setOffset(basalt.debugList:getItemCount() - basalt.debugList:getHeight())
-    end
-    basalt.debugLabel:show()
 end
 
 basalt.log = function(...)
@@ -194,7 +168,7 @@ local function handleSchedules(event, p1, p2, p3, p4)
                 if (coroutine.status(schedules[n]) == "suspended")then
                     local ok, result = coroutine.resume(schedules[n], event, p1, p2, p3, p4)
                     if not(ok)then
-                        basaltError(result)
+                        basalt.basaltError(result)
                     end
                 else
                     table.insert(finished, n)
@@ -290,7 +264,7 @@ local function basaltUpdateEvent(event, ...)
         if(mouseEvent~=nil)then
             mouseEvent(mainFrame, ...)
             handleSchedules(event, ...)
-            drawFrames()
+            renderingUpdateEvent()
             return
         end
     end
@@ -306,7 +280,7 @@ local function basaltUpdateEvent(event, ...)
             end
         end
         handleSchedules(event, ...)
-        drawFrames()
+        renderingUpdateEvent()
         return
     end
 
@@ -325,7 +299,7 @@ local function basaltUpdateEvent(event, ...)
             end
             keyEvent(activeFrame, ...)
             handleSchedules(event, ...)
-            drawFrames()
+            renderingUpdateEvent()
             return
         end
     end
@@ -341,8 +315,8 @@ local function basaltUpdateEvent(event, ...)
             v:eventHandler(event, ...)
         end
         handleSchedules(event, ...)
+        renderingUpdateEvent()
     end
-    drawFrames()
 end
 
 basalt = {
@@ -407,10 +381,11 @@ basalt = {
                 basaltUpdateEvent(os.pullEventRaw())
             end
         end
-        local ok, err = xpcall(f, debug.traceback)
-        if not(ok)then
-            basaltError(err)
-            return
+        while updaterActive do
+            local ok, err = xpcall(f, debug.traceback)
+            if not(ok)then
+                basalt.basaltError(err)
+            end
         end
     end,
     
@@ -418,7 +393,7 @@ basalt = {
         if (event ~= nil) then
             local ok, err = xpcall(basaltUpdateEvent, debug.traceback, event, ...)
             if not(ok)then
-                basaltError(err)
+                basalt.basaltError(err)
                 return
             end
         end
@@ -450,6 +425,10 @@ basalt = {
             return true
         end
         return false
+    end,
+
+    getMainFrame = function()
+        return mainFrame
     end,
     
     onEvent = function(...)
@@ -486,8 +465,6 @@ basalt = {
     setProjectDir = function(dir)
         projectDirectory = dir
     end,
-
-    debug = basalt.debug,
 }
 
 _OBJECTS = pluginSystem.addPlugins(_OBJECTS, bInstance)
@@ -497,6 +474,7 @@ if(basaltPlugins~=nil)then
     for k,v in pairs(basaltPlugins)do
         for a,b in pairs(v(basalt))do
             basalt[a] = b
+            bInstance[a] = b
         end
     end
 end
@@ -508,20 +486,5 @@ if(basaltPlugins~=nil)then
         end
     end
 end
---[[
-basalt.debugFrame = basalt.createFrame("basaltDebuggingFrame"):showBar():setBackground(colors.lightGray):setBar("Debug", colors.black, colors.gray)
-basalt.debugFrame:addButton("back"):setAnchor("topRight"):setSize(1, 1):setText("\22"):onClick(function() if(basalt.oldFrame~=nil)then basalt.oldFrame:show() end end):setBackground(colors.red):show()
-basalt.debugList = basalt.debugFrame:addList("debugList"):setSize("parent.w - 2", "parent.h - 3"):setPosition(2, 3):setScrollable(true):show()
-basalt.debugLabel = basalt.debugFrame:addLabel("debugLabel"):onClick(function() basalt.oldFrame = mainFrame basalt.debugFrame:show() end):setBackground(colors.black):setForeground(colors.white):setAnchor("bottomLeft"):ignoreOffset():setZIndex(20):show()
-]]
 
-local args = {...}
-if(args[1]=="xml")then
-    if(fs.exists(args[2]))then
-        basalt.createFrame():loadLayout("test.xml")
-    else
-        print("File not found")
-    end
-else
-    return basalt
-end
+return basalt

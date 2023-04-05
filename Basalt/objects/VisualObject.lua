@@ -10,14 +10,6 @@ return function(name, basalt)
 
     local isVisible,ignOffset,isHovered,isClicked,isDragging = true,false,false,false,false
     local zIndex = 1
-    local anchor = "topLeft"
-
-    local borderColors = {
-        left = false,
-        right = false,
-        top = false,
-        bottom = false
-    }  
 
     local x, y, width, height = 1,1,1,1
     local dragStartX, dragStartY, dragXOffset, dragYOffset = 0, 0, 0, 0

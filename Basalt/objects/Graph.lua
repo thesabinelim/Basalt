@@ -22,13 +22,6 @@ return function(name)
         end,
         getType = function(self)
             return objectType
-        end;
-
-
-        setValuesByXMLData = function(self, data)
-            base.setValuesByXMLData(self, data)
-            
-            return self
         end,
 
         add = function(self, val)

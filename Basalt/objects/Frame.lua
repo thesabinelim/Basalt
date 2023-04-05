@@ -1,8 +1,6 @@
 local utils = require("utils")
-local rpairs = utils.rpairs
-local orderedTable = utils.orderedTable
 
-local max,min,sub,rep = math.max,math.min,string.sub,string.rep
+local max,min,sub,rep,len = math.max,math.min,string.sub,string.rep,string.len
 
 return function(name, basalt)
     local base = basalt.getObject("Container")(name, basalt)
@@ -50,7 +48,7 @@ return function(name, basalt)
                 if(self:isVisible())then
                     base.render(self)
                     local objects = self:getObjects()
-                    for _, obj in rpairs(orderedTable(objects)) do
+                    for _, obj in ipairs(objects) do
                         if (obj.element.render ~= nil) then
                             obj.element:render()
                         end
@@ -70,14 +68,16 @@ return function(name, basalt)
             local obx, oby = self:getPosition()
             x = x + xOffset
             y = y + yOffset
-            if (y >= 1) and (y <= self:getHeight()) then
-                local w = self:getWidth()
-                t = sub(t, max(1 - x + 1, 1), w - x + 1)
-                f = sub(f, max(1 - x + 1, 1), w - x + 1)
-                b = sub(b, max(1 - x + 1, 1), w - x + 1)
-                parent:blit(max(x + (obx - 1), obx), oby + y - 1, t, f, b)
+            local w, h = self:getSize()
+        
+            if y >= 1 and y <= h then
+                local t_visible = sub(t, max(1 - x + 1, 1), max(w - x + 1, 1))
+                local f_visible = sub(f, max(1 - x + 1, 1), max(w - x + 1, 1))
+                local b_visible = sub(b, max(1 - x + 1, 1), max(w - x + 1, 1))
+        
+                parent:blit(max(x + (obx - 1), obx), oby + y - 1, t_visible, f_visible, b_visible)
             end
-        end,
+        end,      
 
         setCursor = function(self, blink, x, y, color)
             local obx, oby = self:getPosition()
