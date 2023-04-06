@@ -694,19 +694,69 @@ return {
         return object
     end,
 
-}
-
-
---[[
-    TEMPLATE_ = function(base, basalt)
+    Graph = function(base, basalt)
         local object = { 
             setValuesByXMLData = function(self, data, scripts)
                 base.setValuesByXMLData(self, data, scripts)
-    
-                
+                local symbol, symbolCol = self:getGraphSymbol()
+                if(xmlValue("maxEntries", data)~=nil)then self:setMaxEntries(xmlValue("maxEntries", data)) end
+                if(xmlValue("type", data)~=nil)then self:setGraphType(xmlValue("type", data)) end
+                if(xmlValue("minValue", data)~=nil)then self:setMinValue(xmlValue("minValue", data)) end
+                if(xmlValue("maxValue", data)~=nil)then self:setMaxValue(xmlValue("maxValue", data)) end
+                if(xmlValue("symbol", data)~=nil)then symbol = xmlValue("symbol", data) end
+                if(xmlValue("symbolColor", data)~=nil)then symbolCol = xmlValue("symbolColor", data) end
+                self:setGraphSymbol(symbol, symbolCol)
+                if(data["item"]~=nil)then
+                    local tab = data["item"]
+                    if(tab.properties~=nil)then tab = {tab} end
+                    for k,v in pairs(tab)do
+                        self:addDataPoint(xmlValue("value"))
+                    end
+                end
                 return self
             end,
         }
         return object
     end,
-]]
+
+    Treeview = function(base, basalt)
+        local object = { 
+            setValuesByXMLData = function(self, data, scripts)
+                base.setValuesByXMLData(self, data, scripts)
+                local selBg, selFg = self:getSelectionColor()
+                local xOffset, yOffset = self:getOffset()
+                if(xmlValue("space", data)~=nil)then self:setSpace(xmlValue("space", data)) end
+                if(xmlValue("scrollable", data)~=nil)then self:setScrollable(xmlValue("scrollable", data)) end
+                if(xmlValue("selectionBg", data)~=nil)then selBg = xmlValue("selectionBg", data) end
+                if(xmlValue("selectionFg", data)~=nil)then selFg = xmlValue("selectionFg", data) end
+                self:setSelectionColor(selBg, selFg)
+                if(xmlValue("xOffset", data)~=nil)then xOffset = xmlValue("xOffset", data) end
+                if(xmlValue("yOffset", data)~=nil)then yOffset = xmlValue("yOffset", data) end
+                self:setOffset(xOffset, yOffset)
+                local function addNode(node, data)
+                    if(data["node"]~=nil)then
+                        local tab = data["node"]
+                        if(tab.properties~=nil)then tab = {tab} end
+                        for k,v in pairs(tab)do
+                            local n = node:addNode(xmlValue("text", v), colors[xmlValue("bg", v)], colors[xmlValue("fg", v)])
+                            addNode(n, v)
+                        end
+                    end
+                end
+                if(data["node"]~=nil)then
+                    local tab = data["node"]
+                    if(tab.properties~=nil)then tab = {tab} end
+                    for k,v in pairs(tab)do
+                        local n = self:addNode(xmlValue("text", v), colors[xmlValue("bg", v)], colors[xmlValue("fg", v)])
+                        addNode(n, v)
+                    end
+                end
+
+
+                return self
+            end,
+        }
+        return object
+    end,
+
+}

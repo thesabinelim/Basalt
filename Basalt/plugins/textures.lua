@@ -30,6 +30,11 @@ return {
                 return self
             end,
 
+            setInfinitePlay = function(self, state)
+                infinitePlay = state
+                return self
+            end,
+
             eventHandler = function(self, event, timerId, ...)
                 base.eventHandler(self, event, timerId, ...)
                 if(event=="timer")then
@@ -102,6 +107,14 @@ return {
                 end, 1)
                 self:setDrawState("texture-base", false)
             end,
+
+            setValuesByXMLData = function(self, data)
+                base.setValuesByXMLData(self, data)
+                if(xmlValue("texture", data)~=nil)then self:addTexture(xmlValue("texture", data), xmlValue("animate", data)) end
+                if(xmlValue("textureMode", data)~=nil)then self:setTextureMode(xmlValue("textureMode", data)) end
+                if(xmlValue("infinitePlay", data)~=nil)then self:setInfinitePlay(xmlValue("infinitePlay", data)) end
+                return self
+            end
         }
 
         return object

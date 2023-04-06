@@ -9,6 +9,10 @@ return {
                 return self
             end,
 
+            getShadow = function(self)
+                return shadow
+            end,
+
             draw = function(self)
                 base.draw(self)
                 self:addDraw("shadow", function()
@@ -23,6 +27,12 @@ return {
                     end
                 end)
             end,
+
+            setValuesByXMLData = function(self, data)
+                base.setValuesByXMLData(self, data)
+                if(xmlValue("shadow", data)~=nil)then self:setShadow(xmlValue("shadow", data)) end
+                return self
+            end
         }
 
         return object

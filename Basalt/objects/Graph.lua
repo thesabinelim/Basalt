@@ -6,9 +6,9 @@ return function(name, basalt)
     base:setSize(30, 10)
 
     local graphData = {}
-    local graphColor = colors.black
+    local graphColor = colors.gray
     local graphSymbol = "\7"
-    local graphSymbolCol = colors.white
+    local graphSymbolCol = colors.black
     local maxValue = 100
     local minValue = 0
     local graphType = "line"
@@ -40,6 +40,9 @@ return function(name, basalt)
             if value >= minValue and value <= maxValue then
                 table.insert(graphData, value)
                 self:updateDraw()
+            end
+            if(#graphData>100)then -- 100 is hard capped to prevent memory leaks
+                table.remove(graphData,1)
             end
             return self
         end,
