@@ -13,6 +13,23 @@ return function(name, basalt)
     local activeEvents = {}
 
     local focusedObject
+    local sorted = true
+    local objId, evId = 0, 0
+
+    local objSort = function(a, b)
+        if a.zIndex == b.zIndex then
+            return a.objId < b.objId
+        else
+            return a.zIndex < b.zIndex
+        end
+    end
+    local evSort = function(a, b)
+        if a.zIndex == b.zIndex then
+            return a.evId > b.evId
+        else
+            return a.zIndex > b.zIndex
+        end
+    end
 
     local function getObject(self, name)
         if(type(name)=="table")then name = name:getName() end
@@ -38,17 +55,10 @@ return function(name, basalt)
         if (getObject(element:getName()) ~= nil) then
             return
         end
+        objId = objId + 1
         local zIndex = element:getZIndex()
-        local timestamp = os.clock()
-        table.insert(elements, {element = element, zIndex = zIndex, timestamp = timestamp})
-        table.sort(elements, function(a, b)
-            if a.zIndex == b.zIndex then
-                if(a.timestamp == b.timestamp)then return true end
-                return a.timestamp < b.timestamp
-            else
-                return a.zIndex < b.zIndex
-            end
-        end)
+        table.insert(elements, {element = element, zIndex = zIndex, objId = objId})
+        sorted = false
         element:setParent(self, true)
         if(element.init~=nil)then element:init() end
         if(element.load~=nil)then element:load() end
@@ -57,38 +67,24 @@ return function(name, basalt)
     end
 
     local function updateZIndex(self, element, newZ)
-        local timestamp = os.clock()
+        objId = objId + 1
+        evId = evId + 1
         for k,v in pairs(elements)do
             if(v.element==element)then
                 v.zIndex = newZ
-                v.timestamp = timestamp
+                v.objId = objId
                 break
             end
         end
-        table.sort(elements, function(a, b)
-            if a.zIndex == b.zIndex then
-                if(a.timestamp == b.timestamp)then return true end
-                return a.timestamp < b.timestamp
-            else
-                return a.zIndex < b.zIndex
-            end
-        end)
         for k,v in pairs(events)do
             for a,b in pairs(v)do
                 if(b.element==element)then
                     b.zIndex = newZ
-                    b.timestamp = timestamp
+                    b.evId = evId
                 end
             end
-            table.sort(events[k], function(a, b)
-                if a.zIndex == b.zIndex then
-                    if(a.timestamp == b.timestamp)then return false end
-                    return a.timestamp > b.timestamp
-                else
-                    return a.zIndex > b.zIndex
-                end
-            end)
         end
+        sorted = false
         self:updateDraw()
     end
 
@@ -101,6 +97,7 @@ return function(name, basalt)
                 return true
             end
         end
+        sorted = false
     end
 
     local function removeEvents(self, element)
@@ -118,6 +115,7 @@ return function(name, basalt)
                 end
             end
         end
+        sorted = false
     end
 
     local function getEvent(self, event, name)
@@ -136,17 +134,10 @@ return function(name, basalt)
             return
         end
         local zIndex = element:getZIndex() 
-        local timestamp = os.clock()
+        evId = evId + 1
         if(events[event]==nil)then events[event] = {} end
-        events[event][#events[event] + 1] = {element = element, zIndex = zIndex, timestamp = timestamp}
-        table.sort(events[event], function(a, b)
-            if a.zIndex == b.zIndex then
-                if(a.timestamp == b.timestamp)then return false end
-                return a.timestamp > b.timestamp
-            else
-                return a.zIndex > b.zIndex
-            end
-        end)
+        table.insert(events[event], {element = element, zIndex = zIndex, evId = evId})
+        sorted = false
         self:listenEvent(event)
         return element
     end
@@ -163,9 +154,11 @@ return function(name, basalt)
                 self:listenEvent(event, false)
             end
         end
+        sorted = false
     end
 
     local function getObjects(self)
+        self:sortElementOrder()
         return elements
     end
 
@@ -195,44 +188,39 @@ return function(name, basalt)
         end,
 
         setImportant = function(self, element)
-            local timestamp = os.clock()
+            objId = objId + 1
+            evId = evId + 1
             for a, b in pairs(events) do
                 for c, d in pairs(b) do
                     if(d.element == element)then
-                        d.timestamp = timestamp
+                        d.evId = evId
                         table.remove(events[a], c)
                         table.insert(events[a], d)
                         break
                     end
                 end
-                table.sort(events[a], function(a, b)
-                    if a.zIndex == b.zIndex then
-                        if(a.timestamp == b.timestamp)then return false end
-                        return a.timestamp > b.timestamp
-                    else
-                        return a.zIndex > b.zIndex
-                    end
-                end)
             end
             for i, v in ipairs(elements) do
                 if v.element == element then
-                    v.timestamp = timestamp
+                    v.objId = objId
                     table.remove(elements, i)
                     table.insert(elements, v)
                     break
                 end
             end
-            table.sort(elements, function(a, b)
-                if a.zIndex == b.zIndex then
-                    if(a.timestamp == b.timestamp)then return true end
-                    return a.timestamp < b.timestamp
-                else
-                    return a.zIndex < b.zIndex
-                end
-            end)
             if(self.updateDraw~=nil)then
                 self:updateDraw()
             end
+            sorted = false
+        end,
+
+        sortElementOrder = function(self)
+            if(sorted)then return end
+            table.sort(elements, objSort)
+            for a, b in pairs(events) do
+                table.sort(events[a], evSort)
+            end
+            sorted = true
         end,
 
         removeFocusedObject = function(self)
@@ -305,6 +293,7 @@ return function(name, basalt)
             if(base.eventHandler~=nil)then
                 base.eventHandler(self, ...)
                 if(events["other_event"]~=nil)then
+                    self:sortElementOrder()
                     for _, obj in ipairs(events["other_event"]) do
                         if (obj.element.eventHandler ~= nil) then
                             obj.element.eventHandler(obj.element, ...)
@@ -320,6 +309,7 @@ return function(name, basalt)
             if(base[v[1]]~=nil)then
                 if(base[v[1]](self, btn, x, y, ...))then
                     if(events[k]~=nil)then
+                        self:sortElementOrder()
                         for _, obj in ipairs(events[k]) do
                             if (obj.element[v[1]] ~= nil) then
                                 local xO, yO = 0, 0
@@ -345,7 +335,8 @@ return function(name, basalt)
         container[v] = function(self, ...)
             if(base[v]~=nil)then
                 if(base[v](self, ...))then
-                    if(events[k]~=nil)then                    
+                    if(events[k]~=nil)then  
+                        self:sortElementOrder()                  
                         for _, obj in ipairs(events[k]) do
                             if (obj.element[v] ~= nil) then
                                 if (obj.element[v](obj.element, ...)) then

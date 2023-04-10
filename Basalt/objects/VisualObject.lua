@@ -74,14 +74,10 @@ return function(name, basalt)
             return isVisible
         end,
 
-        setVisibility = function(self, _isVisible)
+        setVisible = function(self, _isVisible)
             isVisible = _isVisible or not isVisible
             self:updateDraw()
             return self
-        end,
-
-        getVisibility = function(self)
-            return isVisible
         end,
 
         setTransparency = function(self, _transparency)
@@ -214,16 +210,6 @@ return function(name, basalt)
             ignOffset = ignore
             if(ignore==nil)then ignOffset = true end
             return self
-        end,
-
-        setAnchor = function(self, newAnchor)
-            anchor = newAnchor
-            self:updateDraw()
-            return self
-        end,
-
-        getAnchor = function(self)
-            return anchor
         end,
 
         isCoordsInObject = function(self, x, y)

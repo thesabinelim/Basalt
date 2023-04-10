@@ -65,7 +65,6 @@ return function(name, basalt)
                 local obx, oby = self:getPosition()
                 local w,h = self:getSize()
                 local bgCol,fgCol = self:getBackground(), self:getForeground()
-                local verticalAlign = utils.getTextVerticalAlign(h, textVerticalAlign)
                 if not(autoSize)then
                     local text = wrapText(text, w)
                     for k,v in pairs(text)do

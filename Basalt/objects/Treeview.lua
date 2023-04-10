@@ -36,6 +36,24 @@ return function(name, basalt)
         return childNode
     end
 
+    function Node:setExpanded(expanded)
+        self.expanded = expanded
+        base:updateDraw()
+    end
+
+    function Node:isExpanded()
+        return self.expanded
+    end
+
+    function Node:setExpandable(expandable)
+        self.expandable = expandable
+        base:updateDraw()
+    end
+
+    function Node:isExpandable()
+        return self.expandable
+    end
+
     function Node:removeChild(index)
         table.remove(self.children, index)
     end
@@ -217,8 +235,9 @@ return function(name, basalt)
                         local fg = (node == lastClickedNode) and itemSelectedFG or self:getForeground()
         
                         self:addBlit(1 + level + xOffset, currentLine, node.text, tHex[fg]:rep(#node.text), tHex[bg]:rep(#node.text))
-                        currentLine = currentLine + 1
                     end
+        
+                    currentLine = currentLine + 1
         
                     if(node.expandable)then
                         if node.expanded then

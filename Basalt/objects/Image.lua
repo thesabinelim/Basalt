@@ -47,6 +47,9 @@ return function(name, basalt)
         getType = function(self)
             return objectType
         end,
+        isType = function(self, t)
+            return objectType==t or base.isType~=nil and base.isType(t) or false
+        end,
 
         setOffset = function(self, _x, _y, rel)
             if(rel)then
@@ -252,5 +255,6 @@ return function(name, basalt)
         end,
     }
 
+    object.__index = object
     return setmetatable(object, base)
 end

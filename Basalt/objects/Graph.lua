@@ -53,10 +53,18 @@ return function(name, basalt)
             return self
         end,
 
+        getMaxValue = function(self)
+            return maxValue
+        end,
+
         setMinValue = function(self, value)
             minValue = value
             self:updateDraw()
             return self
+        end,
+
+        getMinValue = function(self)
+            return minValue
         end,
 
         setGraphType = function(self, graph_type)
@@ -92,8 +100,9 @@ return function(name, basalt)
 
                 for i = startIndex, #graphData do
                     local data = graphData[i]
-                    local x = math.floor((w / (maxEntries + 1)) * (i - startIndex + 1) + 0.5)
-                    local y = math.floor(h - (h / range) * (data - minValue) + 0.5)
+                    local x = math.floor(((w - 1) / (maxEntries - 1)) * (i - startIndex) + 1.5)
+                    local y = math.floor((h - 1) - ((h - 1) / range) * (data - minValue) + 1.5)
+
 
                     if graphType == "scatter" then
                         self:addBackgroundBox(x, y, 1, 1, graphColor)

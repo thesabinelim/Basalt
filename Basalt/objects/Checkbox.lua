@@ -46,7 +46,7 @@ return function(name, basalt)
             return self
         end,
 
-        setChecked = self.setValue,
+        setChecked = base.setValue,
 
         mouseHandler = function(self, button, x, y)
             if (base.mouseHandler(self, button, x, y)) then

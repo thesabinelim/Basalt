@@ -48,6 +48,10 @@ return function(name, basalt)
             return objectType==t or base.isType~=nil and base.isType(t) or false
         end,
 
+        setDirection = function(self, dir)
+            direction = dir=="horizontal" and 1 or dir=="vertical" and 0 or direction
+            return self
+        end,
 
         getBase = function(self)
             return base
