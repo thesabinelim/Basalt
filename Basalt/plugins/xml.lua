@@ -385,7 +385,7 @@ return {
             setValuesByXMLData = function(self, data, scripts)
                 base.setValuesByXMLData(self, data, scripts)
                 if(xmlValue("text", data)~=nil)then self:setText(xmlValue("text", data)) end
-                if(xmlValue("textAlign", data)~=nil)then self:setTextAlign(xmlValue("textAlign", data)) end
+                if(xmlValue("align", data)~=nil)then self:setTextAlign(xmlValue("align", data)) end
                 return self
             end,
         }

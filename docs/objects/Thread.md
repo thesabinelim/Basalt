@@ -1,65 +1,33 @@
-Threads are being executed simultaneously.
-<br>
+Threads are objects that allow you to run code concurrently in the background, without blocking the main program. They use coroutines in the background to achieve this behavior. Threads do not inherit from the VisualObject class, as they are not visible elements.
 
-## start
-starts a new thread and executes the function
-#### Parameters: 
-1. `function` the function which should be executed
+In addition to the Object methods, Threads have the following methods:
 
-#### Returns:
-1. `object` The object in use
+|   |   |
+|---|---|
+|[start](objects/Thread/start.md)|Starts a new thread and executes the specified function
+|[stop](objects/Thread/stop.md)|Stops the currently running thread
+|[getStatus](objects/Thread/getStatus.md)|Returns the current thread status
 
-#### Usage:
-* Starts a new thread
+## Example
+
+Here's an example of how to create and use a Thread object:
+
 ```lua
-local mainFrame = basalt.createFrame()
-local aThread = mainFrame:addThread()
-local function randomThreadFunction()
-    while true do
-        basalt.debug("Thread is active")
-        os.sleep(1) -- a sleep/coroutine.yield() or pullEvent is required otherwise we will never come back to the main program (error)
-    end
+-- Function that will be executed in a separate thread
+local function backgroundTask()
+  for i = 1, 5 do
+    basalt.debug("Running in the background:", i)
+    os.sleep(1)
+  end
 end
-aThread:start(randomThreadfunction)
-```
-you are also able to start threads via xml:
-```lua
-    basalt.setVariable("myThread", function() while true do os.sleep(1) end end)
-```
-```xml
-<thread thread="myThread" start="true"/>
-```
 
-## stop
-stops the thread
+-- Create a new Thread object
+local main = basalt.createFrame()
+local myThread = main:addThread()
 
-#### Returns:
-1. `object` The object in use
+-- Start the thread
+myThread:start(backgroundTask)
 
-#### Usage:
-* Stops the current running thread by clicking on a button
-```lua
-local mainFrame = basalt.createFrame()
-local aThread = mainFrame:addThread()
-local function randomThreadFunction()
-    while true do
-        basalt.debug("Thread is active")
-        os.sleep(1) -- a sleep/coroutine.yield() or pullEvent is required otherwise we will never come back to the main program (error)
-    end
-end
-aThread:start(randomThreadfunction)
-local aButton = mainFrame:addButton():setText("Stop Thread"):onClick(function() aThread:stop() end)
-```
-
-## getStatus
-gets the current thread status
-
-#### Returns:
-1. `string` current status - ("running", "normal", "suspended", "dead")
-
-#### Usage:
-```lua
-local mainFrame = basalt.createFrame()
-local aThread = mainFrame:addThread()
-basalt.debug(aThread:getStatus())
+-- Optionally stop the thread (not needed in this example, as the thread will finish on its own)
+-- myThread:stop()
 ```

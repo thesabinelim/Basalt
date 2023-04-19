@@ -1,134 +1,38 @@
-Progressbars are objects to visually display the current state of your progression. They always go from 0 to 100 (%) - no matter how big they are. which means if you
-want to add some energy progress you have to do simple maths: currentValue / maxValue * 100
+Progressbars are objects that visually display the current state of your progress. They always represent progress as a percentage (0 to 100%), regardless of their size. To represent progress in other units, you need to perform a simple conversion: currentValue / maxValue * 100.
 
-Here are all possible functions available for progessbars. Remember progressbar inherits from [Object](objects/Object.md)
+In addition to the Object and VisualObject methods, Progressbar objects have the following methods:
 
-## setDirection
-Sets the direction in which the bar should be expanding.
+|   |   |
+|---|---|
+|[setDirection](objects/Progressbar/setDirection.md)|Sets the progress direction
+|[setProgress](objects/Progressbar/setProgress.md)|Sets the current progress
+|[getProgress](objects/Progressbar/getProgress.md)|Returns the current progress
+|[setProgressBar](objects/Progressbar/setProgressBar.md)|Changes the progress design
+|[setBackgroundSymbol](objects/Progressbar/setBackgroundSymbol.md)|Sets the background symbol
 
-#### Parameters: 
-1. `number` x direction (0 = left to right, 1 = top to bottom, 2 = right to left and 3 = bottom to top)
+## Events
 
-#### Returns:
-1. `object` The object in use
+This is a list of all available events for progressbars:
 
-#### Usage:
-* Creates a progressbar and sets the direction from bottom to top
-```lua
-local mainFrame = basalt.createFrame()
-local aProgressbar = mainFrame:addProgressbar()
-aProgressbar:setDirection(3)
-```
-```xml
-<frame direction="3"></frame>
-```
+|   |   |
+|---|---|
+|[onDone](objects/Progressbar/onDone.md)|Fires when progress has reached 100%
 
-## setProgress
-This is the function you need to call if you want the progression to change.
+## Example
 
-#### Parameters: 
-1. `number` a number from 0 to 100
-
-#### Returns:
-1. `object` The object in use
-
-#### Usage:
-* Creates a progressbar and sets the current progress to 50
-```lua
-local mainFrame = basalt.createFrame()
-local aProgressbar = mainFrame:addProgressbar()
-aProgressbar:setProgress(50)
-```
-
-## getProgress
-Returns the current progress status
-
-#### Returns:
-1. `number` progress (0-100)
-
-#### Usage:
-* Creates a progressbar, sets the current progress to 50 and prints the current progress
-```lua
-local mainFrame = basalt.createFrame()
-local aProgressbar = mainFrame:addProgressbar()
-aProgressbar:setProgress(50)
-basalt.debug(aProgressbar:getProgress())
-```
-
-## setProgressBar
-This function will change the visual display of your progress bar
-
-#### Parameters: 
-1. `number|color` the expanding progress bar color
-2. `char` optional - the bar symbol - default is " " (space)
-3. `number|color` optional - the bar symbol color
-
-#### Returns:
-1. `object` The object in use
-
-#### Usage:
-* Creates a progressbar and sets the progressbar color to green
-```lua
-local mainFrame = basalt.createFrame()
-local aProgressbar = mainFrame:addProgressbar()
-aProgressbar:setProgressBar(colors.green, colors.yellow, colors.red)
-```
-```xml
-<progressbar progressColor="green" progressSymbol="yellow" progressSymbolColor="red" />
-```
-
-## setBackgroundSymbol
-Will change the default background symbol (default is " " - space)
-
-#### Parameters: 
-1. `char` the background symbol
-
-#### Returns:
-1. `object` The object in use
-
-#### Usage:
-* Creates a progressbar and sets the progressbar background symbol to X
-```lua
-local mainFrame = basalt.createFrame()
-local aProgressbar = mainFrame:addProgressbar()
-aProgressbar:setBackgroundSymbol("X")
-```
-```xml
-<progressbar backgroundSymbol="X" />
-```
-
-# Events
-
-## onProgressDone
-`onProgressDone(self)`<br>
-A custom event which gets triggered as soon as the progress reaches 100.
-
-Here is a example on how to add a onProgressDone event to your progressbar:
+Here's an example of how to create a Progressbar object and set its properties:
 
 ```lua
-local basalt = require("Basalt")
-
 local mainFrame = basalt.createFrame()
-local aProgressbar = mainFrame:addProgressbar()
+local progressBar = mainFrame:addProgressbar()
 
-function progressDone()
-  basalt.debug("The Progressbar reached 100%!")
-end
-aProgressbar:onProgressDone(progressDone)
-```
+progressBar:setDirection("right")
+progressBar:setProgress(50)
+progressBar:setProgressBar(colors.blue)
 
-Here is also a example how this is done with xml:
-
-```lua
-local basalt = require("Basalt")
-
-local mainFrame = basalt.createFrame()
-
-basalt.setVariable("progressDone", function()
-  basalt.debug("The Progressbar reached 100%!")
+progressBar:onDone(function()
+  basalt.log("Progress completed")
 end)
 ```
-```xml
-<progressbar onDone="progressDone" />
-```
 
+This example demonstrates how to create a Progressbar object, set its direction, progress, design, and background symbol, and handle the onDone event.

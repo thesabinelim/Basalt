@@ -228,7 +228,7 @@ return {
             end
         end
 
-        local function createAnimation(self, v1, v2, duration, timeOffset, mode, typ, get, set, finished)
+        local function createAnimation(self, v1, v2, duration, timeOffset, mode, typ, f, get, set)
             local v1Val, v2Val = get(self)
             if(activeAnimations[typ]~=nil)then
                 os.cancelTimer(activeAnimations[typ].timerId)
@@ -241,7 +241,7 @@ return {
                 set(self, _v1, _v2)
             end
             activeAnimations[typ].finished = function()
-                if(finished~=nil)then finished() end
+                if(f~=nil)then f(self) end
                 set(self, v1, v2)
             end
 
@@ -253,27 +253,27 @@ return {
         end
 
         local object = {
-            animatePosition = function(self, x, y, duration, timeOffset, mode)
+            animatePosition = function(self, x, y, duration, timeOffset, mode, f)
                 mode = mode or defaultMode
                 duration = duration or 1
                 timeOffset = timeOffset or 0
-                createAnimation(self, x, y, duration, timeOffset, mode, "position", self.getPosition, self.setPosition)
+                createAnimation(self, x, y, duration, timeOffset, mode, "position", f, self.getPosition, self.setPosition)
                 return self
             end,
 
-            animateSize = function(self, w, h, duration, timeOffset, mode)
+            animateSize = function(self, w, h, duration, timeOffset, mode, f)
                 mode = mode or defaultMode
                 duration = duration or 1
                 timeOffset = timeOffset or 0
-                createAnimation(self, w, h, duration, timeOffset, mode, "size", self.getSize, self.setSize)
+                createAnimation(self, w, h, duration, timeOffset, mode, "size", f, self.getSize, self.setSize)
                 return self
             end,
 
-            animateOffset = function(self, x, y, duration, timeOffset, mode)
+            animateOffset = function(self, x, y, duration, timeOffset, mode, f)
                 mode = mode or defaultMode
                 duration = duration or 1
                 timeOffset = timeOffset or 0
-                createAnimation(self, x, y, duration, timeOffset, mode, "size", self.getOffset, self.setOffset)
+                createAnimation(self, x, y, duration, timeOffset, mode, "offset", f, self.getOffset, self.setOffset)
                 return self
             end,
 

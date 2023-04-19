@@ -1,73 +1,20 @@
-Buttons are objects, which execute something by clicking on them.<br>
+The Button object is derived from the VisualObject class and is used for creating interactive buttons in the Basalt framework. When a button is clicked, it can execute a predefined function, such as navigating to another screen or performing a specific action.
 
-Remember button also inherits from [Object](objects/Object.md)
+In addition to the Object and VisualObject methods, buttons also have the following methods:
 
-## setText
-Sets the displayed button text
-#### Parameters: 
-1. `string` the text the button should show
-
-#### Returns:
-1. `object` The object in use
-
-#### Usage:
-* Creates a button with "Click me!" as text.
-```lua
-local mainFrame = basalt.createFrame()
-local button = mainFrame:addButton():setText("Click me!")
-```
-```xml
-<button text="Click me!" />
-```
-
-## setHorizontalAlign
-Sets the horizontal align of the button text
-
-#### Parameters: 
-1. `string` the position as string ("left", "center", "right") - default is center.
-
-#### Returns:
-1. `object` The object in use
-
-#### Usage:
-* Sets the button's horizontal text align to right. 
-```lua
-local mainFrame = basalt.createFrame()
-local button = mainFrame:addButton()
-       :setText("Click me!")
-       :setHorizontalAlign("right")
-```
-```xml
-<button text="Click me!" horizontalAlign="right" />
-```
-
-## setVerticalAlign
-Sets the vertical align of the button text
-
-#### Parameters: 
-1. `string` the position as string ("top", "center", "bottom") - default is center.
-
-#### Returns:
-1. `object` The object in use
-
-#### Usage:
-* Sets the button's horizontal text align to right and the vertical text align to bottom. 
-```lua
-local mainFrame = basalt.createFrame()
-local button = mainFrame:addButton()
-       :setText("Click me!")
-       :setHorizontalAlign("right")
-       :setVerticalAlign("bottom")
-```
-```xml
-<button text="Click me!" horizontalAlign="right" verticalAlign="bottom" />
-```
+|   |   |
+|---|---|
+|[setText](objects/Button/setText.md)|Changes the button text
+|[setHorizontalAlign](objects/Button/setHorizontalAlign.md)|Changes the horizontal text position
+|[setVerticalAlign](objects/Button/setVerticalAlign.md)|Changes the vertical text position
 
 # Example
-This is a example on how you would create a fully working button:
+
+Here's an example of how to create a fully functional button using the Button object:
+
 ```lua
-local mainFrame = basalt.createFrame()
-local aButton = mainFrame:addButton():setText("Click")
+local main = basalt.createFrame()
+local aButton = main:addButton():setText("Click")
 
 aButton:onClick(function(self,event,button,x,y)
   if(event=="mouse_click")and(button==1)then
@@ -76,16 +23,16 @@ aButton:onClick(function(self,event,button,x,y)
 end)
 ```
 
-and this would be the xml way to do it:
-```lua
-local mainFrame = basalt.createFrame():addLayout("example.xml")
+Alternatively, you can create a button using an XML layout:
 
-basalt.setVariable("buttonClick", function(self,event,button,x,y)
-  if(event=="mouse_click")and(button==1)then
-    basalt.debug("Left mousebutton got clicked!")
-  end
-end)
-```
 ```xml
-<button onClick="buttonClick" text="Click" />
+<button onClick="buttonClick" text="Click">
+  <onClick>
+    if(event=="mouse_click")and(button==1)then
+      basalt.debug("Left mousebutton got clicked!")
+    end
+  </onClick>
+</button>
 ```
+
+In these examples, a button is created with the text "Click". When the left mouse button is clicked on the button, the message "Left mouse button got clicked!" is printed.

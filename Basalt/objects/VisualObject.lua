@@ -398,6 +398,7 @@ return function(name, basalt)
 
         addDraw = function(self, name, f, pos, typ, active)
             local queue = (typ==nil or typ==1) and drawQueue or typ==2 and preDrawQueue or typ==3 and postDrawQueue
+            pos = pos or #queue+1
             if(name~=nil)then
                 for k,v in pairs(queue)do
                     if(v.name==name)then 
@@ -406,7 +407,7 @@ return function(name, basalt)
                     end
                 end
                 local t = {name=name, f=f, pos=pos, active=active~=nil and active or true}
-                table.insert(queue, pos or #queue+1, t)
+                table.insert(queue, pos, t)
             end
             self:updateDraw()
             return self

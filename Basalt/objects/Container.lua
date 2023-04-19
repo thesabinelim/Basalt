@@ -187,6 +187,26 @@ return function(name, basalt)
             return self
         end,
 
+        searchObjects = function(self, name)
+            local t = {}
+            for k,v in pairs(elements)do
+                if(string.find(k:getName(), name))then
+                    table.insert(t, v)
+                end
+            end
+            return t
+        end,
+
+        getObjectsByType = function(self, t)
+            local t = {}
+            for k,v in pairs(elements)do
+                if(v:isType(t))then
+                    table.insert(t, v)
+                end
+            end
+            return t
+        end,
+
         setImportant = function(self, element)
             objId = objId + 1
             evId = evId + 1
@@ -246,8 +266,9 @@ return function(name, basalt)
                     end
                 end
                 focusedObject = obj
+                return true
             end
-            return self
+            return false
         end,
 
         getFocusedObject = function(self)

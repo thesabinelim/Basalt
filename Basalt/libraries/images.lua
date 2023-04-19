@@ -8,8 +8,8 @@ local function loadNFP(path)
     return paintutils.loadImage(path), "nfp"
 end
 
-local function loadBIMG(path)
-    local f = fs.open(path, "rb")
+local function loadBIMG(path, binaryMode)
+    local f = fs.open(path, binaryMode and "rb" or "r")
     if(f==nil)then error("Path - "..path.." doesn't exist!") end
     local content = textutils.unserialize(f.readAll())
     f.close()
@@ -26,13 +26,13 @@ local function loadBBFAsBimg(path)
 
 end
 
-local function loadImage(path, f)
+local function loadImage(path, f, binaryMode)
     if(sub(path, -4) == ".bimg")then
-        return loadBIMG(path)
+        return loadBIMG(path, binaryMode)
     elseif(sub(path, -3) == ".bbf")then
-        return loadBBF(path)
+        return loadBBF(path, binaryMode)
     else
-        return loadNFP(path)
+        return loadNFP(path, binaryMode)
     end
     -- ...
 end

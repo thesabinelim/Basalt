@@ -510,13 +510,13 @@ return function(name, basalt)
             return paused
         end;
 
-        injectEvent = function(self, event, p1, p2, p3, p4, ign)
+        injectEvent = function(self, event, ign, ...)
             if (curProcess ~= nil) then
                 if not (curProcess:isDead()) then
                     if (paused == false) or (ign) then
-                        resumeProcess(self, event, p1, p2, p3, p4)
+                        resumeProcess(self, event, ...)
                     else
-                        table.insert(queuedEvent, { event = event, args = { p1, p2, p3, p4 } })
+                        table.insert(queuedEvent, { event = event, args = {...} })
                     end
                 end
             end
@@ -532,10 +532,10 @@ return function(name, basalt)
             return self
         end;
 
-        injectEvents = function(self, events)
+        injectEvents = function(self, ...)
             if (curProcess ~= nil) then
                 if not (curProcess:isDead()) then
-                    for _, value in pairs(events) do
+                    for _, value in pairs({...}) do
                         resumeProcess(self, value.event, table.unpack(value.args))
                     end
                 end

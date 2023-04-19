@@ -124,6 +124,17 @@ return function(name, basalt)
             return self
         end,
 
+        setImage = function(self, t)
+            if(type(t)=="table")then
+                imgData = bimg(t)
+                selectedFrame = 1
+                bimgFrame = imgData.getFrameObject(1)
+                image = bimgFrame.getImage()
+                self:updateDraw()
+            end
+            return self
+        end,
+
         clear = function(self)
             imgData = bimg()
             image = nil

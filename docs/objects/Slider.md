@@ -1,108 +1,29 @@
-Sliders are objects, the user can scroll vertically or horizontally, this will change a value, which you can access by :getValue().<br>
+Sliders are objects that allow users to scroll vertically or horizontally, which in turn changes a value that you can access using the :getValue() method.
 
-Remember slider also inherits from [Object](objects/Object.md)
+Sliders inherit methods from ChangeableObject, which itself inherits methods from VisualObject and Object. This means that Slider objects can also use the setValue, getValue, and onChange event methods from ChangeableObject, as well as methods from VisualObject and Object.
 
-## setSymbol
-Changes the slider symbol, default is " "
+|   |   |
+|---|---|
+|[setSymbol](objects/Slider/setSymbol.md)|Sets the slider symbol
+|[setBackgroundSymbol](objects/Slider/setBackgroundSymbol.md)|Sets the background symbol
+|[setBarType](objects/Slider/setBarType.md)|Sets the bar type (vertical or horizontal)
+|[setMaxValue](objects/Slider/setMaxValue.md)|Sets the maximum value
+|[setIndex](objects/Slider/setIndex.md)|Sets the current index
+|[getIndex](objects/Slider/getIndex.md)|Returns the index
 
-#### Parameters: 
-1. `string` symbol
+## Example
 
-#### Returns:
-1. `object` The object in use
+Here's an example of how to create a Slider object and set its properties:
 
-#### Usage:
-* Creates a new slider and changes the symbol to X
 ```lua
 local mainFrame = basalt.createFrame()
-local slider = mainFrame:addSlider():setSymbol("X")
-```
-```xml
-<slider symbol="X" />
-```
+local slider = mainFrame:addSlider()
 
-## setBackgroundSymbol
-Changes the symbol in the background, default is "\140"
+slider:setBarType("horizontal")
+slider:setMaxValue(100)
+slider:setIndex(50)
 
-#### Parameters: 
-1. `string` symbol
-
-#### Returns:
-1. `object` The object in use
-
-#### Usage:
-* Creates a new slider and changes the background symbol to X
-```lua
-local mainFrame = basalt.createFrame()
-local slider = mainFrame:addSlider():setBackgroundSymbol("X")
-```
-```xml
-<slider backgroundSymbol="X" />
-```
-
-## setBarType
-Changes the slider to be vertical or horizontal, default is horizontal
-
-#### Parameters: 
-1. `string` vertical or horizontal
-
-#### Returns:
-1. `object` The object in use
-
-#### Usage:
-* Creates a new slider and changes the bar type to horizontal
-```lua
-local mainFrame = basalt.createFrame()
-local slider = mainFrame:addSlider():setBarType("vertical")
-```
-```xml
-<slider barType="vertical" />
-```
-
-## setMaxValue
-the default max value is always the width (if horizontal) or height (if vertical), if you change the max value the bar will always calculate the value based on its width or height - example: you set the max value to 100, the height is 10 and it is a vertical bar, this means if the bar is on top, the value is 10, if the bar goes one below, it is 20 and so on.
-
-#### Parameters: 
-1. `number` maximum
-
-#### Returns:
-1. `object` The object in use
-
-#### Usage:
-* Creates a new slider and changes the max value to 20
-```lua
-local mainFrame = basalt.createFrame()
-local slider = mainFrame:addSlider():setMaxValue(20)
-```
-```xml
-<slider maxValue="20" />
-```
-
-## setIndex
-Changes the current index to your choice, for example you could create a button which scrolls up to 1 by using :setIndex(1)
-
-#### Parameters: 
-1. `number` the index
-
-#### Returns:
-1. `object` The object in use
-
-#### Usage:
-* Creates a new slider and changes the index to 1 as soon as the button got clicked
-```lua
-local mainFrame = basalt.createFrame()
-local slider = mainFrame:addSlider():setMaxValue(20)
-local button = mainFrame:addButton(function()
-    slider:setIndex(1)
+slider:onChange(function(self, event, value)
+    basalt.debug("Slider value changed to:", value.text)
 end)
 ```
-```xml
-<slider index="2" />
-```
-
-## getIndex
-Returns the current index
-
-#### Returns:
-1. `number` index
-

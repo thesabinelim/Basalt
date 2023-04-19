@@ -1,161 +1,44 @@
-Textfields are objects, where the user can write something on multiple lines. it act's like the default edit script (without coloring)<br>
+Textfields are objects that allow users to write text in multiple lines, similar to the default edit script.
 
-Remember textfield inherits from [Object](objects/Object.md)
+In addition to the Object and VisualObject methods, Textfield objects have the following methods:
 
-## getLines
-Returns all lines
+|   |   |
+|---|---|
+|[getLines](objects/Textfield/getLines.md)|Returns all lines of text
+|[getLine](objects/Textfield/getLine.md)|Returns a specific line of text
+|[editLine](objects/Textfield/editLine.md)|Edits a specific line of text
+|[addLine](objects/Textfield/addLine.md)|Adds a new line of text
+|[removeLine](objects/Textfield/removeLine.md)|Removes a specific line of text
+|[getTextCursor](objects/Textfield/getTextCursor.md)|Returns the current text cursor position
+|[addKeywords](objects/Textfield/addKeywords.md)|Adds syntax highlighting keywords
+|[addRule](objects/Textfield/addRule.md)|Adds a custom syntax highlighting rule
+|[editRule](objects/Textfield/addRule.md)|Edits an existing syntax highlighting rule
+|[removeRule](objects/Textfield/addRule.md)|Removes an existing syntax highlighting rule
+|[getOffset](objects/Textfield/addRule.md)|Returns the current offset inside the Textfield
+|[setOffset](objects/Textfield/addRule.md)|Changes the offset inside the Textfield
+|[clear](objects/Textfield/addRule.md)|Clears the Textfield content
+|[setSelection](objects/Textfield/addRule.md)|Sets the selection color (text color and background color)
+|[getSelection](objects/Textfield/addRule.md)|Returns the current selection color
 
-#### Returns:
-1. `table` lines
+In version 1.7, Textfields now allow the user to select text with the mouse. The setSelection method is used to choose the text color and background color for selected text.
 
-#### Usage:
-* Prints all lines
+## Example
+
 ```lua
-local mainFrame = basalt.createFrame("myFirstFrame"):show()
-local aTextfield = mainFrame:addTextfield("myFirstTextfield"):show()
-basalt.debug(aTextfield:getLines())
-```
+local main = basalt.createFrame()
+local aTextfield = main:addTextfield()
 
-## getLine
-Returns the line on index position
+-- Add some lines of text to the Textfield
+aTextfield:addLine("This is the first line.")
+aTextfield:addLine("This is the second line.")
+aTextfield:addLine("This is the third line.")
 
-#### Parameteres:
-1. `number` index
+-- Edit the second line
+aTextfield:editLine(2, "This is the modified second line.")
 
-#### Returns:
-1. `string` line
+-- Remove the third line
+aTextfield:removeLine(3)
 
-#### Usage:
-* Prints one line
-```lua
-local mainFrame = basalt.createFrame("myFirstFrame"):show()
-local aTextfield = mainFrame:addTextfield("myFirstTextfield"):show()
-basalt.debug(aTextfield:getLine(1))
-```
-
-## editLine
-Edits the line on index position
-
-#### Parameteres:
-1. `number` index
-2. `string` text
-
-#### Returns:
-1. `object` The object in use
-
-#### Usage:
-* Edits the line
-```lua
-local mainFrame = basalt.createFrame("myFirstFrame"):show()
-local aTextfield = mainFrame:addTextfield("myFirstTextfield"):show()
-basalt.debug(aTextfield:editLine(1, "Hello!"))
-```
-
-## addLine
-Adds a line on index position
-
-#### Parameteres:
-1. `string` text
-2. `number` index
-
-#### Returns:
-1. `object` The object in use
-
-#### Usage:
-* Adds a line
-```lua
-local mainFrame = basalt.createFrame("myFirstFrame"):show()
-local aTextfield = mainFrame:addTextfield("myFirstTextfield"):show()
-basalt.debug(aTextfield:addLine("Hello!", 1))
-```
-```xml
-<textfield>
-    <lines>
-        <line>Hello!</line>
-    </lines>
-</textfield>
-```
-
-## removeLine
-Removes the line on index position
-
-#### Parameteres:
-1. `number` index
-2. `string` text
-
-#### Returns:
-1. `object` The object in use
-
-#### Usage:
-* Removes a line
-```lua
-local mainFrame = basalt.createFrame("myFirstFrame"):show()
-local aTextfield = mainFrame:addTextfield("myFirstTextfield"):show()
-basalt.debug(aTextfield:removeLine())
-```
-
-## getTextCursor
-Gets text cursor position
-
-#### Returns:
-1. `number` x position
-2. `number` y position
-
-## addKeywords
-Adds keywords for special coloring
-
-#### Parameteres:
-1. `number|color` color of your choice
-2. `table` a list of keywords which should be colored example: {"if", "else", "then", "while", "do"}
-
-#### Returns:
-1. `object` The object in use
-
-#### Usage:
-* Changes the color of some words to purple
-```lua
-local mainFrame = basalt.createFrame()
-local aTextfield = mainFrame:addTextfield():addKeywords(colors.purple, {"if", "else", "then", "while", "do", "hello"})
-```
-```xml
-<textfield>
-    <keywords>
-        <purple>
-            <keyword>if</keyword>
-            <keyword>else</keyword>
-            <keyword>then</keyword>
-            <keyword>while</keyword>
-            <keyword>do</keyword>
-            <keyword>hello</keyword>
-        </purple>
-    </keywords>
-</textfield>
-```
-
-## addRule
-Adds a new rule for special coloring
-
-#### Parameteres:
-1. `string` a pattern - check out this page: (https://riptutorial.com/lua/example/20315/lua-pattern-matching)
-2. `number|color` text color
-3. `number|color` background color - optional
-
-#### Returns:
-1. `object` The object in use
-
-#### Usage:
-* Changes the color of all numbers
-```lua
-local mainFrame = basalt.createFrame()
-local aTextfield = mainFrame:addTextfield():addRule("%d", colors.lightBlue)
-```
-```xml
-<textfield>
-    <rules>
-        <rule>
-            <pattern>%d</pattern>
-            <fg>lightBlue</fg>
-        </rule>
-    </rules>
-</textfield>
+-- Add a keyword for syntax highlighting
+aTextfield:addKeywords(colors.red, {"first", "second", "third"})
 ```

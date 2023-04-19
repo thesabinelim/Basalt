@@ -1,84 +1,39 @@
-Timers can call your functions delay and repeat it as often as you wish
-<br>
+Timers are objects that allow you to execute code after a specified delay. Unlike Threads, Timers do not use coroutines for concurrency. They are designed to run a function once after the delay has passed.
 
-## setTime
-sets the time the timer should wait after calling your function
+In addition to the Object methods, Timers have the following methods:
 
-#### Parameters: 
-1. `number` the time to delay
-2. `number` how often it should be repeated -1 is infinite
+|   |   |
+|---|---|
+|[setTime](objects/Timer/setTime.md)|Sets the time the timer should wait before calling your function
+|[start](objects/Timer/start.md)|Starts the timer
+|[cancel](objects/Timer/cancel.md)|Cancels the timer
 
-#### Returns:
-1. `object` The object
+## Events
 
-```lua
-local mainFrame = basalt.createFrame()
-local aTimer = mainFrame:addTimer()
-aTimer:setTime(2)
-```
-```xml
-<timer time="2" repeat="1"/>
-```
+|   |   |
+|---|---|
+|[onCall](objects/Timer/onCall.md)|A custom event which gets triggered as soon as the current timer has finished
 
-## start
-Starts the timer
+## Example
 
-#### Returns:
-1. `object` The object
+Here's an example of how to create and use a Timer object:
 
 ```lua
-local mainFrame = basalt.createFrame()
-local aTimer = mainFrame:addTimer()
-aTimer:setTime(2):start()
-```
-```xml
-<timer time="2" start="true"/>
-```
-
-## cancel
-Cancels the timer
-
-#### Returns:
-1. `object` The object
-
-```lua
-local mainFrame = basalt.createFrame()
-local aTimer = mainFrame:addTimer()
-aTimer:setTime(2):start()
-aTimer:cancel()
-```
-
-# Events
-
-## onCall
-`onCall(self)`<br>
-A custom event which gets triggered as soon as the current timer has finished
-
-Here is a example on how to add a onCall event to your timer:
-
-```lua
-local basalt = require("Basalt")
-
-local mainFrame = basalt.createFrame()
-local aTimer = mainFrame:addTimer()
-
-function call()
-  basalt.debug("The timer has finished!")
+-- Function that will be executed after the timer delay
+local function delayedTask()
+  basalt.debug("This message will be displayed after a 5-second delay")
 end
-aTimer:onCall(call)
-```
 
-Here is also a example how this is done with xml:
+-- Create a new Timer object
+local main = basalt.createFrame()
+local myTimer = main:addTimer()
 
-```lua
-local basalt = require("Basalt")
+myTimer:onCall(delayedTask)
 
-local mainFrame = basalt.createFrame()
+-- Set the time delay and start the timer
+myTimer:setTime(5)
+myTimer:start()
 
-basalt.setVariable("call", function()
-  basalt.debug("The timer has finished!")
-end)
-```
-```xml
-<progressbar onDone="call" />
+-- Optionally cancel the timer (not needed in this example, as the timer will finish on its own)
+-- myTimer:cancel()
 ```

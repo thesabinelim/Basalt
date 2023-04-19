@@ -1,91 +1,33 @@
-With input's you are able to create a object where the user can type something in.<br>
+Input objects allow you to create a field where the user can enter text.
 
-Here are all possible functions available for inputs:<br>
-Remember Input inherits from [Object](objects/Object.md)
+In addition to the Object and VisualObject methods, Input objects have the following methods:
 
-## setInputType
-Changes the input type. default: text
+|   |   |
+|---|---|
+|[setInputType](objects/Input/setInputType.md)|Sets the input type
+|[getInputType](objects/Input/getInputType.md)|Returns the input type
+|[setDefaultText](objects/Input/setDefaultText.md)|Sets the default text
+|[setInputLimit](objects/Input/setInputLimit.md)|Sets a limit to the number of characters that can be entered
+|[getInputLimit](objects/Input/getInputLimit.md)|Returns the character limit
+|[setOffset](objects/Input/setOffset.md)|Changes the offset inside the input
+|[getOffset](objects/Input/getOffset.md)|Returns the input offset
+|[setTextOffset](objects/Input/setTextOffset.md)|Changes the cursor position
+|[getTextOffset](objects/Input/getTextOffset.md)|Returns the cursor position
 
-#### Parameters: 
-1. `string` input type ("text", "password", "number")
+Here's an example of how to create an Input object and set its properties:
 
-#### Returns:
-1. `object` The object in use
+Lua:
 
-#### Usage:
-* Creates a default input and sets it to numbers only.
 ```lua
-local mainFrame = basalt.createFrame()
-local aInput = mainFrame:addInput():setInputType("number")
+local main = basalt.createFrame()
+local anInput = main:addInput()
+anInput:setInputType("text")
+anInput:setDefaultText("Username")
+anInput:setInputLimit(20)
 ```
+
+XML:
+
 ```xml
-<input type="number" />
-```
-
-## getInputType
-Gets the current input type
-
-#### Returns:
-1. `string` input type
-
-#### Usage:
-* Creates a default input and sets it to numbers only. Also prints the current input type to log.
-```lua
-local mainFrame = basalt.createFrame()
-local aInput = mainFrame:addInput():setInputType("number")
-basalt.debug(aInput:getInputType())
-```
-
-## setDefaultText
-Sets the default text. This will only be displayed if there is no input set by the user.
-
-#### Parameters: 
-1. `string` input type ("text", "password", "number")
-2. `number|color` default background color - optional
-3. `number|color` default text color - optional
-
-#### Returns:
-1. `object` The object in use
-
-#### Usage:
-* Creates a default input and sets the default text to "...".
-```lua
-local mainFrame = basalt.createFrame()
-local aInput = mainFrame:addInput():setDefaultText("...")
-```
-```xml
-<input default="..." />
-```
-
-## setInputLimit
-Sets a character limit to the input.
-
-#### Parameters: 
-1. `number` character limit
-
-#### Returns:
-1. `object` The object in use
-
-#### Usage:
-* Creates a default input and sets the character limit to 8.
-```lua
-local mainFrame = basalt.createFrame()
-local aInput = mainFrame:addInput():setInputLimit(8)
-```
-```xml
-<input limit="8" />
-```
-
-## getInputLimit
-Returns the input limit.
-
-#### Returns:
-1. `number` character limit
-
-#### Usage:
-* Creates a default input and sets the character limit to 8. Prints the current limit.
-```lua
-local mainFrame = basalt.createFrame()
-local aInput = mainFrame:addInput():setInputLimit(8)
-basalt.debug(aInput:getInputLimit())
+<input type="text" defaultText="Username" inputLimit="20" />
 ```
