@@ -48,9 +48,15 @@ return function(name, basalt)
             self:addDraw("button", function()
                 local w,h = self:getSize()
                 local verticalAlign = utils.getTextVerticalAlign(h, textVerticalAlign)
-                local xOffset = textHorizontalAlign=="center" and math.ceil(w/2-(text:len()/2)+1) or textHorizontalAlign=="right" and w-(text:len()-1) or 1
-                self:addText(xOffset, verticalAlign, text)
-                self:addFG(xOffset, verticalAlign, tHex[self:getForeground() or colors.white]:rep(text:len()))
+                local xOffset
+                if(textHorizontalAlign=="center")then
+                    xOffset = math.floor((w - text:len()) / 2)
+                elseif(textHorizontalAlign=="right")then
+                    xOffset = w - text:len()
+                end
+
+                self:addText(xOffset + 1, verticalAlign, text)
+                self:addFG(xOffset + 1, verticalAlign, tHex[self:getForeground() or colors.white]:rep(text:len()))
             end)
         end,
     }

@@ -447,6 +447,11 @@ return function(name, basalt)
         addText = function(self, x, y, text)
             local obj = self:getParent() or self
             local xPos,yPos = self:getPosition()
+            if(parent~=nil)then
+                local xO, yO = parent:getOffset()
+                xPos = ignOffset and xPos or xPos - xO
+                yPos = ignOffset and yPos or yPos - yO
+            end
             if not(transparency)then
                 obj:setText(x+xPos-1, y+yPos-1, text)
                 return
@@ -460,8 +465,13 @@ return function(name, basalt)
         end,
 
         addBG = function(self, x, y, bg, noText)
-            local obj = self:getParent() or self
+            local obj = parent or self
             local xPos,yPos = self:getPosition()
+            if(parent~=nil)then
+                local xO, yO = parent:getOffset()
+                xPos = ignOffset and xPos or xPos - xO
+                yPos = ignOffset and yPos or yPos - yO
+            end
             if not(transparency)then
                 obj:setBG(x+xPos-1, y+yPos-1, bg)
                 return
@@ -481,8 +491,13 @@ return function(name, basalt)
         end,
 
         addFG = function(self, x, y, fg)
-            local obj = self:getParent() or self
+            local obj = parent or self
             local xPos,yPos = self:getPosition()
+            if(parent~=nil)then
+                local xO, yO = parent:getOffset()
+                xPos = ignOffset and xPos or xPos - xO
+                yPos = ignOffset and yPos or yPos - yO
+            end
             if not(transparency)then
                 obj:setFG(x+xPos-1, y+yPos-1, fg)
                 return
@@ -496,8 +511,13 @@ return function(name, basalt)
         end,
 
         addBlit = function(self, x, y, t, fg, bg)
-            local obj = self:getParent() or self
+            local obj = parent or self
             local xPos,yPos = self:getPosition()
+            if(parent~=nil)then
+                local xO, yO = parent:getOffset()
+                xPos = ignOffset and xPos or xPos - xO
+                yPos = ignOffset and yPos or yPos - yO
+            end
             if not(transparency)then
                 obj:blit(x+xPos-1, y+yPos-1, t, fg, bg)
                 return
@@ -523,20 +543,35 @@ return function(name, basalt)
         end,
 
         addTextBox = function(self, x, y, w, h, text)
-            local obj = self:getParent() or self
+            local obj = parent or self
             local xPos,yPos = self:getPosition()
+            if(parent~=nil)then
+                local xO, yO = parent:getOffset()
+                xPos = ignOffset and xPos or xPos - xO
+                yPos = ignOffset and yPos or yPos - yO
+            end
             obj:drawTextBox(x+xPos-1, y+yPos-1, w, h, text)
         end,
 
         addForegroundBox = function(self, x, y, w, h, col)
-            local obj = self:getParent() or self
+            local obj = parent or self
             local xPos,yPos = self:getPosition()
+            if(parent~=nil)then
+                local xO, yO = parent:getOffset()
+                xPos = ignOffset and xPos or xPos - xO
+                yPos = ignOffset and yPos or yPos - yO
+            end
             obj:drawForegroundBox(x+xPos-1, y+yPos-1, w, h, col)
         end,
 
         addBackgroundBox = function(self, x, y, w, h, col)
-            local obj = self:getParent() or self
+            local obj = parent or self
             local xPos,yPos = self:getPosition()
+            if(parent~=nil)then
+                local xO, yO = parent:getOffset()
+                xPos = ignOffset and xPos or xPos - xO
+                yPos = ignOffset and yPos or yPos - yO
+            end
             obj:drawBackgroundBox(x+xPos-1, y+yPos-1, w, h, col)
         end,
 

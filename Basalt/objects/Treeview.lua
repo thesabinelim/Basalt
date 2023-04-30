@@ -16,57 +16,84 @@ return function(name, basalt)
     base:setSize(16, 8)
     base:setZIndex(5)
 
-    local Node = {}
-    Node.__index = Node
+    local function newNode(text, expandable)
+        text = text or ""
+        expandable = expandable or false
+        local expanded = false
+        local parent = nil
+        local children = {}
 
-    function Node.new(text, expandable)
-        local self = setmetatable({}, Node)
-        self.text = text
-        self.expandable = expandable or false
-        self.expanded = false
-        self.parent = nil
-        self.children = {}
-        return self
-    end
+        local node = {}
 
-    function Node:addChild(text, expandable)
-        local childNode = Node.new(text, expandable)
-        childNode.parent = self
-        table.insert(self.children, childNode)
-        return childNode
-    end
+        node = {
+            getChildren = function()
+                return children
+            end,
 
-    function Node:setExpanded(expanded)
-        self.expanded = expanded
-        base:updateDraw()
-    end
+            setParent = function(p)
+                parent = p
+            end,
 
-    function Node:isExpanded()
-        return self.expanded
-    end
+            getParent = function()
+                return parent
+            end,
 
-    function Node:setExpandable(expandable)
-        self.expandable = expandable
-        base:updateDraw()
-    end
+            addChild = function(text, expandable)
+                local childNode = newNode(text, expandable)
+                childNode.setParent(node)
+                table.insert(children, childNode)
+                base:updateDraw()
+                return childNode
+            end,
 
-    function Node:isExpandable()
-        return self.expandable
-    end
+            setExpanded = function(exp)
+                if(expandable)then
+                    expanded = exp
+                end
+                base:updateDraw()
+            end,
 
-    function Node:removeChild(index)
-        table.remove(self.children, index)
-    end
+            isExpanded = function()
+                return expanded
+            end,
 
-    function Node:findChildrenByText(searchText)
-        local foundNodes = {}
-        for _, child in ipairs(self.children) do
-            if child.text == searchText then
-                table.insert(foundNodes, child)
+            setExpandable = function(expandable)
+                expandable = expandable
+                base:updateDraw()
+            end,
+
+            isExpandable = function()
+                return expandable
+            end,
+
+            removeChild = function(index)
+                table.remove(children, index)
+            end,
+
+            findChildrenByText = function(searchText)
+                local foundNodes = {}
+                for _, child in ipairs(children) do
+                    if child.getText() == searchText then
+                        table.insert(foundNodes, child)
+                    end
+                end
+                return foundNodes
+            end,
+
+            getText = function()
+                return text
+            end,
+
+            setText = function(t)
+                text = t
             end
-        end
-        return foundNodes
+        }
+
+        return node
     end
+
+    local root = newNode("Root", true)
+    root.setExpanded(true)
 
     local object = {
         init = function(self)
@@ -119,34 +146,8 @@ return function(name, basalt)
             return selectionColorActive
         end,
 
-        addNode = function(self, text, parent, expandable)
-            local newNode = Node.new(text, expandable)
-            if parent then
-                parent:addChild(newNode)
-            else
-                table.insert(nodes, newNode)
-            end
-            self:updateDraw()
-            return newNode
-        end,
-
-        removeNode = function(self, node)
-            if node.parent then
-                for i, child in ipairs(node.parent.children) do
-                    if child == node then
-                        node.parent:removeChild(i)
-                        break
-                    end
-                end
-            else
-                for i, root in ipairs(nodes) do
-                    if root == node then
-                        table.remove(nodes, i)
-                        break
-                    end
-                end
-            end
-            self:updateDraw()
+        getRoot = function(self)
+            return root
         end,
 
         mouseHandler = function(self, button, x, y)
@@ -157,15 +158,15 @@ return function(name, basalt)
                 local function checkNodeClick(node, level)
                     if y == oby+currentLine-1 then
                         if x >= obx and x < obx + w then
-                            node.expanded = not node.expanded
+                            node.setExpanded(not node.isExpanded())
                             self:setValue(node)
                             self:updateDraw()
                             return true
                         end
                     end
                     currentLine = currentLine + 1
-                    if node.expanded then
-                        for _, child in ipairs(node.children) do
+                    if node.isExpanded() then
+                        for _, child in ipairs(node.getChildren()) do
                             if checkNodeClick(child, level + 1) then
                                 return true
                             end
@@ -174,8 +175,8 @@ return function(name, basalt)
                     return false
                 end
         
-                for _, root in ipairs(nodes) do
-                    if checkNodeClick(root, 1) then
+                for _, item in ipairs(root.getChildren()) do
+                    if checkNodeClick(item, 1) then
                         return true
                     end
                 end
@@ -196,15 +197,15 @@ return function(name, basalt)
                         local visibleLines = 0
                         local function countVisibleLines(node, level)
                             visibleLines = visibleLines + 1
-                            if node.expanded then
-                                for _, child in ipairs(node.children) do
+                            if node.isExpanded() then
+                                for _, child in ipairs(node.getChildren()) do
                                     countVisibleLines(child, level + 1)
                                 end
                             end
                         end
         
-                        for _, root in ipairs(nodes) do
-                            countVisibleLines(root, 1)
+                        for _, item in ipairs(root.getChildren()) do
+                            countVisibleLines(item, 1)
                         end
         
                         if visibleLines > h then
@@ -229,31 +230,26 @@ return function(name, basalt)
                 local lastClickedNode = self:getValue()
                 local function drawNode(node, level)
                     local w, h = self:getSize()
-        
+                
                     if currentLine >= 1 and currentLine <= h then
                         local bg = (node == lastClickedNode) and itemSelectedBG or self:getBackground()
                         local fg = (node == lastClickedNode) and itemSelectedFG or self:getForeground()
-        
-                        self:addBlit(1 + level + xOffset, currentLine, node.text, tHex[fg]:rep(#node.text), tHex[bg]:rep(#node.text))
+                
+                        local text = node.getText()
+                        self:addBlit(1 + level + xOffset, currentLine, text, tHex[fg]:rep(#text), tHex[bg]:rep(#text))
                     end
-        
-                    currentLine = currentLine + 1
-        
-                    if(node.expandable)then
-                        if node.expanded then
-                            for _, child in ipairs(node.children) do
-                                drawNode(child, level + 1)
-                            end
-                        end
-                    else
-                        for _, child in ipairs(node.children) do
+                
+                    currentLine = currentLine + 1     
+                               
+                    if node.isExpanded() then
+                        for _, child in ipairs(node.getChildren()) do
                             drawNode(child, level + 1)
                         end
                     end
                 end
         
-                for _, root in ipairs(nodes) do
-                    drawNode(root, 1)
+                for _, item in ipairs(root.getChildren()) do
+                    drawNode(item, 1)
                 end
             end)
         end,

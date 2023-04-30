@@ -10,14 +10,12 @@ return function(name, basalt)
     local function getHorizontalScrollAmount(self)
         local amount = 0
         local objects = self:getObjects()
-        for _, value in pairs(objects) do
-            for _, b in pairs(value) do
-                if(b.getWidth~=nil)and(b.getX~=nil)then
-                    local h, y = b:getWidth(), b:getX()
-                    local width = self:getWidth()
-                    if (h + y - width >= amount) then
-                        amount = max(h + y - width, 0)
-                    end
+        for _, b in pairs(objects) do
+            if(b.element.getWidth~=nil)and(b.element.getX~=nil)then
+                local h, y = b.element:getWidth(), b.element:getX()
+                local width = self:getWidth()
+                if (h + y - width >= amount) then
+                    amount = max(h + y - width, 0)
                 end
             end
         end
@@ -72,9 +70,9 @@ return function(name, basalt)
             if(base.scrollHandler(self, dir, x, y))then
                 local xO, yO = self:getOffset()
                 if(direction==1)then
-                    self:setOffset(math.min(0, math.max(xO - dir, -(getHorizontalScrollAmount(self)-1))), yO)
+                    self:setOffset(min(getHorizontalScrollAmount(self), max(0, xO + dir)), yO)
                 elseif(direction==0)then
-                    self:setOffset(xO, math.min(0, math.max(yO - dir, -(getVerticalScrollAmount(self)-1))))
+                    self:setOffset(xO, min(getVerticalScrollAmount(self), max(0, yO + dir)))
                 end
                 self:updateDraw()
                 return true

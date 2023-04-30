@@ -145,11 +145,12 @@ return function(name, basalt)
                 local list = self:getAll()
                 local bgCol, fgCol = self:getBackground(), self:getForeground()
                 local text = utils.getTextHorizontalAlign((val~=nil and val.text or ""), w, align):sub(1, w - 1)  .. (isOpened and openedSymbol or closedSymbol)
-                self:addBlit(1, 1, text, tHex[fgCol], tHex[bgCol])
+                self:addBlit(1, 1, text, tHex[fgCol]:rep(#text), tHex[bgCol]:rep(#text))
 
                 if (isOpened) then
                     self:addTextBox(1, 2, dropdownW, dropdownH, " ")
                     self:addBackgroundBox(1, 2, dropdownW, dropdownH, bgCol)
+                    self:addForegroundBox(1, 2, dropdownW, dropdownH, fgCol)
                     for n = 1, dropdownH do
                         if (list[n + yOffset] ~= nil) then
                             local t =utils.getTextHorizontalAlign(list[n + yOffset].text, dropdownW, align)

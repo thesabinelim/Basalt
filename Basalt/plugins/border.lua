@@ -1,7 +1,6 @@
 return {
     VisualObject = function(base)
         local inline = true
-        local top, bottom, left, right = true, true, true, true
         local borderColors = {top = false, bottom = false, left = false, right = false}
 
         local object = {

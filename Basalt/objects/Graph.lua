@@ -85,6 +85,12 @@ return function(name, basalt)
             return maxEntries
         end,
 
+        clear = function(self)
+            graphData = {}
+            self:updateDraw()
+            return self
+        end,
+
         draw = function(self)
             base.draw(self)
             self:addDraw("graph", function()

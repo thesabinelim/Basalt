@@ -74,6 +74,16 @@ return function(name, basalt)
             return textX
         end,
 
+        setInputType = function(self, t)
+            inputType = t
+            self:updateDraw()
+            return self
+        end,
+
+        getInputType = function(self)
+            return inputType
+        end,
+
         setValue = function(self, val)
             base.setValue(self, tostring(val))
             if not (internalValueChange) then

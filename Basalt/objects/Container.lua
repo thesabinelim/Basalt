@@ -310,6 +310,12 @@ return function(name, basalt)
             return basalt
         end,
 
+        setPalette = function(self, col, ...)
+            local parent = self:getParent()
+            parent:setPalette(col, ...)
+            return self
+        end,
+
         eventHandler = function(self, ...)            
             if(base.eventHandler~=nil)then
                 base.eventHandler(self, ...)
@@ -337,7 +343,7 @@ return function(name, basalt)
                                 if(self.getOffset~=nil)then
                                     xO, yO = self:getOffset()
                                 end
-                                if (obj.element[v[1]](obj.element, btn, x-xO, y-yO, ...)) then      
+                                if (obj.element[v[1]](obj.element, btn, x+xO, y+yO, ...)) then      
                                     return true
                                 end
                             end

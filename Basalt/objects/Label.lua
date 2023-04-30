@@ -26,6 +26,7 @@ return function(name, basalt)
             text = tostring(newText)
             if(autoSize)then
                 self:setSize(#text, 1)
+                autoSize = true
             end
             self:updateDraw()
             return self

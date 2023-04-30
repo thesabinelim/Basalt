@@ -194,17 +194,28 @@ return {
     Image = function(base, basalt)
         return {
             shrink = function(self)
-                local bimg = self:getImage()
+                local bimg = self:getImageFrame(1)
                 local img = {}
                 for k,v in pairs(bimg)do
                     if(type(k)=="number")then
                         table.insert(img,v[3])
                     end
                 end
-                local shrinkedImg = pixelbox(img, self:getBackground())
+                local shrinkedImg = pixelbox(img, self:getBackground()).get()
                 self:setImage(shrinkedImg)
                 return self
-            end
+            end,
+
+            getShrinkedImage = function(self)
+                local bimg = self:getImageFrame(1)
+                local img = {}
+                for k,v in pairs(bimg)do
+                    if(type(k)=="number")then
+                        table.insert(img, v[3])
+                    end
+                end
+                return pixelbox(img, self:getBackground()).get()
+            end,
         }
     end,
 }

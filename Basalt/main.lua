@@ -7,8 +7,8 @@ local uuid = utils.uuid
 local wrapText = utils.wrapText
 local count = utils.tableCount
 local moveThrottle = 300
-local dragThrottle = 50
-local renderingThrottle = 50
+local dragThrottle = 0
+local renderingThrottle = 0
 
 local baseTerm = term.current()
 local version = "1.7.0"
@@ -339,6 +339,14 @@ basalt = {
 
     setBaseTerm = function(_baseTerm)
         baseTerm = _baseTerm
+    end,
+
+    resetPalette = function()
+        for k,v in pairs(colors)do
+            if(type(v)=="number")then
+                --baseTerm.setPaletteColor(v, colors.packRGB(table.unpack(defaultColors[k])))
+            end
+        end
     end,
 
     setMouseMoveThrottle = function(amount)

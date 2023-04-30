@@ -22,25 +22,26 @@ return function(name, basalt)
     base:setZIndex(2)
 
     local function getPalette(id)
-        if(originalImage~=nil)then
-            local p = {}
-            for k,v in pairs(colors)do
-                if(type(v)=="number")then
-                    p[k] = {term.nativePaletteColor(v)}
-                end
+        local p = {}
+        for k,v in pairs(colors)do
+            if(type(v)=="number")then
+                p[k] = {term.nativePaletteColor(v)}
             end
-            if(originalImage.palette~=nil)then
-                for k,v in pairs(originalImage.palette)do
-                    p[k] = tonumber(v)
-                end
-            end
-            if(originalImage[id]~=nil)and(originalImage[id].palette~=nil)then
-                for k,v in pairs(originalImage[id].palette)do
-                    p[k] = tonumber(v)
-                end
-            end
-            return p
         end
+        local globalPalette = bimgLibrary.getMetadata("palette")
+        if(globalPalette~=nil)then
+            for k,v in pairs(globalPalette)do
+                p[k] = tonumber(v)
+            end
+        end
+        local localPalette = bimgLibrary.getFrameData("palette")
+        basalt.log(localPalette)
+        if(localPalette~=nil)then
+            for k,v in pairs(localPalette)do
+                p[k] = tonumber(v)
+            end
+        end
+        return p
     end
 
     local object = {
@@ -68,44 +69,44 @@ return function(name, basalt)
         end,
 
         selectFrame = function(self, id)
-            if(imgData.getFrameObject(id)==nil)then
-                imgData.addFrame(id)
+            if(bimgLibrary.getFrameObject(id)==nil)then
+                bimgLibrary.addFrame(id)
             end
-            bimgFrame = imgData.getFrameObject(id)
-            bimg = bimgFrame.getImage(id)
+            bimgFrame = bimgLibrary.getFrameObject(id)
+            image = bimgFrame.getImage(id)
             selectedFrame = id
             self:updateDraw()
         end,
 
         addFrame = function(self, id)
-            imgData.addFrame(id)
+            bimgLibrary.addFrame(id)
             return self
         end,
 
         getFrame = function(self, id)
-            return imgData.getFrame(id)
+            return bimgLibrary.getFrame(id)
         end,
 
         getFrameObject = function(self, id)
-            return imgData.getFrameObject(id)
+            return bimgLibrary.getFrameObject(id)
         end,
 
         removeFrame = function(self, id)
-            imgData.removeFrame(id)
+            bimgLibrary.removeFrame(id)
             return self
         end,
 
         moveFrame = function(self, id, dir)
-            imgData.moveFrame(id, dir)
+            bimgLibrary.moveFrame(id, dir)
             return self
         end,
 
         getFrames = function(self)
-            return imgData.getFrames()
+            return bimgLibrary.getFrames()
         end,
 
         getFrameCount = function(self)
-            return #imgData.getFrames()
+            return #bimgLibrary.getFrames()
         end,
 
         getActiveFrame = function(self)
@@ -115,9 +116,10 @@ return function(name, basalt)
         loadImage = function(self, path)
             if(fs.exists(path))then
                 local newBimg = images.loadBIMG(path)
-                imgData = bimg(newBimg)
+                bimgLibrary = bimg(newBimg)
                 selectedFrame = 1
-                bimgFrame = imgData.getFrameObject(1)
+                bimgFrame = bimgLibrary.getFrameObject(1)
+                originalImage = bimgLibrary.createBimg()
                 image = bimgFrame.getImage()
                 self:updateDraw()
             end     
@@ -126,9 +128,10 @@ return function(name, basalt)
 
         setImage = function(self, t)
             if(type(t)=="table")then
-                imgData = bimg(t)
+                bimgLibrary = bimg(t)
                 selectedFrame = 1
-                bimgFrame = imgData.getFrameObject(1)
+                bimgFrame = bimgLibrary.getFrameObject(1)
+                originalImage = bimgLibrary.createBimg()
                 image = bimgFrame.getImage()
                 self:updateDraw()
             end
@@ -136,14 +139,19 @@ return function(name, basalt)
         end,
 
         clear = function(self)
-            imgData = bimg()
+            bimgLibrary = bimg()
+            bimgFrame = bimgLibrary.getFrameObject(1)
             image = nil
             self:updateDraw()
             return self
         end,
 
         getImage = function(self)
-            return imgData.createBimg()
+            return bimgLibrary.createBimg()
+        end,
+
+        getImageFrame = function(self, id)
+            return bimgFrame.getImage(id)
         end,
 
         usePalette = function(self, use)
@@ -152,8 +160,8 @@ return function(name, basalt)
         end,
 
         play = function(self, inf)
-            if(originalImage.animated)then
-                local t = originalImage[curFrame].duration or originalImage.secondsPerFrame or 0.2
+            if(bimgLibrary.getMetadata("animated"))then
+                local t = bimgLibrary.getMetadata("duration") or bimgLibrary.getMetadata("secondsPerFrame") or 0.2
                 self:listenEvent("other_event")
                 animTimer = os.startTimer(t)
                 infinitePlay = inf or false
@@ -161,18 +169,27 @@ return function(name, basalt)
             return self
         end,
 
+        stop = function(self)
+            os.cancelTimer(animTimer)
+            animTimer = nil
+            infinitePlay = false
+            return self
+        end,
+
         eventHandler = function(self, event, timerId, ...)
             base.eventHandler(self, event, timerId, ...)
             if(event=="timer")then
                 if(timerId==animTimer)then
-                    if(originalImage[curFrame+1]~=nil)then
-                        curFrame = curFrame + 1
-                        local t = originalImage[curFrame].duration or originalImage.secondsPerFrame or 0.2
+                    if(bimgLibrary.getFrame(activeFrame+1)~=nil)then
+                        activeFrame = activeFrame + 1
+                        self:selectFrame(activeFrame)
+                        local t = bimgLibrary.getFrameData(activeFrame, "duration") or bimgLibrary.getMetadata("secondsPerFrame") or 0.2
                         animTimer = os.startTimer(t)
                     else
                         if(infinitePlay)then
-                            curFrame = 1
-                            local t = originalImage[curFrame].duration or originalImage.secondsPerFrame or 0.2
+                            activeFrame = 1
+                            self:selectFrame(activeFrame)
+                            local t = bimgLibrary.getFrameData(activeFrame, "duration") or bimgLibrary.getMetadata("secondsPerFrame") or 0.2
                             animTimer = os.startTimer(t)
                         end
                     end
@@ -181,8 +198,22 @@ return function(name, basalt)
             end
         end,
 
+        setMetadata = function(self, key, value)
+            bimgLibrary.setMetadata(key, value)
+            return self
+        end,
+
         getMetadata = function(self, key)
-            return originalImage[key]
+            return bimgLibrary.getMetadata(key)
+        end,
+
+        getFrameMetadata = function(self, id, key)
+            return bimgLibrary.getFrameData(id, key)
+        end,
+
+        setFrameMetadata = function(self, id, key, value)
+            bimgLibrary.setFrameData(id, key, value)
+            return self
         end,
 
         blit = function(self, text, fg, bg, _x, _y)
@@ -233,10 +264,10 @@ return function(name, basalt)
         end,
 
         resizeImage = function(self, w, h)
-            local newBimg = images.resizeBIMG(bimg.createBimg(), w, h)
+            local newBimg = images.resizeBIMG(originalImage, w, h)
             bimgLibrary = bimg(newBimg)
             selectedFrame = 1
-            bimgFrame = bimg.getFrameObject(1)
+            bimgFrame = bimgLibrary.getFrameObject(1)
             image = bimgFrame.getImage()
             self:updateDraw()
             return self
@@ -246,6 +277,18 @@ return function(name, basalt)
             base.draw(self)
             self:addDraw("image", function()
                 local w,h = self:getSize()
+                local x, y = self:getPosition()
+                local wParent, hParent = self:getParent():getSize()
+                local parentXOffset, parentYOffset = self:getParent():getOffset()
+                
+                if(x - parentXOffset > wParent)or(y - parentYOffset > hParent)or(x - parentXOffset + w < 1)or(y - parentYOffset + h < 1)then
+                    return
+                end
+
+                if(usePalette)then
+                    self:getParent():setPalette(getPalette(activeFrame))
+                end
+
                 if(image~=nil)then
                     for k,v in pairs(image)do
                         if(k+yOffset<=h)and(k+yOffset>=1)then

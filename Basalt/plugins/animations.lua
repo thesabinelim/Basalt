@@ -241,8 +241,8 @@ return {
                 set(self, _v1, _v2)
             end
             activeAnimations[typ].finished = function()
-                if(f~=nil)then f(self) end
                 set(self, v1, v2)
+                if(f~=nil)then f(self) end
             end
 
             activeAnimations[typ].timerId=os.startTimer(0.05+timeOffset)
@@ -257,6 +257,8 @@ return {
                 mode = mode or defaultMode
                 duration = duration or 1
                 timeOffset = timeOffset or 0
+                x = math.floor(x+0.5)
+                y = math.floor(y+0.5)
                 createAnimation(self, x, y, duration, timeOffset, mode, "position", f, self.getPosition, self.setPosition)
                 return self
             end,

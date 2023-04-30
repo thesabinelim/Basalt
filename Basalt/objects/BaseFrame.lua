@@ -37,6 +37,40 @@ return function(name, basalt)
         setOffset = function(self, xOff, yOff)
             xOffset = xOff or xOffset
             yOffset = yOff or yOffset
+            self:updateDraw()
+            return self
+        end,
+
+        show = function(self)
+            base.show(self)
+            for k,v in pairs(colorTheme)do
+                if(type(v)=="number")then
+                    termObject.setPaletteColor(type(k)=="number" and k or colors[k], v)
+                else
+                    local r,g,b = table.unpack(v)
+                    termObject.setPaletteColor(type(k)=="number" and k or colors[k], r,g,b)
+                end
+            end
+            return self
+        end,
+
+        setPalette = function(self, col, ...)            
+            if(self==basalt.getActiveFrame())then
+                if(type(col)=="string")then
+                    colorTheme[col] = ...
+                    termObject.setPaletteColor(type(col)=="number" and col or colors[col], ...)
+                elseif(type(col)=="table")then
+                    for k,v in pairs(col)do
+                        colorTheme[k] = v
+                        if(type(v)=="number")then
+                            termObject.setPaletteColor(type(k)=="number" and k or colors[k], v)
+                        else
+                            local r,g,b = table.unpack(v)
+                            termObject.setPaletteColor(type(k)=="number" and k or colors[k], r,g,b)
+                        end
+                    end
+                end
+            end
             return self
         end,
 
@@ -123,15 +157,11 @@ return function(name, basalt)
 
         blit = function (self, x, y, t, f, b)
             local obx, oby = self:getPosition()
-            x = x + xOffset
-            y = y + yOffset
             local w, h = self:getSize()
-        
             if y >= 1 and y <= h then
                 local t_visible = sub(t, max(1 - x + 1, 1), max(w - x + 1, 1))
                 local f_visible = sub(f, max(1 - x + 1, 1), max(w - x + 1, 1))
                 local b_visible = sub(b, max(1 - x + 1, 1), max(w - x + 1, 1))
-        
                 basaltDraw.blit(max(x + (obx - 1), obx), oby + y - 1, t_visible, f_visible, b_visible)
             end
         end,
@@ -161,8 +191,6 @@ return function(name, basalt)
         object[v] = function(self, x, y, width, height, symbol)
             local obx, oby = self:getPosition()
             local w, h  = self:getSize()
-            x = x + xOffset
-            y = y + yOffset
             height = (y < 1 and (height + y > self:getHeight() and self:getHeight() or height + y - 1) or (height + y > self:getHeight() and self:getHeight() - y + 1 or height))
             width = (x < 1 and (width + x > self:getWidth() and self:getWidth() or width + x - 1) or (width + x > self:getWidth() and self:getWidth() - x + 1 or width))
             basaltDraw[v](max(x + (obx - 1), obx), max(y + (oby - 1), oby), width, height, symbol)
@@ -173,8 +201,6 @@ return function(name, basalt)
         object[v] = function(self, x, y, str)
             local obx, oby = self:getPosition()
             local w, h  = self:getSize()
-            x = x + xOffset
-            y = y + yOffset
             if (y >= 1) and (y <= h) then
                 basaltDraw[v](max(x + (obx - 1), obx), oby + y - 1, sub(str, max(1 - x + 1, 1), max(w - x + 1,1)))
             end

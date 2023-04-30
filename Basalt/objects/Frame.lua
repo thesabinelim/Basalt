@@ -34,6 +34,7 @@ return function(name, basalt)
         setOffset = function(self, xOff, yOff)
             xOffset = xOff or xOffset
             yOffset = yOff or yOffset
+            self:updateDraw()
             return self
         end,
 
@@ -66,15 +67,14 @@ return function(name, basalt)
 
         blit = function (self, x, y, t, f, b)
             local obx, oby = self:getPosition()
-            x = x + xOffset
-            y = y + yOffset
-            local w, h = self:getSize()
-        
+            local xO, yO = parent:getOffset()
+            obx = obx - xO
+            oby = oby - yO
+            local w, h = self:getSize()        
             if y >= 1 and y <= h then
                 local t_visible = sub(t, max(1 - x + 1, 1), max(w - x + 1, 1))
                 local f_visible = sub(f, max(1 - x + 1, 1), max(w - x + 1, 1))
-                local b_visible = sub(b, max(1 - x + 1, 1), max(w - x + 1, 1))
-        
+                local b_visible = sub(b, max(1 - x + 1, 1), max(w - x + 1, 1))        
                 parent:blit(max(x + (obx - 1), obx), oby + y - 1, t_visible, f_visible, b_visible)
             end
         end,      
@@ -89,8 +89,9 @@ return function(name, basalt)
     for k,v in pairs({"drawBackgroundBox", "drawForegroundBox", "drawTextBox"})do
         object[v] = function(self, x, y, width, height, symbol)
             local obx, oby = self:getPosition()
-            x = x + xOffset
-            y = y + yOffset
+            local xO, yO = parent:getOffset()
+            obx = obx - xO
+            oby = oby - yO
             height = (y < 1 and (height + y > self:getHeight() and self:getHeight() or height + y - 1) or (height + y > self:getHeight() and self:getHeight() - y + 1 or height))
             width = (x < 1 and (width + x > self:getWidth() and self:getWidth() or width + x - 1) or (width + x > self:getWidth() and self:getWidth() - x + 1 or width))
             parent[v](parent, max(x + (obx - 1), obx), max(y + (oby - 1), oby), width, height, symbol)
@@ -100,9 +101,10 @@ return function(name, basalt)
     for k,v in pairs({"setBG", "setFG", "setText"})do
         object[v] = function(self, x, y, str)
             local obx, oby = self:getPosition()
+            local xO, yO = parent:getOffset()
+            obx = obx - xO
+            oby = oby - yO
             local w, h  = self:getSize()
-            x = x + xOffset
-            y = y + yOffset
             if (y >= 1) and (y <= h) then
                 parent[v](parent, max(x + (obx - 1), obx), oby + y - 1, sub(str, max(1 - x + 1, 1), max(w - x + 1,1)))
             end
